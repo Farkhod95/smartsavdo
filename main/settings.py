@@ -7,7 +7,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'django-insecure-12345yourkeyhere54321'
 DEBUG = True
 
-ALLOWED_HOSTS = ["*",]
+ALLOWED_HOSTS = ["api-savdo.elegantchinni.uz", "admin-savdo.elegantchinni.uz", "savdo.elegantchinni.uz"]
 
 INSTALLED_APPS = [
     'modeltranslation',
@@ -54,8 +54,10 @@ MIDDLEWARE = [
 #     "https://api.optivora-group.com",
 #     "http://localhost:3000",
 # ]
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ORIGIN_ALLOW_ALL = False
+
+CSRF_TRUSTED_ORIGINS = ["https://api-savdo.elegantchinni.uz", "https://admin-savdo.elegantchinni.uz", "https://savdo.elegantchinni.uz"]
 
 # CORS_ALLOWED_ORIGINS = [
 #     "https://optivora-group.com",
