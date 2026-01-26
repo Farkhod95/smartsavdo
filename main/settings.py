@@ -66,13 +66,14 @@ MIDDLEWARE = [
 CORS_ORIGIN_ALLOW_ALL = True
 # CSRF_TRUSTED_ORIGINS = ["https://api-savdo.elegantchinni.uz", "https://admin-savdo.elegantchinni.uz", "https://savdo.elegantchinni.uz", "http://localhost:3000", "http://localhost:8081", "https://admin-savdo.elegantchinni.uz/"]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://optivora-group.com",
-#     "http://optivora.universal-uz.uz",
-#     "http://45.138.159.166:5005",
-#     "http://localhost:3000",  # agar lokalda ishlayotgan bo‘lsa
-#     "http://localhost:5173",  # agar lokalda ishlayotgan bo‘lsa
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://api-savdo.elegantchinni.uz",
+    "https://admin-savdo.elegantchinni.uz",
+    "https://savdo.elegantchinni.uz",
+    "http://localhost:3000",
+    "http://localhost:8081",
+]
+
 
 ROOT_URLCONF = 'main.urls'
 
