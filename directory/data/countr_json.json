@@ -1,0 +1,1724 @@
+[
+  {
+    "ID": "28",
+    "name": "GIBRALTAR",
+    "name_en": "GIBRALTAR",
+    "name_uz": "GIBRALTAR",
+    "name_ru": "Гибралтар"
+  },
+  {
+    "ID": "135",
+    "name": "GONDURAS",
+    "name_en": "GONDURAS",
+    "name_uz": "GONDURAS",
+    "name_ru": "Гондурас"
+  },
+  {
+    "ID": "29",
+    "name": "GONKONG",
+    "name_en": "GONKONG",
+    "name_uz": "GONKONG",
+    "name_ru": "Гонконг"
+  },
+  {
+    "ID": "38",
+    "name": "GRETSIYA",
+    "name_en": "GRETSIYA",
+    "name_uz": "GRETSIYA",
+    "name_ru": "Греция"
+  },
+  {
+    "ID": "36",
+    "name": "GRENADA",
+    "name_en": "GRENADA",
+    "name_uz": "GRENADA",
+    "name_ru": "Гренада"
+  },
+  {
+    "ID": "37",
+    "name": "GRENLANDIYA",
+    "name_en": "GRENLANDIYA",
+    "name_uz": "GRENLANDIYA",
+    "name_ru": "Гренландия"
+  },
+  {
+    "ID": "136",
+    "name": "GRUZIYA",
+    "name_en": "GRUZIYA",
+    "name_uz": "GRUZIYA",
+    "name_ru": "Грузия"
+  },
+  {
+    "ID": "39",
+    "name": "GUAM",
+    "name_en": "GUAM",
+    "name_uz": "GUAM",
+    "name_ru": "Гуам"
+  },
+  {
+    "ID": "65",
+    "name": "DANIYA",
+    "name_en": "DANIYA",
+    "name_uz": "DANIYA",
+    "name_ru": "Дания"
+  },
+  {
+    "ID": "40",
+    "name": "MADAGASKAR",
+    "name_en": "MADAGASKAR",
+    "name_uz": "MADAGASKAR",
+    "name_ru": "Мадагаскар"
+  },
+  {
+    "ID": "82",
+    "name": "MAKAO",
+    "name_en": "MAKAO",
+    "name_uz": "MAKAO",
+    "name_ru": "Макао"
+  },
+  {
+    "ID": "158",
+    "name": "MALAVI",
+    "name_en": "MALAVI",
+    "name_uz": "MALAVI",
+    "name_ru": "Малави"
+  },
+  {
+    "ID": "84",
+    "name": "MALAYZIYA",
+    "name_en": "MALAYZIYA",
+    "name_uz": "MALAYZIYA",
+    "name_ru": "Малайзия"
+  },
+  {
+    "ID": "159",
+    "name": "MALI",
+    "name_en": "MALI",
+    "name_uz": "MALI",
+    "name_ru": "Мали"
+  },
+  {
+    "ID": "172",
+    "name": "SEYSHEL OROLLARI",
+    "name_en": "SEYSHEL OROLLARI",
+    "name_uz": "SEYSHEL OROLLARI",
+    "name_ru": "Сейшел Ороллари"
+  },
+  {
+    "ID": "195",
+    "name": "SENT-VINSENT VA GRENADINLAR",
+    "name_en": "SENT-VINSENT VA GRENADINLAR",
+    "name_uz": "SENT-VINSENT VA GRENADINLAR",
+    "name_ru": "Сент-винсент Ва Гренадинлар"
+  },
+  {
+    "ID": "196",
+    "name": "SENT-PER VA MIKELON",
+    "name_en": "SENT-PER VA MIKELON",
+    "name_uz": "SENT-PER VA MIKELON",
+    "name_ru": "Сент-пер Ва Микелон"
+  },
+  {
+    "ID": "272",
+    "name": "FUQAROLIGI BO‘LMAGAN SHAXS",
+    "name_en": "FUQAROLIGI BO‘LMAGAN SHAXS",
+    "name_uz": "FUQAROLIGI BO‘LMAGAN SHAXS",
+    "name_ru": "Фукаролиги Болмаган Шаксс"
+  },
+  {
+    "ID": "6",
+    "name": "ANTIGUA VA BARBUDA",
+    "name_en": "ANTIGUA VA BARBUDA",
+    "name_uz": "ANTIGUA VA BARBUDA",
+    "name_ru": "Антигуа Ва Барбуда"
+  },
+  {
+    "ID": "9",
+    "name": "ARGENTINA",
+    "name_en": "ARGENTINA",
+    "name_uz": "ARGENTINA",
+    "name_ru": "Аргентина"
+  },
+  {
+    "ID": "122",
+    "name": "ARMANISTON",
+    "name_en": "ARMANISTON",
+    "name_uz": "ARMANISTON",
+    "name_ru": "Арманистон"
+  },
+  {
+    "ID": "47",
+    "name": "IORDANIYA",
+    "name_en": "IORDANIYA",
+    "name_uz": "IORDANIYA",
+    "name_ru": "Иордания"
+  },
+  {
+    "ID": "49",
+    "name": "IRLANDIYA",
+    "name_en": "IRLANDIYA",
+    "name_uz": "IRLANDIYA",
+    "name_ru": "Ирландия"
+  },
+  {
+    "ID": "48",
+    "name": "IROQ",
+    "name_en": "IROQ",
+    "name_uz": "IROQ",
+    "name_ru": "Ирок"
+  },
+  {
+    "ID": "143",
+    "name": "ISLANDIYA",
+    "name_en": "ISLANDIYA",
+    "name_uz": "ISLANDIYA",
+    "name_ru": "Исландия"
+  },
+  {
+    "ID": "66",
+    "name": "ISPANIYA",
+    "name_en": "ISPANIYA",
+    "name_uz": "ISPANIYA",
+    "name_ru": "Испания"
+  },
+  {
+    "ID": "31",
+    "name": "ISROIL",
+    "name_en": "ISROIL",
+    "name_uz": "ISROIL",
+    "name_ru": "Исроил"
+  },
+  {
+    "ID": "54",
+    "name": "ITALIYA",
+    "name_en": "ITALIYA",
+    "name_uz": "ITALIYA",
+    "name_ru": "Италия"
+  },
+  {
+    "ID": "144",
+    "name": "YEMEN",
+    "name_en": "YEMEN",
+    "name_uz": "YEMEN",
+    "name_ru": "Емен"
+  },
+  {
+    "ID": "145",
+    "name": "KABO-VERDE",
+    "name_en": "KABO-VERDE",
+    "name_uz": "KABO-VERDE",
+    "name_ru": "Кабо-верде"
+  },
+  {
+    "ID": "113",
+    "name": "KAYMAN OROLLARI",
+    "name_en": "KAYMAN OROLLARI",
+    "name_uz": "KAYMAN OROLLARI",
+    "name_ru": "Кайман Ороллари"
+  },
+  {
+    "ID": "32",
+    "name": "KAMBODJA",
+    "name_en": "KAMBODJA",
+    "name_uz": "KAMBODJA",
+    "name_ru": "Камбодджа"
+  },
+  {
+    "ID": "147",
+    "name": "KAMERUN",
+    "name_en": "KAMERUN",
+    "name_uz": "KAMERUN",
+    "name_ru": "Камерун"
+  },
+  {
+    "ID": "55",
+    "name": "KANADA",
+    "name_en": "KANADA",
+    "name_uz": "KANADA",
+    "name_ru": "Канада"
+  },
+  {
+    "ID": "33",
+    "name": "QATAR",
+    "name_en": "QATAR",
+    "name_uz": "QATAR",
+    "name_ru": "Катар"
+  },
+  {
+    "ID": "148",
+    "name": "KENIYA",
+    "name_en": "KENIYA",
+    "name_uz": "KENIYA",
+    "name_ru": "Кения"
+  },
+  {
+    "ID": "149",
+    "name": "KIPR",
+    "name_en": "KIPR",
+    "name_uz": "KIPR",
+    "name_ru": "Кипр"
+  },
+  {
+    "ID": "150",
+    "name": "KIRIBATI",
+    "name_en": "KIRIBATI",
+    "name_uz": "KIRIBATI",
+    "name_ru": "Кирибати"
+  },
+  {
+    "ID": "60",
+    "name": "KOKOS OROLLARI",
+    "name_en": "KOKOS OROLLARI",
+    "name_uz": "KOKOS OROLLARI",
+    "name_ru": "Кокос Ороллари"
+  },
+  {
+    "ID": "151",
+    "name": "KOLUMBIYA",
+    "name_en": "KOLUMBIYA",
+    "name_uz": "KOLUMBIYA",
+    "name_ru": "Колумбия"
+  },
+  {
+    "ID": "221",
+    "name": "KOMOR OROLLARI",
+    "name_en": "KOMOR OROLLARI",
+    "name_uz": "KOMOR OROLLARI",
+    "name_ru": "Комор Ороллари"
+  },
+  {
+    "ID": "97",
+    "name": "KONGO",
+    "name_en": "KONGO",
+    "name_uz": "KONGO",
+    "name_ru": "Конго"
+  },
+  {
+    "ID": "62",
+    "name": "KOREYS XALQ DEMOKRATIK RESPUBLIKASI",
+    "name_en": "KOREYS XALQ DEMOKRATIK RESPUBLIKASI",
+    "name_uz": "KOREYS XALQ DEMOKRATIK RESPUBLIKASI",
+    "name_ru": "Корейс Ксалк Демократик Республикаси"
+  },
+  {
+    "ID": "152",
+    "name": "KOREYA RESPUBLIKASI",
+    "name_en": "KOREYA RESPUBLIKASI",
+    "name_uz": "KOREYA RESPUBLIKASI",
+    "name_ru": "Корея Республикаси"
+  },
+  {
+    "ID": "153",
+    "name": "KOSTA-RIKA",
+    "name_en": "KOSTA-RIKA",
+    "name_uz": "KOSTA-RIKA",
+    "name_ru": "Коста-рика"
+  },
+  {
+    "ID": "154",
+    "name": "KOT-D`IVUAR",
+    "name_en": "KOT-D`IVUAR",
+    "name_uz": "KOT-D`IVUAR",
+    "name_ru": "Кот-дивуар"
+  },
+  {
+    "ID": "155",
+    "name": "KUBA",
+    "name_en": "KUBA",
+    "name_uz": "KUBA",
+    "name_ru": "Куба"
+  },
+  {
+    "ID": "114",
+    "name": "KUKA OROLLARI",
+    "name_en": "KUKA OROLLARI",
+    "name_uz": "KUKA OROLLARI",
+    "name_ru": "Кука Ороллари"
+  },
+  {
+    "ID": "77",
+    "name": "LAOS XALQ DEMOKRATIK RESPUBLIKASI",
+    "name_en": "LAOS XALQ DEMOKRATIK RESPUBLIKASI",
+    "name_uz": "LAOS XALQ DEMOKRATIK RESPUBLIKASI",
+    "name_ru": "Лаос Ксалк Демократик Республикаси"
+  },
+  {
+    "ID": "78",
+    "name": "LATVIYA",
+    "name_en": "LATVIYA",
+    "name_uz": "LATVIYA",
+    "name_ru": "Латвия"
+  },
+  {
+    "ID": "67",
+    "name": "LESOTO",
+    "name_en": "LESOTO",
+    "name_uz": "LESOTO",
+    "name_ru": "Лесото"
+  },
+  {
+    "ID": "157",
+    "name": "LIBERIYA",
+    "name_en": "LIBERIYA",
+    "name_uz": "LIBERIYA",
+    "name_ru": "Либерия"
+  },
+  {
+    "ID": "79",
+    "name": "LIVAN",
+    "name_en": "LIVAN",
+    "name_uz": "LIVAN",
+    "name_ru": "Ливан"
+  },
+  {
+    "ID": "207",
+    "name": "LIVIYA ARAB JAMAXIRIYASI",
+    "name_en": "LIVIYA ARAB JAMAXIRIYASI",
+    "name_uz": "LIVIYA ARAB JAMAXIRIYASI",
+    "name_ru": "Ливия Араб Джамаксирияси"
+  },
+  {
+    "ID": "61",
+    "name": "GAYANA",
+    "name_en": "GAYANA",
+    "name_uz": "GAYANA",
+    "name_ru": "Гаяна"
+  },
+  {
+    "ID": "80",
+    "name": "LITVA",
+    "name_en": "LITVA",
+    "name_uz": "LITVA",
+    "name_ru": "Литва"
+  },
+  {
+    "ID": "58",
+    "name": "LIXTENSHTEYN",
+    "name_en": "LIXTENSHTEYN",
+    "name_uz": "LIXTENSHTEYN",
+    "name_ru": "Ликстенштейн"
+  },
+  {
+    "ID": "18",
+    "name": "LYUKSEMBURG",
+    "name_en": "LYUKSEMBURG",
+    "name_uz": "LYUKSEMBURG",
+    "name_ru": "Люксембург"
+  },
+  {
+    "ID": "90",
+    "name": "MO‘G‘ILISTON",
+    "name_en": "MO‘G‘ILISTON",
+    "name_uz": "MO‘G‘ILISTON",
+    "name_ru": "Могилистон"
+  },
+  {
+    "ID": "81",
+    "name": "MAVRIKIY",
+    "name_en": "MAVRIKIY",
+    "name_uz": "MAVRIKIY",
+    "name_ru": "Маврикий"
+  },
+  {
+    "ID": "991",
+    "name": "SERBIYA",
+    "name_en": "SERBIYA",
+    "name_uz": "SERBIYA",
+    "name_ru": "Сербия"
+  },
+  {
+    "ID": "992",
+    "name": "CHERNOGORIYA",
+    "name_en": "CHERNOGORIYA",
+    "name_uz": "CHERNOGORIYA",
+    "name_ru": "Черногория"
+  },
+  {
+    "ID": "999",
+    "name": "ООН",
+    "name_en": "ООН",
+    "name_uz": "ООН",
+    "name_ru": "Оон"
+  },
+  {
+    "ID": "161",
+    "name": "MOLDOVA RESPUBLIKASI",
+    "name_en": "MOLDOVA RESPUBLIKASI",
+    "name_uz": "MOLDOVA RESPUBLIKASI",
+    "name_ru": "Молдова Республикаси"
+  },
+  {
+    "ID": "59",
+    "name": "MONAKO",
+    "name_en": "MONAKO",
+    "name_uz": "MONAKO",
+    "name_ru": "Монако"
+  },
+  {
+    "ID": "91",
+    "name": "MONTSERRAT",
+    "name_en": "MONTSERRAT",
+    "name_uz": "MONTSERRAT",
+    "name_ru": "Монцеррат"
+  },
+  {
+    "ID": "111",
+    "name": "MUQADDAS ELENA OROLI",
+    "name_en": "MUQADDAS ELENA OROLI",
+    "name_uz": "MUQADDAS ELENA OROLI",
+    "name_ru": "Мукаддас Елена Ороли"
+  },
+  {
+    "ID": "208",
+    "name": "MYANMA",
+    "name_en": "MYANMA",
+    "name_uz": "MYANMA",
+    "name_ru": "Мянма"
+  },
+  {
+    "ID": "109",
+    "name": "MEN OROLI",
+    "name_en": "MEN OROLI",
+    "name_uz": "MEN OROLI",
+    "name_ru": "Мен Ороли"
+  },
+  {
+    "ID": "92",
+    "name": "NAMIBIYA",
+    "name_en": "NAMIBIYA",
+    "name_uz": "NAMIBIYA",
+    "name_ru": "Намибия"
+  },
+  {
+    "ID": "162",
+    "name": "NAURU",
+    "name_en": "NAURU",
+    "name_uz": "NAURU",
+    "name_ru": "Науру"
+  },
+  {
+    "ID": "69",
+    "name": "NEPAL",
+    "name_en": "NEPAL",
+    "name_uz": "NEPAL",
+    "name_ru": "Непал"
+  },
+  {
+    "ID": "163",
+    "name": "NIGER",
+    "name_en": "NIGER",
+    "name_uz": "NIGER",
+    "name_ru": "Нигер"
+  },
+  {
+    "ID": "223",
+    "name": "NIGERIYA",
+    "name_en": "NIGERIYA",
+    "name_uz": "NIGERIYA",
+    "name_ru": "Нигерия"
+  },
+  {
+    "ID": "70",
+    "name": "NIDERLAND",
+    "name_en": "NIDERLAND",
+    "name_uz": "NIDERLAND",
+    "name_ru": "Нидерланд"
+  },
+  {
+    "ID": "99",
+    "name": "NIDERLAND ANTIL OROLLARI",
+    "name_en": "NIDERLAND ANTIL OROLLARI",
+    "name_uz": "NIDERLAND ANTIL OROLLARI",
+    "name_ru": "Нидерланд Антил Ороллари"
+  },
+  {
+    "ID": "500",
+    "name": "KONGO DEMOKRATIK RESPUBLIKASI",
+    "name_en": "KONGO DEMOKRATIK RESPUBLIKASI",
+    "name_uz": "KONGO DEMOKRATIK RESPUBLIKASI",
+    "name_ru": "Конго Демократик Республикаси"
+  },
+  {
+    "ID": "100",
+    "name": "NIUE",
+    "name_en": "NIUE",
+    "name_uz": "NIUE",
+    "name_ru": "Ниуе"
+  },
+  {
+    "ID": "71",
+    "name": "NORVEGIYA",
+    "name_en": "NORVEGIYA",
+    "name_uz": "NORVEGIYA",
+    "name_ru": "Норвегия"
+  },
+  {
+    "ID": "103",
+    "name": "NORFOLK OROLI",
+    "name_en": "NORFOLK OROLI",
+    "name_uz": "NORFOLK OROLI",
+    "name_ru": "Норфолк Ороли"
+  },
+  {
+    "ID": "1",
+    "name": "OZARBAYJON",
+    "name_en": "OZARBAYJON",
+    "name_uz": "OZARBAYJON",
+    "name_ru": "Озарбайджон"
+  },
+  {
+    "ID": "27",
+    "name": "OLMONIYA",
+    "name_en": "OLMONIYA",
+    "name_uz": "OLMONIYA",
+    "name_ru": "Олмония"
+  },
+  {
+    "ID": "210",
+    "name": "OMON",
+    "name_en": "OMON",
+    "name_uz": "OMON",
+    "name_ru": "Омон"
+  },
+  {
+    "ID": "165",
+    "name": "PALAU",
+    "name_en": "PALAU",
+    "name_uz": "PALAU",
+    "name_ru": "Палау"
+  },
+  {
+    "ID": "166",
+    "name": "PANAMA",
+    "name_en": "PANAMA",
+    "name_uz": "PANAMA",
+    "name_ru": "Панама"
+  },
+  {
+    "ID": "117",
+    "name": "PAPUA-YANGI GVINEYA",
+    "name_en": "PAPUA-YANGI GVINEYA",
+    "name_uz": "PAPUA-YANGI GVINEYA",
+    "name_ru": "Папуа-янги Гвинея"
+  },
+  {
+    "ID": "167",
+    "name": "PARAGVAY",
+    "name_en": "PARAGVAY",
+    "name_uz": "PARAGVAY",
+    "name_ru": "Парагвай"
+  },
+  {
+    "ID": "168",
+    "name": "PERU",
+    "name_en": "PERU",
+    "name_uz": "PERU",
+    "name_ru": "Перу"
+  },
+  {
+    "ID": "118",
+    "name": "PITKERN",
+    "name_en": "PITKERN",
+    "name_uz": "PITKERN",
+    "name_ru": "Питкерн"
+  },
+  {
+    "ID": "52",
+    "name": "POKISTON",
+    "name_en": "POKISTON",
+    "name_uz": "POKISTON",
+    "name_ru": "Покистон"
+  },
+  {
+    "ID": "169",
+    "name": "POLSHA",
+    "name_en": "POLSHA",
+    "name_uz": "POLSHA",
+    "name_ru": "Полша"
+  },
+  {
+    "ID": "119",
+    "name": "PORTUGALIYA",
+    "name_en": "PORTUGALIYA",
+    "name_uz": "PORTUGALIYA",
+    "name_ru": "Португалия"
+  },
+  {
+    "ID": "501",
+    "name": "BUYUK BRITANIYA",
+    "name_en": "BUYUK BRITANIYA",
+    "name_uz": "BUYUK BRITANIYA",
+    "name_ru": "Буюк Британия"
+  },
+  {
+    "ID": "502",
+    "name": "XERD VA MAKDONALD OROLLARI",
+    "name_en": "XERD VA MAKDONALD OROLLARI",
+    "name_uz": "XERD VA MAKDONALD OROLLARI",
+    "name_ru": "Ксерд Ва Макдоналд Ороллари"
+  },
+  {
+    "ID": "285",
+    "name": "XARVATIYA",
+    "name_en": "XARVATIYA",
+    "name_uz": "XARVATIYA",
+    "name_ru": "Ксарватия"
+  },
+  {
+    "ID": "164",
+    "name": "NIKARAGUA",
+    "name_en": "NIKARAGUA",
+    "name_uz": "NIKARAGUA",
+    "name_ru": "Никарагуа"
+  },
+  {
+    "ID": "120",
+    "name": "PUERTO-RIKO",
+    "name_en": "PUERTO-RIKO",
+    "name_uz": "PUERTO-RIKO",
+    "name_ru": "Пуерто-рико"
+  },
+  {
+    "ID": "191",
+    "name": "REYUNON",
+    "name_en": "REYUNON",
+    "name_uz": "REYUNON",
+    "name_ru": "Реюнон"
+  },
+  {
+    "ID": "277",
+    "name": "PALESTINA",
+    "name_en": "PALESTINA",
+    "name_uz": "PALESTINA",
+    "name_ru": "Палестина"
+  },
+  {
+    "ID": "192",
+    "name": "ROSSIYA FEDERATSIYASI",
+    "name_en": "ROSSIYA FEDERATSIYASI",
+    "name_uz": "ROSSIYA FEDERATSIYASI",
+    "name_ru": "Россия Федерацияси"
+  },
+  {
+    "ID": "193",
+    "name": "RUANDA",
+    "name_en": "RUANDA",
+    "name_uz": "RUANDA",
+    "name_ru": "Руанда"
+  },
+  {
+    "ID": "170",
+    "name": "RUMINIYA",
+    "name_en": "RUMINIYA",
+    "name_uz": "RUMINIYA",
+    "name_ru": "Руминия"
+  },
+  {
+    "ID": "194",
+    "name": "SAMOA",
+    "name_en": "SAMOA",
+    "name_uz": "SAMOA",
+    "name_ru": "Самоа"
+  },
+  {
+    "ID": "171",
+    "name": "SAN-MARINO",
+    "name_en": "SAN-MARINO",
+    "name_uz": "SAN-MARINO",
+    "name_ru": "Сан-марино"
+  },
+  {
+    "ID": "41",
+    "name": "SAN-TOME VA PRINSIPI",
+    "name_en": "SAN-TOME VA PRINSIPI",
+    "name_uz": "SAN-TOME VA PRINSIPI",
+    "name_ru": "Сан-томе Ва Принсипи"
+  },
+  {
+    "ID": "72",
+    "name": "SAUDIYA ARABISTONI",
+    "name_en": "SAUDIYA ARABISTONI",
+    "name_uz": "SAUDIYA ARABISTONI",
+    "name_ru": "Саудия Арабистони"
+  },
+  {
+    "ID": "73",
+    "name": "SVAZILEND",
+    "name_en": "SVAZILEND",
+    "name_uz": "SVAZILEND",
+    "name_ru": "Свазиленд"
+  },
+  {
+    "ID": "254",
+    "name": "AVSTRALIYA",
+    "name_en": "AVSTRALIYA",
+    "name_uz": "AVSTRALIYA",
+    "name_ru": "Австралия"
+  },
+  {
+    "ID": "44",
+    "name": "DOMINIKAN RESPUBLIKASI",
+    "name_en": "DOMINIKAN RESPUBLIKASI",
+    "name_uz": "DOMINIKAN RESPUBLIKASI",
+    "name_ru": "Доминикан Республикаси"
+  },
+  {
+    "ID": "201",
+    "name": "DOMINIKA",
+    "name_en": "DOMINIKA",
+    "name_uz": "DOMINIKA",
+    "name_ru": "Доминика"
+  },
+  {
+    "ID": "2",
+    "name": "JAZOIR",
+    "name_en": "JAZOIR",
+    "name_uz": "JAZOIR",
+    "name_ru": "Джазоир"
+  },
+  {
+    "ID": "139",
+    "name": "ZAMBIYA",
+    "name_en": "ZAMBIYA",
+    "name_uz": "ZAMBIYA",
+    "name_ru": "Замбия"
+  },
+  {
+    "ID": "140",
+    "name": "ZIMBABVE",
+    "name_en": "ZIMBABVE",
+    "name_uz": "ZIMBABVE",
+    "name_ru": "Зимбабве"
+  },
+  {
+    "ID": "173",
+    "name": "SENEGAL",
+    "name_en": "SENEGAL",
+    "name_uz": "SENEGAL",
+    "name_ru": "Сенегал"
+  },
+  {
+    "ID": "225",
+    "name": "SENT-KITS VA NEVIS",
+    "name_en": "SENT-KITS VA NEVIS",
+    "name_uz": "SENT-KITS VA NEVIS",
+    "name_ru": "Сент-киц Ва Невис"
+  },
+  {
+    "ID": "197",
+    "name": "SENT-LYUSIYA",
+    "name_en": "SENT-LYUSIYA",
+    "name_uz": "SENT-LYUSIYA",
+    "name_ru": "Сент-люсия"
+  },
+  {
+    "ID": "174",
+    "name": "SINGAPUR",
+    "name_en": "SINGAPUR",
+    "name_uz": "SINGAPUR",
+    "name_ru": "Сингапур"
+  },
+  {
+    "ID": "198",
+    "name": "SIRIYA ARAB RESPUBLIKASI",
+    "name_en": "SIRIYA ARAB RESPUBLIKASI",
+    "name_uz": "SIRIYA ARAB RESPUBLIKASI",
+    "name_ru": "Сирия Араб Республикаси"
+  },
+  {
+    "ID": "199",
+    "name": "SLOVAKIYA",
+    "name_en": "SLOVAKIYA",
+    "name_uz": "SLOVAKIYA",
+    "name_ru": "Словакия"
+  },
+  {
+    "ID": "51",
+    "name": "MAVRITANIYA",
+    "name_en": "MAVRITANIYA",
+    "name_uz": "MAVRITANIYA",
+    "name_ru": "Мавритания"
+  },
+  {
+    "ID": "106",
+    "name": "ARUBA",
+    "name_en": "ARUBA",
+    "name_uz": "ARUBA",
+    "name_ru": "Аруба"
+  },
+  {
+    "ID": "53",
+    "name": "AFG‘ONISTON",
+    "name_en": "AFG‘ONISTON",
+    "name_uz": "AFG‘ONISTON",
+    "name_ru": "Афгонистон"
+  },
+  {
+    "ID": "200",
+    "name": "BAGAM OROLLARI",
+    "name_en": "BAGAM OROLLARI",
+    "name_uz": "BAGAM OROLLARI",
+    "name_ru": "Багам Ороллари"
+  },
+  {
+    "ID": "94",
+    "name": "BANGLADESH",
+    "name_en": "BANGLADESH",
+    "name_uz": "BANGLADESH",
+    "name_ru": "Бангладеш"
+  },
+  {
+    "ID": "10",
+    "name": "BARBADOS",
+    "name_en": "BARBADOS",
+    "name_uz": "BARBADOS",
+    "name_ru": "Барбадос"
+  },
+  {
+    "ID": "30",
+    "name": "BAXREYN",
+    "name_en": "BAXREYN",
+    "name_uz": "BAXREYN",
+    "name_ru": "Баксрейн"
+  },
+  {
+    "ID": "11",
+    "name": "BELIZ",
+    "name_en": "BELIZ",
+    "name_uz": "BELIZ",
+    "name_ru": "Белиз"
+  },
+  {
+    "ID": "123",
+    "name": "BELORUS",
+    "name_en": "BELORUS",
+    "name_uz": "BELORUS",
+    "name_ru": "Белорус"
+  },
+  {
+    "ID": "63",
+    "name": "BELGIYA",
+    "name_en": "BELGIYA",
+    "name_uz": "BELGIYA",
+    "name_ru": "Белгия"
+  },
+  {
+    "ID": "93",
+    "name": "ANGOLA XALQ RESPUBLIKASI",
+    "name_en": "ANGOLA XALQ RESPUBLIKASI",
+    "name_uz": "ANGOLA XALQ RESPUBLIKASI",
+    "name_ru": "Ангола Ксалк Республикаси"
+  },
+  {
+    "ID": "57",
+    "name": "ANDORRA",
+    "name_en": "ANDORRA",
+    "name_uz": "ANDORRA",
+    "name_ru": "Андорра"
+  },
+  {
+    "ID": "88",
+    "name": "MARSHAL OROLLARI",
+    "name_en": "MARSHAL OROLLARI",
+    "name_uz": "MARSHAL OROLLARI",
+    "name_ru": "Маршал Ороллари"
+  },
+  {
+    "ID": "89",
+    "name": "MEKSIKA",
+    "name_en": "MEKSIKA",
+    "name_uz": "MEKSIKA",
+    "name_ru": "Мексика"
+  },
+  {
+    "ID": "224",
+    "name": "MIKRONEZIYA FEDERATIV SHTATLARI",
+    "name_en": "MIKRONEZIYA FEDERATIV SHTATLARI",
+    "name_uz": "MIKRONEZIYA FEDERATIV SHTATLARI",
+    "name_ru": "Микронезия Федератив Штатлари"
+  },
+  {
+    "ID": "8",
+    "name": "MISR",
+    "name_en": "MISR",
+    "name_uz": "MISR",
+    "name_ru": "Миср"
+  },
+  {
+    "ID": "98",
+    "name": "MOZAMBIK",
+    "name_en": "MOZAMBIK",
+    "name_uz": "MOZAMBIK",
+    "name_ru": "Мозамбик"
+  },
+  {
+    "ID": "739001135",
+    "name": "ABHAZIYA",
+    "name_en": "ABHAZIYA",
+    "name_uz": "ABHAZIYA",
+    "name_ru": "Абхазия"
+  },
+  {
+    "ID": "739001136",
+    "name": "КАБО ВЕРДЕ РЕСПУБЛИКА",
+    "name_en": "КАБО ВЕРДЕ РЕСПУБЛИКА",
+    "name_uz": "КАБО ВЕРДЕ РЕСПУБЛИКА",
+    "name_ru": "Кабо Верде Республика"
+  },
+  {
+    "ID": "739001137",
+    "name": "НАРОДНО ДЕМОКРАТИЧЕСКАЯ РЕСПУБЛИКА КОРЕЯ",
+    "name_en": "НАРОДНО ДЕМОКРАТИЧЕСКАЯ РЕСПУБЛИКА КОРЕЯ",
+    "name_uz": "НАРОДНО ДЕМОКРАТИЧЕСКАЯ РЕСПУБЛИКА КОРЕЯ",
+    "name_ru": "Народно Демократическая Республика Корея"
+  },
+  {
+    "ID": "175",
+    "name": "SLOVENIYA",
+    "name_en": "SLOVENIYA",
+    "name_uz": "SLOVENIYA",
+    "name_ru": "Словения"
+  },
+  {
+    "ID": "205",
+    "name": "SOLOMONOV OROLLARI",
+    "name_en": "SOLOMONOV OROLLARI",
+    "name_uz": "SOLOMONOV OROLLARI",
+    "name_ru": "Соломонов Ороллари"
+  },
+  {
+    "ID": "206",
+    "name": "SOMALI",
+    "name_en": "SOMALI",
+    "name_uz": "SOMALI",
+    "name_ru": "Сомали"
+  },
+  {
+    "ID": "176",
+    "name": "SUDAN",
+    "name_en": "SUDAN",
+    "name_uz": "SUDAN",
+    "name_ru": "Судан"
+  },
+  {
+    "ID": "177",
+    "name": "SURINAM",
+    "name_en": "SURINAM",
+    "name_uz": "SURINAM",
+    "name_ru": "Суринам"
+  },
+  {
+    "ID": "178",
+    "name": "SERRA-LEONE",
+    "name_en": "SERRA-LEONE",
+    "name_uz": "SERRA-LEONE",
+    "name_ru": "Серра-леоне"
+  },
+  {
+    "ID": "74",
+    "name": "TAILAND",
+    "name_en": "TAILAND",
+    "name_uz": "TAILAND",
+    "name_ru": "Таиланд"
+  },
+  {
+    "ID": "211",
+    "name": "TAYVAN",
+    "name_en": "TAYVAN",
+    "name_uz": "TAYVAN",
+    "name_ru": "Тайван"
+  },
+  {
+    "ID": "104",
+    "name": "TANZANIYA BIRLASHGAN RESPUBLIKASI",
+    "name_en": "TANZANIYA BIRLASHGAN RESPUBLIKASI",
+    "name_uz": "TANZANIYA BIRLASHGAN RESPUBLIKASI",
+    "name_ru": "Танзания Бирлашган Республикаси"
+  },
+  {
+    "ID": "212",
+    "name": "TERKS VA KAYKOS OROLLARI",
+    "name_en": "TERKS VA KAYKOS OROLLARI",
+    "name_uz": "TERKS VA KAYKOS OROLLARI",
+    "name_ru": "Теркс Ва Кайкос Ороллари"
+  },
+  {
+    "ID": "213",
+    "name": "TOGO",
+    "name_en": "TOGO",
+    "name_uz": "TOGO",
+    "name_ru": "Того"
+  },
+  {
+    "ID": "179",
+    "name": "TOJIKISTON",
+    "name_en": "TOJIKISTON",
+    "name_uz": "TOJIKISTON",
+    "name_ru": "Тоджикистон"
+  },
+  {
+    "ID": "214",
+    "name": "TOKELAU",
+    "name_en": "TOKELAU",
+    "name_uz": "TOKELAU",
+    "name_ru": "Токелау"
+  },
+  {
+    "ID": "75",
+    "name": "TONGA",
+    "name_en": "TONGA",
+    "name_uz": "TONGA",
+    "name_ru": "Тонга"
+  },
+  {
+    "ID": "180",
+    "name": "TRINIDAD VA TOBAGO",
+    "name_en": "TRINIDAD VA TOBAGO",
+    "name_uz": "TRINIDAD VA TOBAGO",
+    "name_ru": "Тринидад Ва Тобаго"
+  },
+  {
+    "ID": "215",
+    "name": "TUVALU",
+    "name_en": "TUVALU",
+    "name_uz": "TUVALU",
+    "name_ru": "Тувалу"
+  },
+  {
+    "ID": "216",
+    "name": "TUNIS",
+    "name_en": "TUNIS",
+    "name_uz": "TUNIS",
+    "name_ru": "Тунис"
+  },
+  {
+    "ID": "217",
+    "name": "TURKIYA",
+    "name_en": "TURKIYA",
+    "name_uz": "TURKIYA",
+    "name_ru": "Туркия"
+  },
+  {
+    "ID": "218",
+    "name": "TURKMANISTON",
+    "name_en": "TURKMANISTON",
+    "name_uz": "TURKMANISTON",
+    "name_ru": "Туркманистон"
+  },
+  {
+    "ID": "181",
+    "name": "UGANDA",
+    "name_en": "UGANDA",
+    "name_uz": "UGANDA",
+    "name_ru": "Уганда"
+  },
+  {
+    "ID": "219",
+    "name": "UKRAINA",
+    "name_en": "UKRAINA",
+    "name_uz": "UKRAINA",
+    "name_ru": "Украина"
+  },
+  {
+    "ID": "115",
+    "name": "UOLLIS VA FUTUNA OROLLARI",
+    "name_en": "UOLLIS VA FUTUNA OROLLARI",
+    "name_uz": "UOLLIS VA FUTUNA OROLLARI",
+    "name_ru": "Уоллис Ва Футуна Ороллари"
+  },
+  {
+    "ID": "21",
+    "name": "URUGVAY",
+    "name_en": "URUGVAY",
+    "name_uz": "URUGVAY",
+    "name_ru": "Уругвай"
+  },
+  {
+    "ID": "220",
+    "name": "FARER OROLLARI",
+    "name_en": "FARER OROLLARI",
+    "name_uz": "FARER OROLLARI",
+    "name_ru": "Фарер Ороллари"
+  },
+  {
+    "ID": "183",
+    "name": "FIDJI",
+    "name_en": "FIDJI",
+    "name_uz": "FIDJI",
+    "name_ru": "Фидджи"
+  },
+  {
+    "ID": "184",
+    "name": "FILIPPIN",
+    "name_en": "FILIPPIN",
+    "name_uz": "FILIPPIN",
+    "name_ru": "Филиппин"
+  },
+  {
+    "ID": "226",
+    "name": "FINLYANDIYA",
+    "name_en": "FINLYANDIYA",
+    "name_uz": "FINLYANDIYA",
+    "name_ru": "Финляндия"
+  },
+  {
+    "ID": "273",
+    "name": "CHEXIYA RESPUBLIKASI",
+    "name_en": "CHEXIYA RESPUBLIKASI",
+    "name_uz": "CHEXIYA RESPUBLIKASI",
+    "name_ru": "Чексия Республикаси"
+  },
+  {
+    "ID": "83",
+    "name": "MAKEDONIYA",
+    "name_en": "MAKEDONIYA",
+    "name_uz": "MAKEDONIYA",
+    "name_ru": "Македония"
+  },
+  {
+    "ID": "227",
+    "name": "FOLKLEND OROLLARI",
+    "name_en": "FOLKLEND OROLLARI",
+    "name_uz": "FOLKLEND OROLLARI",
+    "name_ru": "Фолкленд Ороллари"
+  },
+  {
+    "ID": "284",
+    "name": "JANUBIY AFRIKA RESPUBLIKASI",
+    "name_en": "JANUBIY AFRIKA RESPUBLIKASI",
+    "name_uz": "JANUBIY AFRIKA RESPUBLIKASI",
+    "name_ru": "Джанубий Африка Республикаси"
+  },
+  {
+    "ID": "228",
+    "name": "FRANSIYA POLINEZIYASI",
+    "name_en": "FRANSIYA POLINEZIYASI",
+    "name_uz": "FRANSIYA POLINEZIYASI",
+    "name_ru": "Франсия Полинезияси"
+  },
+  {
+    "ID": "229",
+    "name": "FRANSIYA",
+    "name_en": "FRANSIYA",
+    "name_uz": "FRANSIYA",
+    "name_ru": "Франсия"
+  },
+  {
+    "ID": "121",
+    "name": "ALBANIYA",
+    "name_en": "ALBANIYA",
+    "name_uz": "ALBANIYA",
+    "name_ru": "Албания"
+  },
+  {
+    "ID": "204",
+    "name": "AMERIKA QO‘SHMA SHTATLARI",
+    "name_en": "AMERIKA QO‘SHMA SHTATLARI",
+    "name_uz": "AMERIKA QO‘SHMA SHTATLARI",
+    "name_ru": "Америка Кошма Штатлари"
+  },
+  {
+    "ID": "3",
+    "name": "AMERIKALI SAMOA",
+    "name_en": "AMERIKALI SAMOA",
+    "name_uz": "AMERIKALI SAMOA",
+    "name_ru": "Америкали Самоа"
+  },
+  {
+    "ID": "142",
+    "name": "INDONEZIYA",
+    "name_en": "INDONEZIYA",
+    "name_uz": "INDONEZIYA",
+    "name_ru": "Индонезия"
+  },
+  {
+    "ID": "56",
+    "name": "XITOY",
+    "name_en": "XITOY",
+    "name_uz": "XITOY",
+    "name_ru": "Кситой"
+  },
+  {
+    "ID": "187",
+    "name": "CHILI",
+    "name_en": "CHILI",
+    "name_uz": "CHILI",
+    "name_ru": "Чили"
+  },
+  {
+    "ID": "22",
+    "name": "SHARQIY TIMOR",
+    "name_en": "SHARQIY TIMOR",
+    "name_uz": "SHARQIY TIMOR",
+    "name_ru": "Шаркий Тимор"
+  },
+  {
+    "ID": "234",
+    "name": "SHVEYSARIYA",
+    "name_en": "SHVEYSARIYA",
+    "name_uz": "SHVEYSARIYA",
+    "name_ru": "Швейсария"
+  },
+  {
+    "ID": "76",
+    "name": "SHVETSIYA",
+    "name_en": "SHVETSIYA",
+    "name_uz": "SHVETSIYA",
+    "name_ru": "Швеция"
+  },
+  {
+    "ID": "235",
+    "name": "SHPITSBERGEN VA YAN-MAYEN OROLLARI",
+    "name_en": "SHPITSBERGEN VA YAN-MAYEN OROLLARI",
+    "name_uz": "SHPITSBERGEN VA YAN-MAYEN OROLLARI",
+    "name_ru": "Шпицберген Ва Ян-маен Ороллари"
+  },
+  {
+    "ID": "255",
+    "name": "ANGILYA",
+    "name_en": "ANGILYA",
+    "name_uz": "ANGILYA",
+    "name_ru": "Ангиля"
+  },
+  {
+    "ID": "257",
+    "name": "SALVADOR",
+    "name_en": "SALVADOR",
+    "name_uz": "SALVADOR",
+    "name_ru": "Салвадор"
+  },
+  {
+    "ID": "504",
+    "name": "SERBIYA VA CHERNOGORIYA",
+    "name_en": "SERBIYA VA CHERNOGORIYA",
+    "name_uz": "SERBIYA VA CHERNOGORIYA",
+    "name_ru": "Сербия Ва Черногория"
+  },
+  {
+    "ID": "505",
+    "name": "CHAD",
+    "name_en": "CHAD",
+    "name_uz": "CHAD",
+    "name_ru": "Чад"
+  },
+  {
+    "ID": "263",
+    "name": "FRANSIYA GVIANASI",
+    "name_en": "FRANSIYA GVIANASI",
+    "name_uz": "FRANSIYA GVIANASI",
+    "name_ru": "Франсия Гвианаси"
+  },
+  {
+    "ID": "42",
+    "name": "SHRI-LANKA",
+    "name_en": "SHRI-LANKA",
+    "name_uz": "SHRI-LANKA",
+    "name_ru": "Шри-ланка"
+  },
+  {
+    "ID": "188",
+    "name": "EKVADOR",
+    "name_en": "EKVADOR",
+    "name_uz": "EKVADOR",
+    "name_ru": "Еквадор"
+  },
+  {
+    "ID": "236",
+    "name": "ERITREYA",
+    "name_en": "ERITREYA",
+    "name_uz": "ERITREYA",
+    "name_ru": "Еритрея"
+  },
+  {
+    "ID": "50",
+    "name": "ERON ISLOM RESPUBLIKASI",
+    "name_en": "ERON ISLOM RESPUBLIKASI",
+    "name_uz": "ERON ISLOM RESPUBLIKASI",
+    "name_ru": "Ерон Ислом Республикаси"
+  },
+  {
+    "ID": "237",
+    "name": "ESTONIYA",
+    "name_en": "ESTONIYA",
+    "name_uz": "ESTONIYA",
+    "name_ru": "Естония"
+  },
+  {
+    "ID": "5",
+    "name": "ANTARKTIKA",
+    "name_en": "ANTARKTIKA",
+    "name_uz": "ANTARKTIKA",
+    "name_ru": "Антарктика"
+  },
+  {
+    "ID": "138",
+    "name": "ZOIR RESPUBLIKASI",
+    "name_en": "ZOIR RESPUBLIKASI",
+    "name_uz": "ZOIR RESPUBLIKASI",
+    "name_ru": "Зоир Республикаси"
+  },
+  {
+    "ID": "202",
+    "name": "SHIMOLIY MARIAN OROLLARI",
+    "name_en": "SHIMOLIY MARIAN OROLLARI",
+    "name_uz": "SHIMOLIY MARIAN OROLLARI",
+    "name_ru": "Шимолий Мариан Ороллари"
+  },
+  {
+    "ID": "256",
+    "name": "NEYTRALNAYA ZONA",
+    "name_en": "NEYTRALNAYA ZONA",
+    "name_uz": "NEYTRALNAYA ZONA",
+    "name_ru": "Нейтралная Зона"
+  },
+  {
+    "ID": "276",
+    "name": "MAYOTTA",
+    "name_en": "MAYOTTA",
+    "name_uz": "MAYOTTA",
+    "name_ru": "Маётта"
+  },
+  {
+    "ID": "238",
+    "name": "EFIOPIYA",
+    "name_en": "EFIOPIYA",
+    "name_uz": "EFIOPIYA",
+    "name_ru": "Ефиопия"
+  },
+  {
+    "ID": "209",
+    "name": "YUGOSLAVIYA",
+    "name_en": "YUGOSLAVIYA",
+    "name_uz": "YUGOSLAVIYA",
+    "name_ru": "Югославия"
+  },
+  {
+    "ID": "239",
+    "name": "YAMAYKA",
+    "name_en": "YAMAYKA",
+    "name_uz": "YAMAYKA",
+    "name_ru": "Ямайка"
+  },
+  {
+    "ID": "101",
+    "name": "YANGI ZELANDIYA",
+    "name_en": "YANGI ZELANDIYA",
+    "name_uz": "YANGI ZELANDIYA",
+    "name_ru": "Янги Зеландия"
+  },
+  {
+    "ID": "102",
+    "name": "YANGI KALEDONIYA",
+    "name_en": "YANGI KALEDONIYA",
+    "name_uz": "YANGI KALEDONIYA",
+    "name_ru": "Янги Каледония"
+  },
+  {
+    "ID": "240",
+    "name": "YAPONIYA",
+    "name_en": "YAPONIYA",
+    "name_uz": "YAPONIYA",
+    "name_ru": "Япония"
+  },
+  {
+    "ID": "45",
+    "name": "G‘ARBIY SAXARA",
+    "name_en": "G‘ARBIY SAXARA",
+    "name_uz": "G‘ARBIY SAXARA",
+    "name_ru": "Гарбий Саксара"
+  },
+  {
+    "ID": "182",
+    "name": "O‘ZBEKISTON",
+    "name_en": "O‘ZBEKISTON",
+    "name_uz": "O‘ZBEKISTON",
+    "name_ru": "Озбекистон"
+  },
+  {
+    "ID": "242",
+    "name": "QIRG‘IZISTON",
+    "name_en": "QIRG‘IZISTON",
+    "name_uz": "QIRG‘IZISTON",
+    "name_ru": "Киргизистон"
+  },
+  {
+    "ID": "156",
+    "name": "QIRG‘IZISTON RESPUBLIKASI",
+    "name_en": "QIRG‘IZISTON RESPUBLIKASI",
+    "name_uz": "QIRG‘IZISTON RESPUBLIKASI",
+    "name_ru": "Киргизистон Республикаси"
+  },
+  {
+    "ID": "146",
+    "name": "QOZOG‘ISTON",
+    "name_en": "QOZOG‘ISTON",
+    "name_uz": "QOZOG‘ISTON",
+    "name_ru": "Козогистон"
+  },
+  {
+    "ID": "34",
+    "name": "QUVAYT",
+    "name_en": "QUVAYT",
+    "name_uz": "QUVAYT",
+    "name_ru": "Кувайт"
+  },
+  {
+    "ID": "141",
+    "name": "HINDISTON",
+    "name_en": "HINDISTON",
+    "name_uz": "HINDISTON",
+    "name_ru": "Хиндистон"
+  },
+  {
+    "ID": "0",
+    "name": "AVSTRIYA",
+    "name_en": "AVSTRIYA",
+    "name_uz": "AVSTRIYA",
+    "name_ru": "Австрия"
+  },
+  {
+    "ID": "137",
+    "name": "DJIBUTI",
+    "name_en": "DJIBUTI",
+    "name_uz": "DJIBUTI",
+    "name_ru": "Дджибути"
+  },
+  {
+    "ID": "86",
+    "name": "MALDIVI",
+    "name_en": "MALDIVI",
+    "name_uz": "MALDIVI",
+    "name_ru": "Малдиви"
+  },
+  {
+    "ID": "160",
+    "name": "MALTA",
+    "name_en": "MALTA",
+    "name_uz": "MALTA",
+    "name_ru": "Малта"
+  },
+  {
+    "ID": "231",
+    "name": "MARKAZIY AFRIKA RESPUBLIKASI",
+    "name_en": "MARKAZIY AFRIKA RESPUBLIKASI",
+    "name_uz": "MARKAZIY AFRIKA RESPUBLIKASI",
+    "name_ru": "Марказий Африка Республикаси"
+  },
+  {
+    "ID": "68",
+    "name": "MAROKKO",
+    "name_en": "MAROKKO",
+    "name_uz": "MAROKKO",
+    "name_ru": "Марокко"
+  },
+  {
+    "ID": "87",
+    "name": "MARTINIKA",
+    "name_en": "MARTINIKA",
+    "name_uz": "MARTINIKA",
+    "name_ru": "Мартиника"
+  },
+  {
+    "ID": "95",
+    "name": "BENIN",
+    "name_en": "BENIN",
+    "name_uz": "BENIN",
+    "name_ru": "Бенин"
+  },
+  {
+    "ID": "12",
+    "name": "BERMUD OROLLARI",
+    "name_en": "BERMUD OROLLARI",
+    "name_uz": "BERMUD OROLLARI",
+    "name_ru": "Бермуд Ороллари"
+  },
+  {
+    "ID": "105",
+    "name": "BIRLASHGAN ARAB AMIRLIKLARI",
+    "name_en": "BIRLASHGAN ARAB AMIRLIKLARI",
+    "name_uz": "BIRLASHGAN ARAB AMIRLIKLARI",
+    "name_ru": "Бирлашган Араб Амирликлари"
+  },
+  {
+    "ID": "124",
+    "name": "BOLGARIYA",
+    "name_en": "BOLGARIYA",
+    "name_uz": "BOLGARIYA",
+    "name_ru": "Болгария"
+  },
+  {
+    "ID": "125",
+    "name": "BOLIVIYA",
+    "name_en": "BOLIVIYA",
+    "name_uz": "BOLIVIYA",
+    "name_ru": "Боливия"
+  },
+  {
+    "ID": "13",
+    "name": "BOSNIYA VA GERSEGOVINA",
+    "name_en": "BOSNIYA VA GERSEGOVINA",
+    "name_uz": "BOSNIYA VA GERSEGOVINA",
+    "name_ru": "Босния Ва Герсеговина"
+  },
+  {
+    "ID": "126",
+    "name": "BOTSVANA",
+    "name_en": "BOTSVANA",
+    "name_uz": "BOTSVANA",
+    "name_ru": "Боцвана"
+  },
+  {
+    "ID": "222",
+    "name": "BRAZILIYA",
+    "name_en": "BRAZILIYA",
+    "name_uz": "BRAZILIYA",
+    "name_ru": "Бразилия"
+  },
+  {
+    "ID": "15",
+    "name": "BRITANIYA VIRGINIYA OROLLARI",
+    "name_en": "BRITANIYA VIRGINIYA OROLLARI",
+    "name_uz": "BRITANIYA VIRGINIYA OROLLARI",
+    "name_ru": "Британия Виргиния Ороллари"
+  },
+  {
+    "ID": "16",
+    "name": "BRUNEY-DORUSSALOM",
+    "name_en": "BRUNEY-DORUSSALOM",
+    "name_uz": "BRUNEY-DORUSSALOM",
+    "name_ru": "Бруней-доруссалом"
+  },
+  {
+    "ID": "107",
+    "name": "BUVE OROLI",
+    "name_en": "BUVE OROLI",
+    "name_uz": "BUVE OROLI",
+    "name_ru": "Буве Ороли"
+  },
+  {
+    "ID": "17",
+    "name": "BURKINA-FASO",
+    "name_en": "BURKINA-FASO",
+    "name_uz": "BURKINA-FASO",
+    "name_ru": "Буркина-фасо"
+  },
+  {
+    "ID": "127",
+    "name": "BURUNDI",
+    "name_en": "BURUNDI",
+    "name_uz": "BURUNDI",
+    "name_ru": "Бурунди"
+  },
+  {
+    "ID": "64",
+    "name": "BUTAN",
+    "name_en": "BUTAN",
+    "name_uz": "BUTAN",
+    "name_ru": "Бутан"
+  },
+  {
+    "ID": "128",
+    "name": "VANUATU",
+    "name_en": "VANUATU",
+    "name_uz": "VANUATU",
+    "name_ru": "Вануату"
+  },
+  {
+    "ID": "35",
+    "name": "VATIKAN SHAHAR - DAVLATI",
+    "name_en": "VATIKAN SHAHAR - DAVLATI",
+    "name_uz": "VATIKAN SHAHAR - DAVLATI",
+    "name_ru": "Ватикан Шахар - Давлати"
+  },
+  {
+    "ID": "19",
+    "name": "VENGRIYA",
+    "name_en": "VENGRIYA",
+    "name_uz": "VENGRIYA",
+    "name_ru": "Венгрия"
+  },
+  {
+    "ID": "129",
+    "name": "VENESUELA",
+    "name_en": "VENESUELA",
+    "name_uz": "VENESUELA",
+    "name_ru": "Венесуела"
+  },
+  {
+    "ID": "20",
+    "name": "VIRGINIYA OROLLARI",
+    "name_en": "VIRGINIYA OROLLARI",
+    "name_uz": "VIRGINIYA OROLLARI",
+    "name_ru": "Виргиния Ороллари"
+  },
+  {
+    "ID": "96",
+    "name": "VETNAM",
+    "name_en": "VETNAM",
+    "name_uz": "VETNAM",
+    "name_ru": "Ветнам"
+  },
+  {
+    "ID": "23",
+    "name": "GABON",
+    "name_en": "GABON",
+    "name_uz": "GABON",
+    "name_ru": "Габон"
+  },
+  {
+    "ID": "130",
+    "name": "GAITI",
+    "name_en": "GAITI",
+    "name_uz": "GAITI",
+    "name_ru": "Гаити"
+  },
+  {
+    "ID": "131",
+    "name": "GAMBIYA",
+    "name_en": "GAMBIYA",
+    "name_uz": "GAMBIYA",
+    "name_ru": "Гамбия"
+  },
+  {
+    "ID": "132",
+    "name": "GANA",
+    "name_en": "GANA",
+    "name_uz": "GANA",
+    "name_ru": "Гана"
+  },
+  {
+    "ID": "24",
+    "name": "GVADELUPA",
+    "name_en": "GVADELUPA",
+    "name_uz": "GVADELUPA",
+    "name_ru": "Гваделупа"
+  },
+  {
+    "ID": "133",
+    "name": "GVATEMALA",
+    "name_en": "GVATEMALA",
+    "name_uz": "GVATEMALA",
+    "name_ru": "Гватемала"
+  },
+  {
+    "ID": "26",
+    "name": "GVINEYA",
+    "name_en": "GVINEYA",
+    "name_uz": "GVINEYA",
+    "name_ru": "Гвинея"
+  },
+  {
+    "ID": "189",
+    "name": "GVINEYA EKVATORIAL RESPUBLIKASI",
+    "name_en": "GVINEYA EKVATORIAL RESPUBLIKASI",
+    "name_uz": "GVINEYA EKVATORIAL RESPUBLIKASI",
+    "name_ru": "Гвинея Екваториал Республикаси"
+  },
+  {
+    "ID": "134",
+    "name": "GVINEYA-BISAU",
+    "name_en": "GVINEYA-BISAU",
+    "name_uz": "GVINEYA-BISAU",
+    "name_ru": "Гвинея-бисау"
+  }
+]
