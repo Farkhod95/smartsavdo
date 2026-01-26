@@ -9,7 +9,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "api-savdo.elegantchinni.uz",
     "admin-savdo.elegantchinni.uz",
-    "savdo.elegantchinni.uz"
+    "savdo.elegantchinni.uz",
     "134.122.73.130",
     "localhost",
     "127.0.0.1",
