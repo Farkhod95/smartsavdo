@@ -6,8 +6,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'django-insecure-12345yourkeyhere54321'
 DEBUG = True
-
-ALLOWED_HOSTS = ["api-savdo.elegantchinni.uz", "admin-savdo.elegantchinni.uz", "savdo.elegantchinni.uz", "http://localhost:3000", "http://localhost:8081", "http://127.0.0.1:8000/", "https://admin-savdo.elegantchinni.uz/"]
+ALLOWED_HOSTS = [
+    "api-savdo.elegantchinni.uz",
+    "admin-savdo.elegantchinni.uz",
+    "savdo.elegantchinni.uz"
+    "134.122.73.130",
+    "localhost",
+    "127.0.0.1",
+]
+# ALLOWED_HOSTS = ["api-savdo.elegantchinni.uz", "admin-savdo.elegantchinni.uz", "savdo.elegantchinni.uz", "http://localhost:3000", "http://localhost:8081", "http://127.0.0.1:8000/", "https://admin-savdo.elegantchinni.uz/"]
 
 INSTALLED_APPS = [
     'modeltranslation',
@@ -56,8 +63,8 @@ MIDDLEWARE = [
 # ]
 # CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ORIGIN_ALLOW_ALL = False
-
-CSRF_TRUSTED_ORIGINS = ["https://api-savdo.elegantchinni.uz", "https://admin-savdo.elegantchinni.uz", "https://savdo.elegantchinni.uz", "http://localhost:3000", "http://localhost:8081", "https://admin-savdo.elegantchinni.uz/"]
+CORS_ORIGIN_ALLOW_ALL = True
+# CSRF_TRUSTED_ORIGINS = ["https://api-savdo.elegantchinni.uz", "https://admin-savdo.elegantchinni.uz", "https://savdo.elegantchinni.uz", "http://localhost:3000", "http://localhost:8081", "https://admin-savdo.elegantchinni.uz/"]
 
 # CORS_ALLOWED_ORIGINS = [
 #     "https://optivora-group.com",
