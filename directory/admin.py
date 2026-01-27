@@ -36,10 +36,10 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Model)
 class ModelAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'category', 'sorting', 'is_delete')
-    fields = ('name', 'category', 'sorting', 'is_delete')
+    list_display = ('id', 'name', 'sorting', 'is_delete')
+    fields = ('name', 'categories', 'sorting', 'is_delete')
     search_fields = ('name',)
-    list_filter = ('category', 'is_delete')
+    list_filter = ('is_delete',)
     ordering = ('sorting', 'id')
 
 

@@ -52,7 +52,7 @@ class ModelFilter(FilterSet):
             'name': ['exact'],
             'sorting': ['exact'],
             'is_delete': ['exact'],
-            'category': ['exact'],
+            'categories': ['exact'],
         }
 
 

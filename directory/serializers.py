@@ -101,15 +101,17 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 class ModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Model
-        fields = ('id', 'name', 'category', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'categories', 'sorting', 'is_delete')
 
 
 class ModelListSerializer(serializers.ModelSerializer):
-    category_detail = ProductCategorySerializer(source='category', read_only=True)
+    category_detail = ProductCategorySerializer(
+        source='categories', many=True, read_only=True
+    )
 
     class Meta:
         model = Model
-        fields = ('id', 'name', 'category', 'category_detail', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'categories', 'category_detail', 'sorting', 'is_delete')
 
 
 class ModelTypeSerializer(serializers.ModelSerializer):

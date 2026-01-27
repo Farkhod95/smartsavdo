@@ -58,7 +58,8 @@ class ProductCategory(BaseModel):
 
 class Model(BaseModel):
     name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Nomi"))
-    category = models.ForeignKey(ProductCategory, related_name='model_category', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Kategoriya"))
+    # category = models.ForeignKey(ProductCategory, related_name='model_category', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Kategoriya"))
+    categories = models.ManyToManyField(ProductCategory, related_name='model_category', blank=True, help_text=_("Kategoriya"))
     sorting = models.IntegerField(null=True, blank=True, unique=True, help_text=_("sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
 
@@ -67,7 +68,7 @@ class Model(BaseModel):
         verbose_name_plural = _('Modeles')
 
     def __str__(self):
-        return f"{self.category.name} / {self.name}"
+        return f"{self.sorting} / {self.name}"
 
 
 class ModelType(BaseModel):
