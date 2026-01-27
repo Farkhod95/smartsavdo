@@ -19,12 +19,12 @@ urlpatterns = [
     re_path(r'^region$', RegionView.as_view(), name='regions_view'),
     path('region/<int:pk>', RegionDetailView.as_view(), name='region_detail_view'),
     path('region/fields/', RegionFieldInfoView.as_view(), name='region_fields_info'),
-    re_path(r'^region/public/', RegionViewList.as_view(), name='regions_public_view'),
+    re_path(r'^region/telegram/', RegionViewList.as_view(), name='regions_public_view'),
 
     re_path(r'^district$', DistrictView.as_view(), name='districts_view'),
     path('district/<int:pk>', DistrictDetailView.as_view(), name='districts_detail_view'),
     path('district/fields/', DistrictFieldInfoView.as_view(), name='district_fields_info'),
-    re_path(r'^district/public/', DistrictViewList.as_view(), name='district_public_view'),
+    re_path(r'^district/telegram/', DistrictViewList.as_view(), name='district_public_view'),
 
     re_path(r'^product-category$', ProductCategoryView.as_view(), name='product-category-view'),
     path('product-category/<int:pk>', ProductCategoryDetailView.as_view(), name='product-category-detail-view'),

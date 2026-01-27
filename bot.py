@@ -58,11 +58,7 @@ def unwrap_list(data: JSONType) -> List[Dict[str, Any]]:
 
 
 def pick_name(obj: Dict[str, Any]) -> str:
-    for k in ("name", "title", "name_uz", "name_ru", "name_en"):
-        v = obj.get(k)
-        if v:
-            return str(v)
-    return f"#{obj.get('id', '')}"
+    return str(obj.get("name") or f"#{obj.get('id', '')}")
 
 
 async def api_get(session: aiohttp.ClientSession, path: str, params=None) -> JSONType:

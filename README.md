@@ -12,6 +12,8 @@
     source env/bin/activate for Linux/MacOS
     env\Scripts\activate for Windows
 
+    deactivate
+
 #### 3. Install requirements
 
     pip install -r requirements.txt

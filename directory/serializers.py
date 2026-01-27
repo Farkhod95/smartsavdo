@@ -70,7 +70,7 @@ class RegionListPublicSerializer(LocaleSerializer):
 class DistrictListPublicSerializer(LocaleSerializer):
     class Meta:
         model = District
-        fields = ('id', 'code', 'name')
+        fields = ('id', 'code', 'name', 'region')
 
 
 class DistrictListSerializer(LocaleSerializer):

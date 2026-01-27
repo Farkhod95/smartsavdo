@@ -34,13 +34,15 @@ class RegionFieldInfoView(APIView):
 
 
 class RegionViewList(ListCreateAPIView):
+    permission_classes = (AllowAny,)
+    authentication_classes = []
     serializer_class = RegionListSerializer
-    pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'code')
-    permission_classes = (AllowAny,)
+
     ordering = ['pk']
     http_method_names = ['get']
+    pagination_class = None
 
     def get_queryset(self):
         return Region.objects.all()

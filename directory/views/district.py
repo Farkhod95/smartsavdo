@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny
 
 from directory.filterset import DistrictFilter
 from directory.models import District, Region
-from directory.serializers import DistrictListSerializer, DistrictSerializer
+from directory.serializers import DistrictListSerializer, DistrictSerializer, DistrictListPublicSerializer
 
 from restapp.pagination import ResultsSetPagination
 
@@ -34,14 +34,16 @@ class DistrictFieldInfoView(APIView):
 
 
 class DistrictViewList(ListCreateAPIView):
-    serializer_class = DistrictListSerializer
-    pagination_class = ResultsSetPagination
+    permission_classes = (AllowAny,)
+    authentication_classes = []
+    serializer_class = DistrictListPublicSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DistrictFilter
     search_fields = ('name', 'code')
     ordering = ['pk']
-    permission_classes = (AllowAny,)
+
     http_method_names = ['get']
+    pagination_class = None
 
     def get_queryset(self):
         return District.objects.all()
