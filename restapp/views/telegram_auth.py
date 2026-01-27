@@ -12,14 +12,14 @@ User = get_user_model()
 
 def _check_secret(request) -> bool:
     secret = request.headers.get("X-TG-SECRET")
-    return bool(secret) and secret == settings.TELEGRAM_BOT_API_SECRET
+    return bool(secret) and secret == "change-me-strong-secret"
 
 class TelegramRegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         if not _check_secret(request):
-            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Unauthorized (Error secret key"}, status=status.HTTP_401_UNAUTHORIZED)
 
         ser = TelegramRegisterSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
@@ -52,7 +52,7 @@ class TelegramRegisterView(APIView):
                 telegram_id=telegram_id,
                 phone_number=phone,
                 full_name=full_name,
-                Company_id=region_id,     # sizda region maydoni "Company"
+                region_id=region_id,     # sizda region maydoni "Company"
                 district_id=district_id,
                 is_active=True,
             )
@@ -63,11 +63,11 @@ class TelegramRegisterView(APIView):
             user.telegram_id = telegram_id
             user.phone_number = phone
             user.full_name = full_name
-            user.Company_id = region_id
+            user.region_id = region_id
             user.district_id = district_id
             user.is_active = True
             user.save(update_fields=[
-                "telegram_id", "phone_number", "full_name", "Company", "district", "is_active"
+                "telegram_id", "phone_number", "full_name", "region", "district", "is_active"
             ])
 
         return Response({
