@@ -50,7 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','company','district','role','roles','address','avatar','created_time','updated_time','created_by','updated_by')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','company','region','district','role','roles','address','avatar','created_time','updated_time','created_by','updated_by')
         extra_kwargs = {'username': {'validators': [UnicodeUsernameValidator(), UniqueValidator(queryset=User.objects.all())]}, 'password': {'write_only': True, 'required': False, 'allow_null': True}}
 
     def create(self, validated_data):
@@ -63,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        for field in ['username','full_name','is_active','date_of_birthday','gender','phone_number','email','company','district','role','address','avatar','created_by','updated_by']:
+        for field in ['username','full_name','is_active','date_of_birthday','gender','phone_number','email','company','region','district','role','address','avatar','created_by','updated_by']:
             if field in validated_data:
                 setattr(instance, field, validated_data[field])
 
@@ -83,7 +83,7 @@ class UserListPublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined','role','roles','company','company_detail','region_detail','district','district_detail','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined','role','roles','company','company_detail','region','region_detail','district','district_detail','address')
 
 
 
@@ -92,7 +92,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined','role','roles','company','district','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined','role','roles','company','region','district','address')
 
 
 

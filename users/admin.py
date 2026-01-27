@@ -10,7 +10,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('full_name', 'email', 'phone_number', 'gender', 'date_of_birthday', 'avatar', 'address')}),
-        (_('Company & Location'), {'fields': ('company', 'Company', 'district')}),
+        (_('Company & Location'), {'fields': ('company', 'region', 'district')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'role', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Audit'), {'fields': ('created_by', 'updated_by', 'created_time', 'updated_time')}),
@@ -19,12 +19,12 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'full_name', 'email', 'phone_number', 'gender', 'date_of_birthday', 'avatar', 'address', 'company', 'Company', 'district', 'role', 'is_active', 'is_staff', 'password1', 'password2'),
+            'fields': ('username', 'full_name', 'email', 'phone_number', 'gender', 'date_of_birthday', 'avatar', 'address', 'company', 'region', 'district', 'role', 'is_active', 'is_staff', 'password1', 'password2'),
         }),
     )
 
     list_display = ('id', 'username', 'full_name', 'phone_number', 'email', 'role', 'company', 'is_active', 'is_staff', 'is_superuser')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'role', 'company', 'Company', 'district')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'role', 'company', 'region', 'district')
     search_fields = ('username', 'full_name', 'phone_number', 'email')
     ordering = ('-id',)
     filter_horizontal = ('groups', 'user_permissions')

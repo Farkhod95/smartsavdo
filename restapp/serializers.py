@@ -32,3 +32,14 @@ class ModelAuditSerializer(serializers.ModelSerializer):
 
     def get_username(self, instance):
         return instance.user.username if instance.user else ''
+
+
+class TelegramRegisterSerializer(serializers.Serializer):
+    telegram_id = serializers.IntegerField()
+    full_name = serializers.CharField(max_length=100)
+    region_id = serializers.IntegerField()
+    district_id = serializers.IntegerField()
+    phone_number = serializers.CharField(max_length=100)
+
+class TelegramTokenSerializer(serializers.Serializer):
+    telegram_id = serializers.IntegerField()

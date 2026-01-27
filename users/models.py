@@ -50,6 +50,7 @@ class User(AbstractUser):
         MALE = 'male', _('Male')
         FEMALE = 'female', _('Female')
 
+    telegram_id = models.BigIntegerField(null=True, blank=True, unique=True, db_index=True, help_text=_("Telegram ID"))
     username = models.CharField(max_length=255, unique=True, help_text=_("Foydalanuvchi nomi"))
     full_name = models.CharField( max_length=100, help_text=_("FIO"))
     is_active = models.BooleanField(_('Active'), default=True, help_text=_("Foydalanuvchi holati"))
@@ -61,7 +62,7 @@ class User(AbstractUser):
     password = models.CharField(max_length=255, null=True, blank=True, help_text=_("Parol"))
     company = models.ForeignKey("users.Company", related_name='user_company', on_delete=models.SET_NULL, null=True,
                                help_text=_("Kompaniya"))
-    Company = models.ForeignKey("directory.Region", related_name='user_region', on_delete=models.SET_NULL, null=True,
+    region = models.ForeignKey("directory.Region", related_name='user_region', on_delete=models.SET_NULL, null=True,
                                help_text=_("Viloyat"))
     district = models.ForeignKey("directory.District", related_name='user_district', on_delete=models.SET_NULL,
                                  null=True, help_text=_("Tuman"))
