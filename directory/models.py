@@ -26,7 +26,7 @@ class Region(BaseModel):
         verbose_name_plural = _('regions')
 
     def __str__(self):
-        return f"{self.code}"
+        return f"{self.name}"
 
 
 class District(BaseModel):
