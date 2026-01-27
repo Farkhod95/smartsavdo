@@ -121,6 +121,29 @@ async def api_post(session: aiohttp.ClientSession, path: str, payload: dict) -> 
         return {"_error": False, "data": data}
 
 
+async def has_user_by_telegram_id(telegram_id: int) -> bool:
+    """
+    Eng ishonchli tekshiruv: token endpoint'iga uramiz.
+    - 200 -> user bor
+    - 404 -> user yo'q
+    - 401 -> secret xato (bu holatni alohida ko'rsatamiz)
+    """
+    async with aiohttp.ClientSession() as session:
+        resp = await api_post(session, "/auth/telegram/token/", {"telegram_id": telegram_id})
+
+    if resp.get("_error"):
+        status = resp.get("status")
+        if status == 404:
+            return False
+        if status == 401:
+            # secret noto'g'ri bo'lsa bot doim registerga o'tib ketmasin
+            raise RuntimeError("TG_SECRET noto‘g‘ri yoki backend secret tekshiryapti (401).")
+        # boshqa xatolar: 500 va hokazo
+        raise RuntimeError(f"User check xato: {status} {str(resp.get('data'))[:200]}")
+    return True
+
+
+
 def chunk_buttons(items: List[InlineKeyboardButton], per_row: int = 2) -> List[List[InlineKeyboardButton]]:
     rows: List[List[InlineKeyboardButton]] = []
     row: List[InlineKeyboardButton] = []
@@ -188,6 +211,23 @@ async def main() -> None:
     @dp.message(CommandStart())
     async def start(message: Message, state: FSMContext):
         await state.clear()
+
+        try:
+            exists = await has_user_by_telegram_id(message.from_user.id)
+        except Exception as e:
+            await message.answer(f"❌ Tekshiruvda xatolik: {short_err(e)}\nIltimos keyinroq urinib ko‘ring.")
+            return
+
+        if exists:
+            await message.answer(
+                "Assalomu alaykum! 👋\n"
+                "Siz avval ro‘yxatdan o‘tib bo‘lgansiz.\n\n"
+                "Token olish uchun tugmani bosing. 🔑",
+                reply_markup=token_button_keyboard()
+            )
+            return
+
+        # Aks holda registratsiya davom etadi
         await state.set_state(RegisterState.full_name)
         await message.answer(
             "Assalomu alaykum! 👋\n"
