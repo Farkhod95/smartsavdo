@@ -9,7 +9,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import (
     Message, CallbackQuery,
     ReplyKeyboardMarkup, KeyboardButton,
-    InlineKeyboardMarkup, InlineKeyboardButton
+    InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 )
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -167,7 +167,8 @@ def phone_keyboard() -> ReplyKeyboardMarkup:
 
 def token_button_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔑 Tizimga kirish (token olish)", callback_data="get_token")]
+        # [InlineKeyboardButton(text="🔑 Tizimga kirish (token olish)", callback_data="get_token")],
+        [InlineKeyboardButton(text="🌐 Savdo saytini ochish", web_app=WebAppInfo(url="https://savdo.elegantchinni.uz/"))],
     ])
 
 
