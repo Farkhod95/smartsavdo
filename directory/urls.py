@@ -6,7 +6,8 @@ from .views.import_country import CountryFileImportView
 from .views.model_size import ModelSizeView, ModelSizeDetailView, ModelSizeFieldInfoView
 from .views.model_type import ModelTypeView, ModelTypeDetailView, ModelTypeFieldInfoView
 from .views.product_model import ModelView, ModelDetailView, ModelFieldInfoView
-from .views.product_category import ProductCategoryView, ProductCategoryDetailView, ProductCategoryFieldInfoView
+from .views.product_category import ProductCategoryView, ProductCategoryDetailView, ProductCategoryFieldInfoView, \
+    ProductCategoryViewList
 from .views.region import RegionView, RegionDetailView, RegionFieldInfoView, RegionViewList
 
 urlpatterns = [
@@ -29,6 +30,7 @@ urlpatterns = [
     re_path(r'^product-category$', ProductCategoryView.as_view(), name='product-category-view'),
     path('product-category/<int:pk>', ProductCategoryDetailView.as_view(), name='product-category-detail-view'),
     path('product-category/fields/', ProductCategoryFieldInfoView.as_view(), name='product-category-fields-info'),
+    path('product-category/public/', ProductCategoryViewList.as_view(), name='product-category-public-info'),
 
     re_path(r'^model$', ModelView.as_view(), name='model-view'),
     path('model/<int:pk>', ModelDetailView.as_view(), name='model-detail-view'),

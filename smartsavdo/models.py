@@ -25,6 +25,7 @@ class Product(BaseModel):
     price = models.FloatField(null=True, blank=True, help_text=_("Price"))
     sorting = models.IntegerField(null=True, blank=True, unique=True, help_text=_("sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+    discription = models.TextField(null=True, blank=True, help_text=_("Description"))
 
     class Meta:
         verbose_name = _('Task Comment')

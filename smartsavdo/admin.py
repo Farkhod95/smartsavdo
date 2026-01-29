@@ -23,7 +23,7 @@ class ProductAdmin(admin.ModelAdmin):
         'category', 'model', 'model_type', 'model_size',
         'size', 'type', 'count',
         'real_price', 'price',
-        'sorting', 'is_delete'
+        'sorting', 'is_delete', 'discription'
     )
     search_fields = ('id',)  # Product modelida name yo‘q, shuning uchun id bilan qidirish
     list_filter = ('category', 'model', 'model_type', 'model_size', 'type', 'is_delete')

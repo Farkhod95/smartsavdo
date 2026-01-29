@@ -43,6 +43,7 @@ class ProductViewList(ListCreateAPIView):
         'model_type__name',
         'type',
     )
+    filterset_class = ProductFilter
     permission_classes = (AllowAny,)
     ordering_fields = ('id', 'created_time', 'updated_time', 'sorting', 'price', 'real_price', 'count')
     ordering = ('-id',)

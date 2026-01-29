@@ -62,12 +62,19 @@ class BaseLocaleSerializer(serializers.ModelSerializer):
         return fields
 
 
+class ProductImagePublicSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductImage
+        fields = ('id', 'product', 'file')
+
+
 class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
         fields = ('id', 'category', 'model', 'model_type', 'model_size', 'size', 'type', 'count', 'real_price', 'price',
-                  'sorting', 'is_delete')
+                  'sorting', 'is_delete', 'discription')
 
 
 class ProductListSerializer(serializers.ModelSerializer):
@@ -76,12 +83,13 @@ class ProductListSerializer(serializers.ModelSerializer):
     model_type_detail = ModelTypeSerializer(source='model_type', read_only=True)
     model_size_detail = ModelSizeSerializer(source='model_size', read_only=True)
 
+    attachments = ProductImagePublicSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = ('id', 'category', 'category_detail', 'model', 'model_detail', 'model_type', 'model_type_detail',
                   'model_size', 'model_size_detail', 'size', 'type', 'count', 'real_price', 'price',
-                  'sorting', 'is_delete')
+                  'sorting', 'is_delete', 'discription', 'attachments', )
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
