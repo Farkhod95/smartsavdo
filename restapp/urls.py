@@ -11,6 +11,7 @@ from restapp.views.telegram_auth import TelegramRegisterView, TelegramTokenView
 from restapp.views.term import TermView, TermDetailView
 from restapp.views.translations import TranslationsView
 from restapp.views.user_log import UserLogsView
+from restapp.views.views_telegram import TelegramWebAppLoginView
 
 urlpatterns = [
     re_path(r'^auth/token$', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -18,6 +19,7 @@ urlpatterns = [
     re_path(r'^auth/logout$', LogoutView.as_view(), name='auth_logout'),
     path("auth/telegram/register/", TelegramRegisterView.as_view(), name="tg-register"),
     path("auth/telegram/token/", TelegramTokenView.as_view(), name="tg-token"),
+    path("tg/login/", TelegramWebAppLoginView.as_view(), name="tg-webapp-login"),
     path('', include('users.urls')),
     path('', include('smartsavdo.urls')),
     path('', include('directory.urls')),

@@ -104,7 +104,7 @@ WSGI_APPLICATION = 'main.wsgi.application'
 
 TELEGRAM_BOT_API_SECRET = os.getenv("TELEGRAM_BOT_API_SECRET", "change-me-strong-secret")
 
-
+#
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -155,6 +155,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        "restapp.views.authentication.CookieJWTAuthentication",
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication'

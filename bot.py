@@ -163,12 +163,12 @@ def phone_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         one_time_keyboard=True
     )
-
+WEBAPP_LOGIN_URL = "https://api-savdo.elegantchinni.uz/api/v1/tg/login/"
 
 def token_button_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         # [InlineKeyboardButton(text="🔑 Tizimga kirish (token olish)", callback_data="get_token")],
-        [InlineKeyboardButton(text="🌐 Savdo saytini ochish", web_app=WebAppInfo(url="https://savdo.elegantchinni.uz/"))],
+        [InlineKeyboardButton(text="🌐 Savdo saytini ochish", web_app=WebAppInfo(url=WEBAPP_LOGIN_URL))],
     ])
 
 
