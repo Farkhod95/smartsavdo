@@ -163,7 +163,8 @@ def phone_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         one_time_keyboard=True
     )
-WEBAPP_LOGIN_URL = "https://api-savdo.elegantchinni.uz/api/v1/tg/login/"
+# WEBAPP_LOGIN_URL = "https://api-savdo.elegantchinni.uz/api/v1/tg/login/"
+WEBAPP_LOGIN_URL = "https://savdo.elegantchinni.uz/"
 
 def token_button_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
