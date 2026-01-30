@@ -63,10 +63,20 @@ class BaseLocaleSerializer(serializers.ModelSerializer):
 
 
 class ProductImagePublicSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductImage
         fields = ('id', 'product', 'file')
+
+    def get_file(self, obj):
+        if not obj.file:
+            return None
+        request = self.context.get('request')
+        url = obj.file.url  # /media/...
+        if request:
+            return request.build_absolute_uri(url)
+        return url
 
 
 class ProductSerializer(serializers.ModelSerializer):
