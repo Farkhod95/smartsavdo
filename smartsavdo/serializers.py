@@ -73,10 +73,11 @@ class ProductImagePublicSerializer(serializers.ModelSerializer):
         if not obj.file:
             return None
         request = self.context.get('request')
-        url = obj.file.url  # /media/...
-        if request:
-            return request.build_absolute_uri(url)
-        return url
+        if not request:
+            return obj.file.url
+
+        absolute = request.build_absolute_uri(obj.file.url)
+        return absolute.replace("http://", "https://", 1)
 
 
 class ProductSerializer(serializers.ModelSerializer):
