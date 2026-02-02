@@ -63,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','companies','region','distric','roles','address','avatar','created_time','updated_time','created_by','updated_by')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','companies','region','district','roles','address','avatar','created_time','updated_time','created_by','updated_by')
         extra_kwargs = {'username': {'validators': [UnicodeUsernameValidator(), UniqueValidator(queryset=User.objects.all())]}, 'password': {'write_only': True, 'required': False, 'allow_null': True}}
 
     def create(self, validated_data):
