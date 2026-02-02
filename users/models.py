@@ -26,10 +26,12 @@ class Company(models.Model):
     email = models.EmailField(_('Email'), max_length=254, null=True, blank=True, help_text=_('Rasmiy aloqa e-pochtasi'))  # info@...
     phone = models.CharField(_('Telefon'), max_length=64, null=True, blank=True, help_text=_('Aloqa uchun telefon raqami'))  # +998...
     address = models.CharField(_('Manzil'), max_length=255, null=True, blank=True, help_text=_('Ofis manzili, shahar va mamlakat bilan'))  # Tashkent, Uzbekistan
-    title = models.CharField(_('Kompaniya sarlavhasi'), max_length=150, default='Optivora',
-                            help_text=_('Kompaniya sarlavhasi'))  # Masalan: Optivora
     description = models.TextField(_('Tavsif'), null=True, blank=True,
                                    help_text=_('Kompaniya haqida batafsil tavsif (ixtiyoriy)'))  # SEO/Detail
+    region = models.ForeignKey("directory.Region", related_name='company_region', on_delete=models.SET_NULL, null=True,
+                               help_text=_("Viloyat"))
+    district = models.ForeignKey("directory.District", related_name='company_district', on_delete=models.SET_NULL,
+                                 null=True, help_text=_("Tuman"))
     created_time = models.DateTimeField(auto_now_add=True, help_text=_("Yaratilgan vaqt"))
     updated_time = models.DateTimeField(auto_now=True, help_text=_("Yangilangan vaqt"))
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='companies_created', null=True,
@@ -60,14 +62,13 @@ class User(AbstractUser):
     email = models.EmailField(_('email address'), blank=True, null=True, help_text=_("Email manzili"))
     date_joined = models.DateTimeField(_('Date joined'), auto_now_add=True, help_text=_("Ro‘yxatdan o‘tgan sana"))
     password = models.CharField(max_length=255, null=True, blank=True, help_text=_("Parol"))
-    company = models.ForeignKey("users.Company", related_name='user_company', on_delete=models.SET_NULL, null=True,
-                               help_text=_("Kompaniya"))
+    companies = models.ManyToManyField('users.Company', blank=True, related_name='user_company',
+                                       verbose_name=_('Kompaniya'))
     region = models.ForeignKey("directory.Region", related_name='user_region', on_delete=models.SET_NULL, null=True,
                                help_text=_("Viloyat"))
     district = models.ForeignKey("directory.District", related_name='user_district', on_delete=models.SET_NULL,
                                  null=True, help_text=_("Tuman"))
-    role = models.ForeignKey(Role, related_name='role_user', null=True, on_delete=models.SET_NULL,
-                             help_text=_("Foydalanuvchi roli"))
+    roles = models.ManyToManyField(Role, related_name='users', blank=True, help_text=_("Foydalanuvchi rollari"))
     address = models.TextField(_("Address"), null=True, help_text=_("Yashash manzili"))
     created_time = models.DateTimeField(auto_now_add=True, help_text=_("Yaratilgan vaqt"))
     updated_time = models.DateTimeField(auto_now=True, help_text=_("Yangilangan vaqt"))

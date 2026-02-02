@@ -11,11 +11,11 @@ class UserFilter(FilterSet):
             'username': ['exact', 'startswith', 'contains'],
             'last_name': ['exact'],
             'first_name': ['exact'],
-            'company': ['exact'],
+            'companies': ['exact'],
             'region': ['exact'],
             'district': ['exact'],
             'gender': ['exact'],
-            'role': ['exact'],
+            'roles': ['exact'],
         }
 
 
@@ -25,6 +25,7 @@ class CompanyFilter(FilterSet):
         model = Company
         fields = {
             'name': ['exact'],
-            'title': ['exact'],
+            'region': ['exact'],
+            'district': ['exact'],
         }
 

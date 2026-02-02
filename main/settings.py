@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from corsheaders.defaults import default_headers
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'django-insecure-12345yourkeyhere54321'
+SECRET_KEY = 'django-insecure-12345elegant12398798chinni54321'
 DEBUG = True
 ALLOWED_HOSTS = [
     "api-savdo.elegantchinni.uz",

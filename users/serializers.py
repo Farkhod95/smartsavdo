@@ -35,64 +35,110 @@ class LoginSerializer(serializers.Serializer):
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = ('id', 'name', 'logo', 'email', 'phone', 'address', 'title', 'description')
+        fields = ('id', 'name', 'logo', 'email', 'phone', 'address', 'region', 'district', 'description')
 
 
 class CompanyListSerializer(serializers.ModelSerializer):
+    region_detail = RegionListSerializer(source='region', read_only=True)
+    district_detail = DistrictSerializer(source='district', read_only=True)
+
     class Meta:
         model = Company
-        fields = ('id', 'name', 'logo', 'email', 'phone', 'address', 'title', 'description')
+        fields = ('id', 'name', 'logo', 'email', 'phone', 'address', 'region', 'district', 'description')
 
 
 
 class UserSerializer(serializers.ModelSerializer):
-    roles = RoleSerializer(source='role', read_only=True)
+    roles = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Role.objects.all(),
+        required=False
+    )
+
+    companies = serializers.PrimaryKeyRelatedField(
+        queryset=Company.objects.all(),
+        many=True,
+        required=False
+    )
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','company','region','district','role','roles','address','avatar','created_time','updated_time','created_by','updated_by')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','companies','region','distric','roles','address','avatar','created_time','updated_time','created_by','updated_by')
         extra_kwargs = {'username': {'validators': [UnicodeUsernameValidator(), UniqueValidator(queryset=User.objects.all())]}, 'password': {'write_only': True, 'required': False, 'allow_null': True}}
 
     def create(self, validated_data):
+        # ManyToMany va parolni alohida olib qo'yamiz
+        companies = validated_data.pop('companies', [])
+        roles_ids = validated_data.pop('roles', [])
         password = validated_data.pop('password', None)
-        user = User.objects.create(**validated_data)
+
+        user = User(**validated_data)
+
         if password:
-            user.password = make_password(password)
+            # istasang validate_password(password) ham qo'shsa bo'ladi
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+
         user.is_active = True
         user.save()
+
+        if companies:
+            user.companies.set(companies)
+
+        if roles_ids:
+            user.roles.set(roles_ids)
+
         return user
 
     def update(self, instance, validated_data):
-        for field in ['username','full_name','is_active','date_of_birthday','gender','phone_number','email','company','region','district','role','address','avatar','created_by','updated_by']:
-            if field in validated_data:
-                setattr(instance, field, validated_data[field])
+        # ManyToMany maydon va parolni alohida ajratamiz
+        companies = validated_data.pop('companies', None)
+        roles_ids = validated_data.pop('roles', None)
+        password = validated_data.pop('password', None)
 
-        password = validated_data.get('password', None)
+        # Oddiy fieldlarni umumiy tarzda set qilamiz
+        for attr, value in validated_data.items():
+            # date_joined va boshqa read_only fieldlar Meta.read_only_fields orqali himoyalangan
+            setattr(instance, attr, value)
+
+        # Parol bo‘lsa, hash qilib saqlaymiz
         if password:
-            instance.password = make_password(password)
+            instance.set_password(password)
 
         instance.save()
+
+        # ManyToMany yangilash:
+        # Agar `companies` keldi -> to‘liq yangidan set qilamiz
+        # Agar kelmasa -> umuman tegmaymiz
+        if companies is not None:
+            instance.companies.set(companies)
+
+        if roles_ids is not None:
+            instance.roles.set(roles_ids)
+
         return instance
 
 
 class UserListPublicSerializer(serializers.ModelSerializer):
-    roles = RoleSerializer(source='role', read_only=True)
-    company_detail = CompanySerializer(source='company', read_only=True)
-    region_detail = RegionListSerializer(source='Company', read_only=True)
+    region_detail = RegionListSerializer(source='region', read_only=True)
     district_detail = DistrictSerializer(source='district', read_only=True)
+    companies_detail = CompanyListSerializer(source='companies', many=True, read_only=True)
+    roles_detail = RoleSerializer(source='roles', many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined','role','roles','company','company_detail','region','region_detail','district','district_detail','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'roles_detail','companies','companies_detail','region','region_detail','district','district_detail','address')
 
 
 
 class UserListSerializer(serializers.ModelSerializer):
-    roles = RoleSerializer(source='role', read_only=True)
+    role_detail = RoleSerializer(source='roles', many=True, read_only=True)
+    companies_detail = CompanyListSerializer(source='companies', many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined','role','roles','company','region','district','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'role_detail','companies', 'companies_detail','region','district','address')
 
 
 
