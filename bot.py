@@ -190,7 +190,7 @@ async def build_regions_keyboard() -> InlineKeyboardMarkup:
 
 async def build_districts_keyboard(region_id: int) -> InlineKeyboardMarkup:
     async with aiohttp.ClientSession() as session:
-        data = await api_get(session, "/district/telegram", params={"region_id": region_id})
+        data = await api_get(session, "/district/telegram", params={"region": region_id})
     districts = unwrap_list(data)
 
     buttons = []

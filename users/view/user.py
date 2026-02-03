@@ -21,7 +21,7 @@ class UserListView(APIView):
 
 
 class UserView(ListCreateAPIView):
-    serializer_class = UserSerializer
+    serializer_class = UserListSerializer
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = UserFilter
@@ -33,7 +33,7 @@ class UserView(ListCreateAPIView):
         return queryset
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(created_by=self.request.user)
         return Response(serializer.data, status.HTTP_201_CREATED)
@@ -50,7 +50,7 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
 
     def get(self, request, pk):
         instance = get_object_or_404(User, id=pk)
-        serializer = self.serializer_class(instance)
+        serializer = UserListSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):

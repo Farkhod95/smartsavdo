@@ -23,7 +23,7 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-    list_display = ('id', 'username', 'full_name', 'phone_number', 'email', 'is_active', 'is_staff', 'is_superuser')
+    list_display = ('id', 'telegram_id', 'username', 'full_name', 'phone_number', 'email', 'is_active', 'is_staff', 'is_superuser')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'roles', 'filials', 'region', 'district')
     search_fields = ('username', 'full_name', 'phone_number', 'email')
     ordering = ('-id',)
