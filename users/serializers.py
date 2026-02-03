@@ -4,7 +4,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from directory.serializers import RegionListSerializer, DistrictSerializer, CountrySerializer
+from accounts.serializers import RegionListSerializer, DistrictSerializer, CountrySerializer
 
 from .models import User, Role, AppModule, Company
 

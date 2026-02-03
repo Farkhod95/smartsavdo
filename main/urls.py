@@ -20,7 +20,7 @@ schema_view = get_swagger_view(title=api_title, patterns=rest_urlpatterns, url='
 urlpatterns = [
     path('', empty_root),
     re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('admin/', admin.site.urls),
+    path('api/v1/admin/', admin.site.urls),
     path('api/v1/', schema_view),
     path('api/v1/docs/', schema_view),
     path('api/v1/', include('restapp.urls')),

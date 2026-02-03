@@ -175,7 +175,7 @@ def token_button_keyboard() -> InlineKeyboardMarkup:
 
 async def build_regions_keyboard() -> InlineKeyboardMarkup:
     async with aiohttp.ClientSession() as session:
-        data = await api_get(session, "/region/telegram/")
+        data = await api_get(session, "/region/telegram")
     regions = unwrap_list(data)
     buttons = []
     for r in regions:
@@ -190,7 +190,7 @@ async def build_regions_keyboard() -> InlineKeyboardMarkup:
 
 async def build_districts_keyboard(region_id: int) -> InlineKeyboardMarkup:
     async with aiohttp.ClientSession() as session:
-        data = await api_get(session, "/district/telegram/", params={"region_id": region_id})
+        data = await api_get(session, "/district/telegram", params={"region_id": region_id})
     districts = unwrap_list(data)
 
     buttons = []
@@ -318,7 +318,7 @@ async def main() -> None:
 
         async with aiohttp.ClientSession() as session:
 
-            reg = await api_post(session, "/auth/telegram/register/", payload)
+            reg = await api_post(session, "/auth/telegram/register", payload)
 
         if reg.get("_error"):
             await message.answer(f"❌ Xatolik: {reg['status']}\n{str(reg['data'])[:500]}")
@@ -343,7 +343,7 @@ async def main() -> None:
     @dp.callback_query(F.data == "get_token")
     async def handle_get_token(call: CallbackQuery):
         async with aiohttp.ClientSession() as session:
-            tok = await api_post(session, "/auth/telegram/token/", {"telegram_id": call.from_user.id})
+            tok = await api_post(session, "/auth/telegram/token", {"telegram_id": call.from_user.id})
 
         if tok.get("_error"):
             if tok.get("status") == 404:

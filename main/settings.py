@@ -33,8 +33,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'corsheaders',
-    'smartsavdo',
-    'directory',
+    'inventory',
+    'suppliers',
+    'accounts',
+    'sales',
+    'finance',
     'django_celery_results',
     'django_celery_beat',
 ]

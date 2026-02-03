@@ -18,7 +18,7 @@ urlpatterns = [
 
     re_path(r'^company', CompanyView.as_view(), name='company_view'),
     path('company/<int:pk>', CompanyDetailView.as_view(), name='company_detail_view'),
-    path('company/fields/', CompanyFieldInfoView.as_view(), name='company_fields_info'),
+    path('company/fields', CompanyFieldInfoView.as_view(), name='company_fields_info'),
 
     # Enums api
     re_path(r'^user/enum/gender$', UserGenderList.as_view(), name='roles_view'),

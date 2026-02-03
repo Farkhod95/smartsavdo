@@ -28,9 +28,9 @@ class Company(models.Model):
     address = models.CharField(_('Manzil'), max_length=255, null=True, blank=True, help_text=_('Ofis manzili, shahar va mamlakat bilan'))  # Tashkent, Uzbekistan
     description = models.TextField(_('Tavsif'), null=True, blank=True,
                                    help_text=_('Kompaniya haqida batafsil tavsif (ixtiyoriy)'))  # SEO/Detail
-    region = models.ForeignKey("directory.Region", related_name='company_region', on_delete=models.SET_NULL, null=True,
+    region = models.ForeignKey("accounts.Region", related_name='company_region', on_delete=models.SET_NULL, null=True,
                                help_text=_("Viloyat"))
-    district = models.ForeignKey("directory.District", related_name='company_district', on_delete=models.SET_NULL,
+    district = models.ForeignKey("accounts.District", related_name='company_district', on_delete=models.SET_NULL,
                                  null=True, help_text=_("Tuman"))
     created_time = models.DateTimeField(auto_now_add=True, help_text=_("Yaratilgan vaqt"))
     updated_time = models.DateTimeField(auto_now=True, help_text=_("Yangilangan vaqt"))
@@ -64,9 +64,9 @@ class User(AbstractUser):
     password = models.CharField(max_length=255, null=True, blank=True, help_text=_("Parol"))
     companies = models.ManyToManyField('users.Company', blank=True, related_name='user_company',
                                        verbose_name=_('Kompaniya'))
-    region = models.ForeignKey("directory.Region", related_name='user_region', on_delete=models.SET_NULL, null=True,
+    region = models.ForeignKey("accounts.Region", related_name='user_region', on_delete=models.SET_NULL, null=True,
                                help_text=_("Viloyat"))
-    district = models.ForeignKey("directory.District", related_name='user_district', on_delete=models.SET_NULL,
+    district = models.ForeignKey("accounts.District", related_name='user_district', on_delete=models.SET_NULL,
                                  null=True, help_text=_("Tuman"))
     roles = models.ManyToManyField(Role, related_name='users', blank=True, help_text=_("Foydalanuvchi rollari"))
     address = models.TextField(_("Address"), null=True, help_text=_("Yashash manzili"))
