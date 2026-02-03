@@ -222,28 +222,33 @@ class RegionView(ListCreateAPIView):
         ]
 
         for region in regions_data:
-            # Prepare the data for serializer
             region_data = {
-                'id': region['id'],
-                'code': region['code'],
-                'name': region['name'],
-                'name_uz': region['name_uz'],  # Ensure that 'name_uz' is included in the input data
-                'name_ru': region['name_ru'],  # Ensure that 'name_ru' is included in the input data
-                'name_en': region['name_en'],  # Ensure that 'name_en' is included in the input data
+                'code': region.get('code'),
+                'name': region.get('name_uz'),
+                'name_uz': region.get('name_uz'),
+                'name_ru': region.get('name_ru'),
+                'name_en': region.get('name_en'),
             }
 
-            # Instantiate the serializer with the data
-            serializer = RegionSerializer(data=region_data)
+            # code bo‘yicha mavjudligini tekshiramiz
+            region_obj = Region.objects.filter(code=region_data['code']).first()
 
-            # Validate and save the data if valid
-            if serializer.is_valid():
-                # Create or update the region using serializer's save() method
-                serializer.save()
-                print(f"Region {region['name']} created/updated successfully.")
+            if region_obj:
+                # UPDATE
+                serializer = RegionSerializer(region_obj, data=region_data, partial=True)
+                action = "updated"
             else:
-                # Handle validation errors
-                print(f"Validation errors for region {region['name']}: {serializer.errors}")
-        return Response({}, status.HTTP_201_CREATED)
+                # CREATE
+                serializer = RegionSerializer(data=region_data)
+                action = "created"
+
+            if serializer.is_valid():
+                serializer.save()
+                print(f"Region {region_data.get('name')} {action} successfully.")
+            else:
+                print(f"Validation errors for region {region_data.get('name')}: {serializer.errors}")
+
+        return Response({}, status=status.HTTP_201_CREATED)
 
 
 class RegionDetailView(RetrieveUpdateDestroyAPIView):

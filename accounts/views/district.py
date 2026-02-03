@@ -3124,30 +3124,45 @@ class DistrictView(ListCreateAPIView):
     ]
 
         for item in json_data:
-            fields = item['fields']
-            region = Region.objects.get(id=fields['region_id'])
+          fields = item['fields']
 
-            # Prepare the data for serializer
-            district_data = {
-                'code': fields['code'],
-                'name': fields['name'],
-                'name_uz': fields['name_uz'],
-                'name_ru': fields['name_ru'],
-                'name_en': fields['name_en'],
-                'region': region.id  # Pass the region id
-            }
+          region = Region.objects.get(id=fields['region_id'])
 
-            # Instantiate the serializer with the data
+          district_data = {
+            'code': fields.get('code'),
+            'name': fields.get('name_uz'),
+            'name_uz': fields.get('name_uz'),
+            'name_ru': fields.get('name_ru'),
+            'name_en': fields.get('name_en'),
+            'region': region.id,  # FK id
+          }
+
+          # code + region bo‘yicha topamiz (code region ichida unique deb qarayapmiz)
+          district_obj = District.objects.filter(
+            code=district_data['code'],
+            region_id=region.id
+          ).first()
+
+          if district_obj:
+            # UPDATE
+            serializer = DistrictSerializer(
+              district_obj,
+              data=district_data,
+              partial=True  # jsonda hamma field kelmasa ham update qilsin
+            )
+            action = "updated"
+          else:
+            # CREATE
             serializer = DistrictSerializer(data=district_data)
+            action = "created"
 
-            # Validate and save the data if valid
-            if serializer.is_valid():
-                serializer.save()
-                print(f"District {fields['name']} created successfully.")
-            else:
-                # Handle validation errors
-                print(f"Validation errors: {serializer.errors}")
-        return Response({}, status.HTTP_201_CREATED)
+          if serializer.is_valid():
+            serializer.save()
+            print(f"District {district_data.get('name')} {action} successfully.")
+          else:
+            print(f"Validation errors: {serializer.errors}")
+
+        return Response({}, status=status.HTTP_201_CREATED)
 
 
 class DistrictDetailView(RetrieveUpdateDestroyAPIView):
