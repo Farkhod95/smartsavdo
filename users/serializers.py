@@ -4,7 +4,9 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from accounts.serializers import RegionListSerializer, DistrictSerializer, CountrySerializer
+
+from accounts.models import Filial
+from accounts.serializers import RegionListSerializer, DistrictSerializer, CountrySerializer, FilialSerializer
 
 from .models import User, Role, AppModule, Company
 
@@ -55,20 +57,20 @@ class UserSerializer(serializers.ModelSerializer):
         required=False
     )
 
-    companies = serializers.PrimaryKeyRelatedField(
-        queryset=Company.objects.all(),
+    filials = serializers.PrimaryKeyRelatedField(
+        queryset=Filial.objects.all(),
         many=True,
         required=False
     )
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','companies','region','district','roles','address','avatar','created_time','updated_time','created_by','updated_by')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','filials','region','district','roles','address','avatar','created_time','updated_time','created_by','updated_by')
         extra_kwargs = {'username': {'validators': [UnicodeUsernameValidator(), UniqueValidator(queryset=User.objects.all())]}, 'password': {'write_only': True, 'required': False, 'allow_null': True}}
 
     def create(self, validated_data):
         # ManyToMany va parolni alohida olib qo'yamiz
-        companies = validated_data.pop('companies', [])
+        filials = validated_data.pop('filials', [])
         roles_ids = validated_data.pop('roles', [])
         password = validated_data.pop('password', None)
 
@@ -83,8 +85,8 @@ class UserSerializer(serializers.ModelSerializer):
         user.is_active = True
         user.save()
 
-        if companies:
-            user.companies.set(companies)
+        if filials:
+            user.filials.set(filials)
 
         if roles_ids:
             user.roles.set(roles_ids)
@@ -93,7 +95,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # ManyToMany maydon va parolni alohida ajratamiz
-        companies = validated_data.pop('companies', None)
+        filials = validated_data.pop('filials', None)
         roles_ids = validated_data.pop('roles', None)
         password = validated_data.pop('password', None)
 
@@ -109,10 +111,10 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
 
         # ManyToMany yangilash:
-        # Agar `companies` keldi -> to‘liq yangidan set qilamiz
+        # Agar `filials` keldi -> to‘liq yangidan set qilamiz
         # Agar kelmasa -> umuman tegmaymiz
-        if companies is not None:
-            instance.companies.set(companies)
+        if filials is not None:
+            instance.filials.set(filials)
 
         if roles_ids is not None:
             instance.roles.set(roles_ids)
@@ -123,22 +125,22 @@ class UserSerializer(serializers.ModelSerializer):
 class UserListPublicSerializer(serializers.ModelSerializer):
     region_detail = RegionListSerializer(source='region', read_only=True)
     district_detail = DistrictSerializer(source='district', read_only=True)
-    companies_detail = CompanyListSerializer(source='companies', many=True, read_only=True)
+    filials_detail = FilialSerializer(source='filials', many=True, read_only=True)
     roles_detail = RoleSerializer(source='roles', many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'roles_detail','companies','companies_detail','region','region_detail','district','district_detail','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'roles_detail','filials','filials_detail','region','region_detail','district','district_detail','address')
 
 
 
 class UserListSerializer(serializers.ModelSerializer):
     role_detail = RoleSerializer(source='roles', many=True, read_only=True)
-    companies_detail = CompanyListSerializer(source='companies', many=True, read_only=True)
+    filials_detail = FilialSerializer(source='filials', many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'role_detail','companies', 'companies_detail','region','district','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'role_detail','filials', 'filials_detail','region','district','address')
 
 
 
