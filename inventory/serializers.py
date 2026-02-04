@@ -61,17 +61,18 @@ class ProductTypeSerializer(serializers.ModelSerializer):
 
 class ProductTypeSizeListSerializer(serializers.ModelSerializer):
     product_type_detail = ProductTypeListSerializer(source='product_type', read_only=True)
-    type_detail = UnitListSerializer(source='type', read_only=True)
+    unit_detail = UnitListSerializer(source='unit', read_only=True)
+
 
     class Meta:
         model = ProductTypeSize
-        fields = ('id', 'product_type', 'product_type_detail', 'size', 'type', 'type_detail', 'sorting', 'is_delete')
+        fields = ('id', 'product_type', 'product_type_detail', 'size', 'unit', 'unit_detail', 'sorting', 'is_delete')
 
 
 class ProductTypeSizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductTypeSize
-        fields = ('id', 'product_type', 'size', 'type', 'sorting', 'is_delete')
+        fields = ('id', 'product_type', 'size', 'unit', 'sorting', 'is_delete')
 
 
 class ProductImagePublicSerializer(serializers.ModelSerializer):

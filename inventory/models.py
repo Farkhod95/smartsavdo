@@ -65,7 +65,7 @@ class ProductType(BaseModel):
 class ProductTypeSize(BaseModel):
     product_type = models.ForeignKey(ProductType, related_name='product_type_sizes', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductType bilan bog'lanish"))
     size = models.FloatField(_('Size'), null=True, blank=True, help_text=_("O'lcham qiymati (masalan: 12, 64, 1.5 ...)"))
-    type = models.ForeignKey(Unit, related_name='product_type_sizes', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Unit (o'lchov birligi) bilan bog'lanish"))
+    unit = models.ForeignKey(Unit, related_name='product_type_sizes', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Unit (o'lchov birligi) bilan bog'lanish"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
 
@@ -74,7 +74,7 @@ class ProductTypeSize(BaseModel):
         verbose_name_plural = _('product type sizes')
 
     def __str__(self):
-        return f"{self.product_type} | {self.size} {self.type}" if self.product_type else f"ProductTypeSize #{self.pk}"
+        return f"{self.product_type} | {self.size} {self.unit}" if self.product_type else f"ProductTypeSize #{self.pk}"
 
 
 class Product(BaseModel):
@@ -129,7 +129,7 @@ class ProductHistory(BaseModel):
 
 class ProductImage(BaseModel):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product bilan bog'lanish"))
-    file = models.CharField(_('File'), max_length=500, null=True, blank=True, help_text=_("Rasm fayl yo'li yoki URL"))
+    file = models.FileField(upload_to='product-image/%Y/%m/%d', null=True, blank=True, help_text=_("Fayl o‘zi (rasm, pdf, doc va h.k.)"))
 
     class Meta:
         verbose_name = _('product image')

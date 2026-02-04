@@ -37,10 +37,10 @@ class ProductTypeAdmin(admin.ModelAdmin):
 
 @admin.register(ProductTypeSize)
 class ProductTypeSizeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'product_type', 'size', 'type', 'sorting', 'is_delete')
-    fields = ('product_type', 'size', 'type', 'sorting', 'is_delete')
-    search_fields = ('product_type__name', 'type__code', 'type__name')
-    list_filter = ('is_delete', 'type', 'product_type')
+    list_display = ('id', 'product_type', 'size', 'unit', 'sorting', 'is_delete')
+    fields = ('product_type', 'size', 'unit', 'sorting', 'is_delete')
+    search_fields = ('product_type__name', 'unit__code', 'unit__name')
+    list_filter = ('is_delete', 'unit', 'product_type')
 
 
 @admin.register(Product)

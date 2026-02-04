@@ -51,7 +51,7 @@ class ProductTypeSizeFilter(FilterSet):
         fields = {
             'product_type': ['exact'],
             'size': ['exact', 'gte', 'lte'],
-            'type': ['exact'],
+            'unit': ['exact'],
             'sorting': ['exact', 'gte', 'lte'],
             'is_delete': ['exact'],
         }
@@ -102,5 +102,4 @@ class ProductImageFilter(FilterSet):
         model = ProductImage
         fields = {
             'product': ['exact'],
-            'file': ['exact', 'icontains'],
         }
