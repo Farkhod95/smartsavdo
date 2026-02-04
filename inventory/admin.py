@@ -53,8 +53,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductHistory)
 class ProductHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date', 'product', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price')
-    fields = ('date', 'reserve_limit', 'product', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+    list_display = ('id', 'date', 'product', 'filial', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price')
+    fields = ('date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
     search_fields = ('note', 'product__id', 'purchase_invoice__id', 'branch__name', 'model__name', 'type__name')
     list_filter = ('date', 'branch', 'model', 'type')
 

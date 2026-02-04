@@ -123,13 +123,13 @@ class ProductHistoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductHistory
-        fields = ('id', 'date', 'reserve_limit', 'product', 'product_detail', 'purchase_invoice', 'purchase_invoice_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+        fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'product_detail', 'purchase_invoice', 'purchase_invoice_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
 
 
 class ProductHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductHistory
-        fields = ('id', 'date', 'reserve_limit', 'product', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+        fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     """
@@ -154,7 +154,7 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductHistory
         fields = (
-            'id', 'date', 'reserve_limit', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price',
+            'id', 'date', 'filial', 'reserve_limit', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price',
             'unit_price', 'wholesale_price', 'min_price', 'note',
             'product',       # response’da ko‘rinsin
             # 'product_data',  # request’da keladi
@@ -163,34 +163,50 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """
-        Ixtiyoriy: product_data ichidagi branch/model/type/size
-        history dagi branch/model/type/size bilan mosligini tekshirsa ham bo‘ladi.
-        (Ko‘p loyihalarda shu muhim.)
+        filial payload’da kelmasa, purchase_invoice.filial dan olib qo'yamiz.
+        Ikkalasi ham bo'lmasa xato.
         """
-        product_data = attrs.get('product_data') or {}
-        for f in ('branch', 'model', 'type', 'size'):
-            v_hist = attrs.get(f)
-            v_prod = product_data.get(f)
-            if v_hist and v_prod and v_hist != v_prod:
+        filial = attrs.get('filial')
+        invoice = attrs.get('purchase_invoice')
+
+        if not filial:
+            if invoice and getattr(invoice, 'filial_id', None):
+                attrs['filial'] = invoice.filial
+            else:
                 raise serializers.ValidationError({
-                    f: f"History dagi {f} Product dagi {f} bilan mos emas."
+                    'filial': "Filial yuborilishi kerak yoki purchase_invoice ichida filial bo‘lishi shart."
                 })
         return attrs
 
     @transaction.atomic
     def create(self, validated_data):
-        product_data = validated_data.pop('product_data')
+        # filial endi aniq bor (validate ichida qo‘yilgan bo‘ladi)
+        filial = validated_data['filial']
 
-        # 1) Product yaratamiz
-        product = Product.objects.create(**product_data)
+        # 1) Product yaratamiz (payload fieldlari asosida)
+        product = Product.objects.create(
+            date=validated_data.get('date'),
+            reserve_limit=validated_data.get('reserve_limit'),
+            filial=filial,
+            branch=validated_data.get('branch'),
+            model=validated_data.get('model'),
+            type=validated_data.get('type'),
+            size=validated_data.get('size'),
+            count=validated_data.get('count'),
+            real_price=validated_data.get('real_price', 0),
+            unit_price=validated_data.get('unit_price', 0),
+            wholesale_price=validated_data.get('wholesale_price', 0),
+            min_price=validated_data.get('min_price', 0),
+            note=validated_data.get('note'),
+            is_delete=False,
+        )
 
-        # 2) ProductHistory yaratamiz
+        # 2) ProductHistory yaratamiz va product ni bog'laymiz
         history = ProductHistory.objects.create(
             product=product,
             **validated_data
         )
         return history
-
 
 class ProductImageListSerializer(serializers.ModelSerializer):
     product_detail = ProductListSerializer(source='product', read_only=True)
