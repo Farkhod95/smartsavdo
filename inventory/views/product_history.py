@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductHistoryFilter
 from inventory.models import ProductHistory
-from inventory.serializers import ProductHistoryListSerializer, ProductHistorySerializer
+from inventory.serializers import ProductHistoryListSerializer, ProductHistorySerializer, ProductHistoryCreateSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -57,9 +57,12 @@ class ProductHistoryView(ListCreateAPIView):
 
     def get_queryset(self):
         return ProductHistory.objects.all()
-
+    #
+    # def perform_create(self, serializer):
+    #     # BaseModel’da created_by bo‘lsa shu yerda berib yuboramiz
+    #     serializer.save(created_by=self.request.user)
     def post(self, request):
-        serializer = ProductHistorySerializer(data=request.data)
+        serializer = ProductHistoryCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(created_by=self.request.user)
         return Response(serializer.data, status.HTTP_201_CREATED)

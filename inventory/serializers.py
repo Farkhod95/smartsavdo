@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db import transaction
 
 from accounts.serializers import FilialListSerializer
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
@@ -129,6 +130,66 @@ class ProductHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductHistory
         fields = ('id', 'date', 'reserve_limit', 'product', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    """
+    ProductHistory yaratishdan oldin Product yaratish uchun.
+    Client Product'ning barcha kerakli fieldlarini shu yerga yuboradi.
+    """
+    class Meta:
+        model = Product
+        fields = (
+            'id', 'date', 'reserve_limit', 'filial', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price',
+            'wholesale_price', 'min_price', 'note', 'is_delete',
+        )
+        read_only_fields = ('id',)
+
+
+class ProductHistoryCreateSerializer(serializers.ModelSerializer):
+    """
+    ProductHistory yaratadi, lekin product maydoni o‘rniga product_data qabul qiladi.
+    """
+    # product_data = ProductCreateSerializer(write_only=True)
+
+    class Meta:
+        model = ProductHistory
+        fields = (
+            'id', 'date', 'reserve_limit', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price',
+            'unit_price', 'wholesale_price', 'min_price', 'note',
+            'product',       # response’da ko‘rinsin
+            # 'product_data',  # request’da keladi
+        )
+        read_only_fields = ('id', 'product')
+
+    def validate(self, attrs):
+        """
+        Ixtiyoriy: product_data ichidagi branch/model/type/size
+        history dagi branch/model/type/size bilan mosligini tekshirsa ham bo‘ladi.
+        (Ko‘p loyihalarda shu muhim.)
+        """
+        product_data = attrs.get('product_data') or {}
+        for f in ('branch', 'model', 'type', 'size'):
+            v_hist = attrs.get(f)
+            v_prod = product_data.get(f)
+            if v_hist and v_prod and v_hist != v_prod:
+                raise serializers.ValidationError({
+                    f: f"History dagi {f} Product dagi {f} bilan mos emas."
+                })
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        product_data = validated_data.pop('product_data')
+
+        # 1) Product yaratamiz
+        product = Product.objects.create(**product_data)
+
+        # 2) ProductHistory yaratamiz
+        history = ProductHistory.objects.create(
+            product=product,
+            **validated_data
+        )
+        return history
 
 
 class ProductImageListSerializer(serializers.ModelSerializer):

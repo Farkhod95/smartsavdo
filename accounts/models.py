@@ -104,8 +104,8 @@ class Sklad(BaseModel):
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
 
     class Meta:
-        verbose_name = _('warehouse')
-        verbose_name_plural = _('warehouses')
+        verbose_name = _('Sklad')
+        verbose_name_plural = _('Sklads')
 
     def __str__(self):
         return self.name or f"Warehouse #{self.pk}"
