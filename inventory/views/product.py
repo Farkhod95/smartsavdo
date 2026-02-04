@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductFilter
 from inventory.models import Product
-from inventory.serializers import ProductListSerializer, ProductSerializer, ProductListPublicSerializer
+from inventory.serializers import ProductListSerializer, ProductSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -36,7 +36,7 @@ class ProductViewList(ListCreateAPIView):
     permission_classes = (AllowAny,)
     # authentication_classes = []
     pagination_class = ResultsSetPagination
-    serializer_class = ProductListPublicSerializer
+    serializer_class = ProductListSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
     search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name')

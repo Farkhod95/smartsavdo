@@ -76,24 +76,22 @@ class ProductTypeSizeSerializer(serializers.ModelSerializer):
 
 
 class ProductImagePublicSerializer(serializers.ModelSerializer):
+    file = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
         fields = ('id', 'file')
 
+    def get_file(self, obj):
+        if obj.file:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
 
 class ProductListSerializer(serializers.ModelSerializer):
-    filial_detail = FilialListSerializer(source='filial', read_only=True)
-    branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
-    model_detail = ProductModelListSerializer(source='model', read_only=True)
-    type_detail = ProductTypeListSerializer(source='type', read_only=True)
-    size_detail = ProductTypeSizeListSerializer(source='size', read_only=True)
-
-    class Meta:
-        model = Product
-        fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete')
-
-
-class ProductListPublicSerializer(serializers.ModelSerializer):
     filial_detail = FilialListSerializer(source='filial', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
     model_detail = ProductModelListSerializer(source='model', read_only=True)
@@ -105,7 +103,6 @@ class ProductListPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
-
 
 
 class ProductSerializer(serializers.ModelSerializer):
