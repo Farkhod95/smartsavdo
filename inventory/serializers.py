@@ -86,7 +86,9 @@ class ProductImagePublicSerializer(serializers.ModelSerializer):
         if obj.file:
             request = self.context.get('request')
             if request is not None:
-                return request.build_absolute_uri(obj.file.url)
+                url = request.build_absolute_uri(obj.file.url)
+                # HTTP ni HTTPS ga o'zgartirish
+                return url.replace('http://', 'https://')
             return obj.file.url
         return None
 
