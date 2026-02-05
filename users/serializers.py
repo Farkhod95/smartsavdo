@@ -49,6 +49,12 @@ class CompanyListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'logo', 'email', 'phone', 'address', 'region', 'district', 'description')
 
 
+class UserViewListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email')
+
 
 class UserSerializer(serializers.ModelSerializer):
     roles = serializers.PrimaryKeyRelatedField(
