@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('suppliers.urls')),
     path('', include('accounts.urls')),
     path('', include('finance.urls')),
+    path('', include('sales.urls')),
     re_path(r'^settings/languages$', LanguagesView.as_view(), name='languages_list'),
     re_path(r'^settings/translations$', TermView.as_view(), name='translations_list'),
     path('settings/translations/<int:pk>', TermDetailView.as_view(), name='translations_list'),

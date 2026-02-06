@@ -1,6 +1,5 @@
 from django.urls import re_path, path
 
-from sales import VozvratOrderDetailView, VozvratOrderFieldInfoView
 from sales.views.client import ClientView, ClientDetailView, ClientFieldInfoView
 from sales.views.client_keshbek_history import ClientKeshbekHistoryView, ClientKeshbekHistoryDetailView, \
     ClientKeshbekHistoryFieldInfoView
@@ -8,7 +7,7 @@ from sales.views.order import OrderView, OrderDetailView, OrderFieldInfoView
 from sales.views.order_history import OrderHistoryView, OrderHistoryFieldInfoView, OrderHistoryDetailView
 from sales.views.order_history_product import OrderHistoryProductView, OrderHistoryProductDetailView, \
     OrderHistoryProductFieldInfoView
-from sales.views.vozvrat_order import VozvratOrderView
+from sales.views.vozvrat_order import VozvratOrderView, VozvratOrderDetailView, VozvratOrderFieldInfoView
 
 urlpatterns = [
     re_path(r'^client$', ClientView.as_view(), name='client_view'),
