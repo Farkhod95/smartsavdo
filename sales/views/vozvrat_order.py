@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from sales.filterset import VozvratOrderFilter
-from inventory.models import VozvratOrder
-from inventory.serializers import VozvratOrderListSerializer, VozvratOrderSerializer
+from sales.models import VozvratOrder
+from sales.serializers import VozvratOrderListSerializer, VozvratOrderSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
