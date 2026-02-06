@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from sales.filterset import OrderHistoryFilter
 from sales.models import OrderHistory
-from sales.serializers import OrderHistoryListSerializer, OrderHistorySerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.serializers import OrderHistorySerializer, OrderHistoryListSerializer, OrderHistoryUpdateSerializer
 
 
 class OrderHistoryFieldInfoView(APIView):
@@ -80,11 +80,16 @@ class OrderHistoryDetailView(RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        instance = get_object_or_404(OrderHistory, id=pk)
-        serializer = self.serializer_class(instance, data=request.data)
+        instance = get_object_or_404(OrderHistory, id=pk, is_delete=False)
+
+        serializer = OrderHistoryUpdateSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
         serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=self.request.user)
-        return Response(serializer.data, status.HTTP_202_ACCEPTED)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     def delete(self, request, pk):
         instance = get_object_or_404(OrderHistory, id=pk)

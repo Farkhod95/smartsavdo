@@ -98,7 +98,7 @@ class OrderHistory(BaseModel):
     status_order_dukon = models.BooleanField(default=False, help_text=_("Do'konda buyurtma xolati"))
     status_order_sklad = models.BooleanField(default=False, help_text=_("Skladda buyurtma xolati"))
     driver_info = models.CharField(_('Driver info'), max_length=255, null=True, blank=True, help_text=_("Haydovchi ma'lumotlari"))
-    is_karzinka = models.BooleanField(default=False, help_text=_("Karzinkaga qoshilganmi?"))
+    is_karzinka = models.BooleanField(default=True, help_text=_("Karzinkaga qoshilganmi?"))
 
     class Meta:
         verbose_name = _('order history')

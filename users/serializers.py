@@ -71,7 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','filials','region','district','roles','address','avatar','created_time','updated_time','created_by','updated_by')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','email','date_joined','password','filials','order_filial','region','district','roles','address','avatar','created_time','updated_time','created_by','updated_by')
         extra_kwargs = {'username': {'validators': [UnicodeUsernameValidator(), UniqueValidator(queryset=User.objects.all())]}, 'password': {'write_only': True, 'required': False, 'allow_null': True}}
 
     def create(self, validated_data):
@@ -132,21 +132,23 @@ class UserListPublicSerializer(serializers.ModelSerializer):
     region_detail = RegionListSerializer(source='region', read_only=True)
     district_detail = DistrictSerializer(source='district', read_only=True)
     filials_detail = FilialSerializer(source='filials', many=True, read_only=True)
+    order_filial_detail = FilialSerializer(source='order_filial', read_only=True)
     roles_detail = RoleSerializer(source='roles', many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'roles_detail','filials','filials_detail','region','region_detail','district','district_detail','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'roles_detail','filials','filials_detail', 'order_filial', 'order_filial_detail','region','region_detail','district','district_detail','address')
 
 
 
 class UserListSerializer(serializers.ModelSerializer):
     role_detail = RoleSerializer(source='roles', many=True, read_only=True)
     filials_detail = FilialSerializer(source='filials', many=True, read_only=True)
+    order_filial_detail = FilialSerializer(source='order_filial', read_only=True)
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'role_detail','filials', 'filials_detail','region','district','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'role_detail','filials', 'filials_detail', 'order_filial', 'order_filial_detail','region','district','address')
 
 
 

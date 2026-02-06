@@ -63,7 +63,9 @@ class User(AbstractUser):
     date_joined = models.DateTimeField(_('Date joined'), auto_now_add=True, help_text=_("Ro‘yxatdan o‘tgan sana"))
     password = models.CharField(max_length=255, null=True, blank=True, help_text=_("Parol"))
     filials = models.ManyToManyField('accounts.Filial', blank=True, related_name='user_company',
-                                       verbose_name=_('Kompaniya'))
+                                       verbose_name=_('Fillial'))
+    order_filial = models.ForeignKey("accounts.Filial", related_name='user_filial', on_delete=models.SET_NULL, null=True,
+                               help_text=_("Buyurtma Fillial"))
     region = models.ForeignKey("accounts.Region", related_name='user_region', on_delete=models.SET_NULL, null=True,
                                help_text=_("Viloyat"))
     district = models.ForeignKey("accounts.District", related_name='user_district', on_delete=models.SET_NULL,

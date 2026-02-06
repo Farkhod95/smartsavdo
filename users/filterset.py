@@ -12,6 +12,7 @@ class UserFilter(FilterSet):
             'last_name': ['exact'],
             'first_name': ['exact'],
             'filials': ['exact'],
+            'order_filial': ['exact'],
             'region': ['exact'],
             'district': ['exact'],
             'gender': ['exact'],
