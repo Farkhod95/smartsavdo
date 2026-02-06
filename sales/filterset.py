@@ -85,6 +85,7 @@ class OrderHistoryFilter(FilterSet):
             'is_debtor_product': ['exact'],
             'status_order_dukon': ['exact'],
             'status_order_sklad': ['exact'],
+            'is_karzinka': ['exact'],
             'driver_info': ['exact', 'icontains'],
         }
 
@@ -106,6 +107,7 @@ class OrderHistoryProductFilter(FilterSet):
             # 'unit_price': ['exact', 'gte', 'lte'],
             # 'wholesale_price': ['exact', 'gte', 'lte'],
             'is_delete': ['exact'],
+            'is_karzinka': ['exact'],
             'cargo_terminal': ['exact', 'icontains'],
             'price_difference': ['exact'],
             'status_order': ['exact'],
