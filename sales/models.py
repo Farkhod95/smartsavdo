@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from accounts.models import Region, District, Filial
-from inventory.models import ProductBranch, ProductModel, ProductType, ProductTypeSize
+from inventory.models import ProductBranch, ProductModel, ProductType, ProductTypeSize, Product
 from restapp.models import BaseModel
 from django.conf import settings
 
@@ -137,7 +137,8 @@ class VozvratOrder(BaseModel):
 
 class OrderHistoryProduct(BaseModel):
     date = models.DateField(_('Date'), null=True, blank=True, help_text=_("Sana"))
-    order_history = models.ForeignKey(OrderHistory, related_name='products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("OrderHistory bilan bog'lanish"))
+    order_history = models.ForeignKey(OrderHistory, related_name='products_order_history', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("OrderHistory bilan bog'lanish"))
+    product = models.ForeignKey(Product, related_name='Order_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Mahsulot bilan bog'lanish"))
     vozvrat_order = models.ForeignKey(VozvratOrder, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("VozvratOrder bilan bog'lanish"))
     branch = models.ForeignKey(ProductBranch, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     model = models.ForeignKey(ProductModel, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductModel bilan bog'lanish"))

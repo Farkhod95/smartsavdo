@@ -96,6 +96,7 @@ class OrderHistoryProductFilter(FilterSet):
         fields = {
             'date': ['exact', 'gte', 'lte'],
             'order_history': ['exact'],
+            'product': ['exact'],
             'vozvrat_order': ['exact'],
             'branch': ['exact'],
             'model': ['exact'],

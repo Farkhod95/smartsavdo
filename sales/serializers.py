@@ -4,7 +4,7 @@ from django.db import transaction
 
 from accounts.serializers import RegionListSerializer, DistrictListPublicSerializer, FilialListSerializer
 from inventory.serializers import ProductBranchListSerializer, ProductModelListSerializer, ProductTypeListSerializer, \
-    ProductTypeSizeListSerializer
+    ProductTypeSizeListSerializer, ProductSerializer
 from sales.models import Client, ClientKeshbekHistory, Order, OrderHistory, OrderHistoryProduct, VozvratOrder
 
 
@@ -289,6 +289,7 @@ class VozvratOrderSerializer(serializers.ModelSerializer):
 
 class OrderHistoryProductListSerializer(serializers.ModelSerializer):
     order_history_detail = OrderHistoryListSerializer(source='order_history', read_only=True)
+    product_detail = ProductSerializer(source='product', read_only=True)
     vozvrat_order_detail = VozvratOrderSerializer(source='vozvrat_order', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
     model_detail = ProductModelListSerializer(source='model', read_only=True)
@@ -297,11 +298,11 @@ class OrderHistoryProductListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderHistoryProduct
-        fields = ('id', 'date', 'order_history', 'order_history_detail', 'vozvrat_order', 'vozvrat_order_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka')
+        fields = ('id', 'date', 'order_history', 'order_history_detail', 'vozvrat_order', 'vozvrat_order_detail', 'product', 'product_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka')
 
 
 class OrderHistoryProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderHistoryProduct
-        fields = ('id', 'date', 'order_history', 'vozvrat_order', 'branch', 'model', 'type', 'size', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka')
+        fields = ('id', 'date', 'order_history', 'vozvrat_order', 'product', 'branch', 'model', 'type', 'size', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka')
 
