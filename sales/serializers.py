@@ -4,6 +4,7 @@ from django.db import transaction
 
 from accounts.serializers import RegionListSerializer, DistrictListPublicSerializer, FilialListSerializer, \
     FilialSerializer
+from inventory.models import Product
 from inventory.serializers import ProductBranchListSerializer, ProductModelListSerializer, ProductTypeListSerializer, \
     ProductTypeSizeListSerializer, ProductSerializer
 from sales.models import Client, ClientKeshbekHistory, Order, OrderHistory, OrderHistoryProduct, VozvratOrder
@@ -317,5 +318,100 @@ class OrderHistoryProductListSerializer(serializers.ModelSerializer):
 class OrderHistoryProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderHistoryProduct
-        fields = ('id', 'date', 'order_history', 'vozvrat_order', 'product', 'branch', 'model', 'type', 'size', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka')
+        fields = ('id', 'date', 'order_history', 'vozvrat_order', 'product', 'branch', 'model', 'type', 'size', 'count',
+                  'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal',
+                  'price_difference', 'status_order', 'is_karzinka')
+
+
+class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderHistoryProduct
+        fields = (
+            'id', 'date',
+            'order_history', 'vozvrat_order',
+            'product',
+            'branch', 'model', 'type', 'size',
+            'count', 'given_count',
+            'real_price', 'unit_price', 'wholesale_price',
+            'is_delete', 'cargo_terminal',
+            'price_difference', 'status_order', 'is_karzinka'
+        )
+        read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
+
+    def validate(self, attrs):
+        product = attrs.get('product')
+        count = attrs.get('count')
+
+        if not product:
+            raise serializers.ValidationError({"product": "Mahsulot (product) majburiy."})
+
+        if count is None:
+            raise serializers.ValidationError({"count": "Miqdor (count) majburiy."})
+
+        if int(count) <= 0:
+            raise serializers.ValidationError({"count": "Miqdor (count) 0 dan katta bo‘lishi kerak."})
+
+        if product.is_delete:
+            raise serializers.ValidationError({"product": "Bu mahsulot o‘chirilgan (is_delete=True)."})
+
+        # NOTE: stock tekshiruvni create() ichida select_for_update bilan ham qilamiz.
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        """
+        POST paytida:
+        - branch/model/type/size -> Product dan ko‘chiriladi
+        - Product.count -> kamaytiriladi
+        """
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        product: Product = validated_data["product"]
+        order_count = int(validated_data["count"])
+
+        # Stockni lock qilib olamiz (race-condition oldi olinadi)
+        locked_product = (
+            Product.objects
+            .select_for_update()
+            .select_related('branch', 'model', 'type', 'size')
+            .get(pk=product.pk)
+        )
+
+        if locked_product.is_delete:
+            raise serializers.ValidationError({"product": "Bu mahsulot o‘chirilgan (is_delete=True)."})
+
+        current_stock = int(locked_product.count or 0)
+        if current_stock < order_count:
+            raise serializers.ValidationError({
+                "count": f"Mahsulot qoldig‘i yetarli emas. Omborda: {current_stock}, so‘raldi: {order_count}."
+            })
+
+        # Productdan kerakli FKlarni olish
+        validated_data["branch"] = locked_product.branch
+        validated_data["model"] = locked_product.model
+        validated_data["type"] = locked_product.type
+        validated_data["size"] = locked_product.size
+
+        # Real price (xohlasangiz saqlaysiz, bo‘lmasa olib tashlang)
+        validated_data["real_price"] = locked_product.real_price
+
+        # given_count kelmasa, default = count
+        if validated_data.get("given_count") is None:
+            validated_data["given_count"] = order_count
+
+        # created_by / updated_by
+        if user and user.is_authenticated:
+            validated_data["created_by"] = user
+            validated_data["updated_by"] = user
+
+        # OrderHistoryProduct ni yaratamiz
+        instance = super().create(validated_data)
+
+        # Product.count ni kamaytiramiz
+        # locked_product.count = current_stock - order_count
+        # locked_product.save(update_fields=["count", "updated_time"])
+
+        return instance
+
 

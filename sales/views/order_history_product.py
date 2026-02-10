@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 
 from sales.filterset import OrderHistoryProductFilter
 from sales.models import OrderHistoryProduct
-from sales.serializers import OrderHistoryProductListSerializer, OrderHistoryProductSerializer
+from sales.serializers import OrderHistoryProductListSerializer, OrderHistoryProductSerializer, \
+    OrderHistoryProductCreateSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -59,7 +60,7 @@ class OrderHistoryProductView(ListCreateAPIView):
         return OrderHistoryProduct.objects.filter(is_delete=False)
 
     def post(self, request):
-        serializer = OrderHistoryProductSerializer(data=request.data)
+        serializer = OrderHistoryProductCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(created_by=self.request.user)
         return Response(serializer.data, status.HTTP_201_CREATED)
