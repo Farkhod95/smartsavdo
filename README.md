@@ -50,3 +50,17 @@
     python -m django --version   # 4.2.13 chiqishi kerak
 
 
+#### 9. Elegantdan malumotlarni import qilish 
+    # Ishga tushirish
+        python manage.py import_product_models
+    # Agar elegant_id bo‘yicha borlarini yangilab ketsin desangiz:
+        python manage.py import_product_models --update
+    
+    # model_types boyicha import
+        python manage.py import_product_model_types 
+
+    # import_product_type boyicha import
+        python manage.py import_product_type_sizes --update
+
+
+    

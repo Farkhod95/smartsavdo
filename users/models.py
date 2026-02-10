@@ -12,13 +12,16 @@ class CommonInfo(models.Model):
 
 
 class Role(models.Model):
-    name = models.CharField(_('Name'), max_length=150, help_text=_('Rol to‘liq nomi'))
-    key = models.CharField(_('Key'), max_length=150, help_text=_('Kalit soz'))
+    name = models.CharField(_('Name'), max_length=150, null=True, blank=True, help_text=_('Rol to‘liq nomi'))
+    key = models.CharField(_('Key'), max_length=150, null=True, blank=True, help_text=_('Kalit soz'))
     description = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         verbose_name = _('role')
         verbose_name_plural = _('roles')
+
+    def __str__(self):
+        return self.name
 
 
 class Company(models.Model):
