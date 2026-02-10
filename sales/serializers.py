@@ -336,82 +336,83 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
             'is_delete', 'cargo_terminal',
             'price_difference', 'status_order', 'is_karzinka'
         )
+        # Productdan olinadigan maydonlar user yubormaydi
         read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
 
     def validate(self, attrs):
-        product = attrs.get('product')
-        count = attrs.get('count')
+        product = attrs.get("product")
+        count = attrs.get("count")
 
         if not product:
-            raise serializers.ValidationError({"product": "Mahsulot (product) majburiy."})
+            raise serializers.ValidationError({"product": "product majburiy."})
 
         if count is None:
-            raise serializers.ValidationError({"count": "Miqdor (count) majburiy."})
+            raise serializers.ValidationError({"count": "count majburiy."})
 
-        if int(count) <= 0:
-            raise serializers.ValidationError({"count": "Miqdor (count) 0 dan katta bo‘lishi kerak."})
+        try:
+            count_int = int(count)
+        except Exception:
+            raise serializers.ValidationError({"count": "count son bo‘lishi kerak."})
+
+        if count_int <= 0:
+            raise serializers.ValidationError({"count": "count 0 dan katta bo‘lishi kerak."})
 
         if product.is_delete:
-            raise serializers.ValidationError({"product": "Bu mahsulot o‘chirilgan (is_delete=True)."})
+            raise serializers.ValidationError({"product": "Bu product o‘chirilgan (is_delete=True)."})
 
-        # NOTE: stock tekshiruvni create() ichida select_for_update bilan ham qilamiz.
         return attrs
 
     @transaction.atomic
     def create(self, validated_data):
-        """
-        POST paytida:
-        - branch/model/type/size -> Product dan ko‘chiriladi
-        - Product.count -> kamaytiriladi
-        """
         request = self.context.get("request")
         user = getattr(request, "user", None)
 
         product: Product = validated_data["product"]
         order_count = int(validated_data["count"])
 
-        # Stockni lock qilib olamiz (race-condition oldi olinadi)
+        # ✅ MUHIM: select_related() YO‘Q !!!
+        # ✅ Django 4.2 da of=('self',) bilan faqat Product jadvalini lock qilamiz
         locked_product = (
             Product.objects
-            .select_for_update()
-            .select_related('branch', 'model', 'type', 'size')
+            .select_for_update(of=('self',))
             .get(pk=product.pk)
         )
 
         if locked_product.is_delete:
-            raise serializers.ValidationError({"product": "Bu mahsulot o‘chirilgan (is_delete=True)."})
+            raise serializers.ValidationError({"product": "Bu product o‘chirilgan (is_delete=True)."})
 
         current_stock = int(locked_product.count or 0)
         if current_stock < order_count:
             raise serializers.ValidationError({
-                "count": f"Mahsulot qoldig‘i yetarli emas. Omborda: {current_stock}, so‘raldi: {order_count}."
+                "count": f"Qoldiq yetarli emas. Omborda: {current_stock}, so‘raldi: {order_count}."
             })
 
-        # Productdan kerakli FKlarni olish
+        # ✅ Productdan FK larni ko‘chiramiz (JOIN shart emas)
         validated_data["branch"] = locked_product.branch
         validated_data["model"] = locked_product.model
         validated_data["type"] = locked_product.type
         validated_data["size"] = locked_product.size
 
-        # Real price (xohlasangiz saqlaysiz, bo‘lmasa olib tashlang)
+        # (xohlasangiz real_price ni ham productdan olib qo‘yasiz)
         validated_data["real_price"] = locked_product.real_price
 
-        # given_count kelmasa, default = count
+        # given_count kelmasa = count
         if validated_data.get("given_count") is None:
             validated_data["given_count"] = order_count
 
-        # created_by / updated_by
-        if user and user.is_authenticated:
+        # created_by / updated_by (BaseModel bo‘lsa)
+        if user and getattr(user, "is_authenticated", False):
             validated_data["created_by"] = user
             validated_data["updated_by"] = user
 
-        # OrderHistoryProduct ni yaratamiz
+        # OrderHistoryProduct yaratamiz
         instance = super().create(validated_data)
 
-        # Product.count ni kamaytiramiz
-        # locked_product.count = current_stock - order_count
-        # locked_product.save(update_fields=["count", "updated_time"])
+        # ✅ Product.count kamaytiramiz
+        locked_product.count = current_stock - order_count
+        locked_product.save(update_fields=["count", "updated_time"])
 
         return instance
+
 
 
