@@ -61,6 +61,10 @@
 
     # import_product_type boyicha import
         python manage.py import_product_type_sizes --update
+    
+    # import_products_from_warehouse 
+        python manage.py import_products_from_warehouse --path inventory/data/warehouse.json
+
 
 
     

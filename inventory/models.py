@@ -70,6 +70,7 @@ class ProductTypeSize(BaseModel):
     unit = models.ForeignKey(Unit, related_name='product_type_sizes', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Unit (o'lchov birligi) bilan bog'lanish"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+    elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))
 
     class Meta:
         verbose_name = _('product type size')
