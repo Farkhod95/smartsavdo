@@ -3,7 +3,7 @@ from django.db import transaction
 
 from accounts.serializers import FilialListSerializer
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
-    ProductImage
+    ProductImage, ProductBranchCategory
 from suppliers.serializers import PurchaseInvoiceSerializer
 
 
@@ -29,6 +29,25 @@ class ProductBranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductBranch
         fields = ('id', 'name', 'sorting', 'is_delete')
+
+
+class ProductBranchCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductBranchCategory
+        fields = ('id', 'product_branch', 'name', 'sorting', 'is_delete')
+        extra_kwargs = {
+            'name': {"required": False, "allow_blank": True, "allow_null": True},
+            'sorting': {"required": False, "allow_null": True},
+            'is_delete': {"required": False},
+        }
+
+
+class ProductBranchCategoryListSerializer(serializers.ModelSerializer):
+    product_branch_detail = ProductBranchListSerializer(source='product_branch', read_only=True)
+
+    class Meta:
+        model = ProductBranchCategory
+        fields = ('id', 'product_branch', 'product_branch_detail', 'name', 'sorting', 'is_delete')
 
 
 class ProductModelListSerializer(serializers.ModelSerializer):

@@ -32,10 +32,25 @@ class ProductBranch(BaseModel):
     def __str__(self):
         return self.name or f"ProductBranch #{self.pk}"
 
+class ProductBranchCategory(BaseModel):
+    product_branch = models.ForeignKey(ProductBranch, related_name='branch_categories', on_delete=models.SET_NULL, null=True,
+                               blank=True, help_text=_("ProductBranch bilan bog'lanish"))
+    name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Mahsulot bo'limi nomi"))
+    sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
+    is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+
+    class Meta:
+        verbose_name = _('product branch Category')
+        verbose_name_plural = _('product branch Categories')
+
+    def __str__(self):
+        return self.name or f"ProductBranchCategory #{self.pk}"
+
+
 
 class ProductModel(BaseModel):
     name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Model nomi (masalan: N-1, Grafin nabor, Termos, Artel, Canon, Samsung)"))
-    branch = models.ForeignKey(ProductBranch, related_name='product_models', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
+    branch = models.ForeignKey(ProductBranchCategory, related_name='product_models', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))

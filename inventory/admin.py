@@ -1,6 +1,6 @@
 from django.contrib import admin
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
-    ProductImage
+    ProductImage, ProductBranchCategory
 
 
 @admin.register(Unit)
@@ -17,6 +17,15 @@ class ProductBranchAdmin(admin.ModelAdmin):
     fields = ('name', 'sorting', 'is_delete')
     search_fields = ('name',)
     list_filter = ('is_delete',)
+
+
+@admin.register(ProductBranchCategory)
+class ProductBranchCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'product_branch', 'sorting', 'is_delete')
+    list_select_related = ('product_branch',)
+    list_filter = ('is_delete', 'product_branch')
+    search_fields = ('name',)
+    fields = ('product_branch', 'name', 'sorting', 'is_delete')
 
 
 @admin.register(ProductModel)

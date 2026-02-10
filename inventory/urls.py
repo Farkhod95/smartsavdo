@@ -3,6 +3,8 @@ from django.urls import re_path, path
 from inventory.views.product import ProductView, ProductDetailView, ProductFieldInfoView, ProductViewList
 from inventory.views.product_branch import ProductBranchView, ProductBranchDetailView, ProductBranchFieldInfoView, \
     ProductBranchViewList
+from inventory.views.product_branch_category import ProductBranchCategoryView, ProductBranchCategoryDetailView, \
+    ProductBranchCategoryFieldInfoView
 from inventory.views.product_history import ProductHistoryView, ProductHistoryDetailView, ProductHistoryFieldInfoView
 from inventory.views.product_image import ProductImageView, ProductImageDetailView, ProductImageFieldInfoView
 from inventory.views.product_model import ProductModelView, ProductModelDetailView, ProductModelFieldInfoView
@@ -20,6 +22,12 @@ urlpatterns = [
     path('product-branch/<int:pk>', ProductBranchDetailView.as_view(), name='product_branch_detail_view'),
     path('product-branch/fields', ProductBranchFieldInfoView.as_view(), name='product_branch_fields_info'),
     path('product-branch/public', ProductBranchViewList.as_view(), name='product_branch_public_info'),
+
+    re_path(r'^product-branch-category/$', ProductBranchCategoryView.as_view(), name='product_branch_category_view'),
+    path('product-branch-category/<int:pk>', ProductBranchCategoryDetailView.as_view(),
+         name='product_branch_category_detail_view'),
+    path('product-branch-category/fields/', ProductBranchCategoryFieldInfoView.as_view(),
+         name='product_branch_category_fields_info'),
 
     re_path(r'^product-model$', ProductModelView.as_view(), name='product_model_view'),
     path('product-model/<int:pk>', ProductModelDetailView.as_view(), name='product_model_detail_view'),

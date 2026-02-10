@@ -1,6 +1,6 @@
 from django_filters import FilterSet
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
-    ProductImage
+    ProductImage, ProductBranchCategory
 
 
 class UnitFilter(FilterSet):
@@ -21,6 +21,13 @@ class ProductBranchFilter(FilterSet):
             'sorting': ['exact', 'gte', 'lte'],
             'is_delete': ['exact'],
         }
+
+
+class ProductBranchCategoryFilter(FilterSet):
+
+    class Meta:
+        model = ProductBranchCategory
+        fields = ('product_branch', 'is_delete', 'name')
 
 
 class ProductModelFilter(FilterSet):
