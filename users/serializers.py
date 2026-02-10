@@ -49,6 +49,13 @@ class CompanyListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'logo', 'email', 'phone', 'address', 'region', 'district', 'description')
 
 
+class UserViewListShortSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name','phone_number')
+
+
 class UserViewListSerializer(serializers.ModelSerializer):
 
     class Meta:

@@ -7,6 +7,7 @@ from accounts.serializers import RegionListSerializer, DistrictListPublicSeriali
 from inventory.serializers import ProductBranchListSerializer, ProductModelListSerializer, ProductTypeListSerializer, \
     ProductTypeSizeListSerializer, ProductSerializer
 from sales.models import Client, ClientKeshbekHistory, Order, OrderHistory, OrderHistoryProduct, VozvratOrder
+from users.serializers import UserViewListShortSerializer
 
 
 class ClientListSerializer(serializers.ModelSerializer):
@@ -58,6 +59,7 @@ class OrderHistoryListSerializer(serializers.ModelSerializer):
     order_detail = OrderSerializer(source='order', read_only=True)
     client_detail = ClientSerializer(source='client', read_only=True)
     order_filial_detail = FilialSerializer(source='client', read_only=True)
+    created_by_detail = UserViewListShortSerializer(source='created_by', read_only=True)
 
     class Meta:
         model = OrderHistory
