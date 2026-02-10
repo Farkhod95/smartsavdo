@@ -20,7 +20,7 @@ class PermissionSerializer(serializers.ModelSerializer):
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'key', 'description']
 
 
 class GroupSerializer(serializers.ModelSerializer):

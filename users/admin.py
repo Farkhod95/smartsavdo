@@ -11,7 +11,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('full_name', 'email', 'phone_number', 'gender', 'date_of_birthday', 'avatar', 'address')}),
         (_('Company & Location'), {'fields': ('filials', 'order_filial', 'region', 'district')}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'roles', 'groups', 'user_permissions')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'roles', )}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Audit'), {'fields': ('created_by', 'updated_by', 'created_time', 'updated_time')}),
     )
@@ -27,7 +27,6 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'roles', 'filials', 'order_filial', 'region', 'district')
     search_fields = ('username', 'full_name', 'phone_number', 'email')
     ordering = ('-id',)
-    filter_horizontal = ('groups', 'user_permissions')
 
     readonly_fields = ('date_joined', 'last_login', 'created_time', 'updated_time')
 
@@ -44,11 +43,10 @@ class CompanyAdmin(admin.ModelAdmin):
 
 
 @admin.register(Role)
-class RoleAdmin(GroupAdmin):
-    list_display = ('name', 'description')
-    fields = ('name', 'description', 'permissions')
-    search_fields = ('name', 'description')
-    filter_horizontal = ('permissions',)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ('name', 'key', 'description')
+    fields = ('name', 'key', 'description')
+    search_fields = ('name', 'key')
 
 
 @admin.register(AppModule)

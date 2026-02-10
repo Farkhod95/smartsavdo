@@ -11,8 +11,11 @@ class CommonInfo(models.Model):
     updated_time = models.DateTimeField(auto_now_add=False, auto_now=True)
 
 
-class Role(Group):
-    objects = GroupManager()
+class Role(models.Model):
+    name = models.CharField(_('Name'), max_length=150, default='Optivora', null=True, blank=True,
+                            help_text=_('Rol to‘liq nomi'))
+    key = models.CharField(_('Key'), max_length=150, null=True, blank=True,
+                            help_text=_('Kalit soz'))
     description = models.CharField(max_length=255)
 
     class Meta:
@@ -21,7 +24,7 @@ class Role(Group):
 
 
 class Company(models.Model):
-    name = models.CharField(_('Kompaniya nomi'), max_length=150, default='Optivora', null=True, blank=True, help_text=_('Kompaniya to‘liq nomi'))  # Masalan: Optivora
+    name = models.CharField(_('Kompaniya nomi'), max_length=150, null=True, blank=True, help_text=_('Kompaniya to‘liq nomi'))  # Masalan: Optivora
     logo = models.ImageField(upload_to='company/logo/%Y/%m/', null=True, blank=True, verbose_name=_('Logo'), help_text=_('Kompaniya logotipi (ixtiyoriy)'))  # PNG/SVG/JPG
     email = models.EmailField(_('Email'), max_length=254, null=True, blank=True, help_text=_('Rasmiy aloqa e-pochtasi'))  # info@...
     phone = models.CharField(_('Telefon'), max_length=64, null=True, blank=True, help_text=_('Aloqa uchun telefon raqami'))  # +998...
