@@ -58,7 +58,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderHistoryListSerializer(serializers.ModelSerializer):
     order_detail = OrderSerializer(source='order', read_only=True)
     client_detail = ClientSerializer(source='client', read_only=True)
-    order_filial_detail = FilialSerializer(source='client', read_only=True)
+    order_filial_detail = FilialSerializer(source='order_filial', read_only=True)
     created_by_detail = UserViewListShortSerializer(source='created_by', read_only=True)
 
     class Meta:
@@ -68,7 +68,7 @@ class OrderHistoryListSerializer(serializers.ModelSerializer):
                   'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer',
                   'discount_amount', 'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
                   'is_debtor_product', 'status_order_dukon', 'status_order_sklad', 'driver_info', 'is_karzinka',
-                  'created_time', 'created_by', 'order_filial', 'order_filial_detail')
+                  'created_time', 'created_by', 'created_by_detail', 'order_filial', 'order_filial_detail')
 
 
 def d(value) -> Decimal:

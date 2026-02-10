@@ -53,7 +53,7 @@ class UserViewListShortSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'full_name','phone_number')
+        fields = ('id', 'full_name', 'phone_number')
 
 
 class UserViewListSerializer(serializers.ModelSerializer):
