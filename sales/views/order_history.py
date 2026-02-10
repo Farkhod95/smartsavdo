@@ -47,6 +47,22 @@ class OrderHistoryViewList(ListCreateAPIView):
         return OrderHistory.objects.filter(is_delete=False)
 
 
+class OrderHistorySelfView(ListCreateAPIView):
+    serializer_class = OrderHistoryListSerializer
+    pagination_class = ResultsSetPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = OrderHistoryFilter
+    search_fields = ('order__id', 'client__full_name', 'employee__username', 'note', 'driver_info')
+    ordering = ['pk']
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        return OrderHistory.objects.filter(
+            is_delete=False,
+            created_by=self.request.user
+        )
+
+
 class OrderHistoryView(ListCreateAPIView):
     serializer_class = OrderHistoryListSerializer
     pagination_class = ResultsSetPagination
