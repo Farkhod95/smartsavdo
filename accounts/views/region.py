@@ -60,195 +60,195 @@ class RegionView(ListCreateAPIView):
         return Region.objects.all()
 
     def post(self, request):
-        # serializer = RegionSerializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        # serializer.save(created_by=self.request.user)
-        # return Response(serializer.data, status.HTTP_201_CREATED)
-        regions_data =[
-            {
-                "id": 1,
-                "code": 17,
-                "name": "Andijan region",
-                "name_en": "Andijan region",
-                "name_uz": "Andijon viloyati",
-                "name_ru": "Андижанская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 2,
-                "code": 20,
-                "name": "Bukhara region",
-                "name_en": "Bukhara region",
-                "name_uz": "Buxoro viloyati",
-                "name_ru": "Бухарская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 3,
-                "code": 13,
-                "name": "Jizzakh region",
-                "name_en": "Jizzakh region",
-                "name_uz": "Jizzax viloyati",
-                "name_ru": "Джизакская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 4,
-                "code": 18,
-                "name": "Kashkadarya region",
-                "name_en": "Kashkadarya region",
-                "name_uz": "Qashqadaryo viloyati",
-                "name_ru": "Кашкадарьинская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 5,
-                "code": 21,
-                "name": "Navoi region",
-                "name_en": "Navoi region",
-                "name_uz": "Navoiy viloyati",
-                "name_ru": "Навоийская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 6,
-                "code": 16,
-                "name": "Namangan region",
-                "name_en": "Namangan region",
-                "name_uz": "Namangan viloyati",
-                "name_ru": "Наманганская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 7,
-                "code": 14,
-                "name": "Samarkand region",
-                "name_en": "Samarkand region",
-                "name_uz": "Samarqand viloyati",
-                "name_ru": "Самаркандская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 8,
-                "code": 19,
-                "name": "Surkhandarya region",
-                "name_en": "Surkhandarya region",
-                "name_uz": "Surxondaryo viloyati",
-                "name_ru": "Сурхандарьинская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 9,
-                "code": 12,
-                "name": "Syrdarya region",
-                "name_en": "Syrdarya region",
-                "name_uz": "Sirdaryo viloyati",
-                "name_ru": "Сырдарьинская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 10,
-                "code": 10,
-                "name": "Tashkent city",
-                "name_en": "Tashkent city",
-                "name_uz": "Toshkent shahri",
-                "name_ru": "город Ташкент",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 11,
-                "code": 11,
-                "name": "Tashkent region",
-                "name_en": "Tashkent region",
-                "name_uz": "Toshkent viloyati",
-                "name_ru": "Ташкентская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 12,
-                "code": 15,
-                "name": "Fergana region",
-                "name_en": "Fergana region",
-                "name_uz": "Farg'ona viloyati",
-                "name_ru": "Ферганская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 13,
-                "code": 22,
-                "name": "Khorezm region",
-                "name_en": "Khorezm region",
-                "name_uz": "Xorazm viloyati",
-                "name_ru": "Хорезмская область",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            },
-            {
-                "id": 14,
-                "code": 23,
-                "name": "Republic of Karakalpakstan",
-                "name_en": "Republic of Karakalpakstan",
-                "name_uz": "Qoraqalpog'iston Respublikasi",
-                "name_ru": "Республика Каракалпакстан",
-                "created_time": "2020-01-01 00:00:00+00:00",
-                "updated_time": "2020-01-01 00:00:00+00:00",
-                "created_by": 1
-            }
-        ]
-
-        for region in regions_data:
-            region_data = {
-                'code': region.get('code'),
-                'name': region.get('name_uz'),
-                'name_uz': region.get('name_uz'),
-                'name_ru': region.get('name_ru'),
-                'name_en': region.get('name_en'),
-            }
-
-            # code bo‘yicha mavjudligini tekshiramiz
-            region_obj = Region.objects.filter(code=region_data['code']).first()
-
-            if region_obj:
-                # UPDATE
-                serializer = RegionSerializer(region_obj, data=region_data, partial=True)
-                action = "updated"
-            else:
-                # CREATE
-                serializer = RegionSerializer(data=region_data)
-                action = "created"
-
-            if serializer.is_valid():
-                serializer.save()
-                print(f"Region {region_data.get('name')} {action} successfully.")
-            else:
-                print(f"Validation errors for region {region_data.get('name')}: {serializer.errors}")
-
-        return Response({}, status=status.HTTP_201_CREATED)
+        serializer = RegionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(created_by=self.request.user)
+        return Response(serializer.data, status.HTTP_201_CREATED)
+        # regions_data =[
+        #     {
+        #         "id": 1,
+        #         "code": 17,
+        #         "name": "Andijan region",
+        #         "name_en": "Andijan region",
+        #         "name_uz": "Andijon viloyati",
+        #         "name_ru": "Андижанская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 2,
+        #         "code": 20,
+        #         "name": "Bukhara region",
+        #         "name_en": "Bukhara region",
+        #         "name_uz": "Buxoro viloyati",
+        #         "name_ru": "Бухарская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 3,
+        #         "code": 13,
+        #         "name": "Jizzakh region",
+        #         "name_en": "Jizzakh region",
+        #         "name_uz": "Jizzax viloyati",
+        #         "name_ru": "Джизакская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 4,
+        #         "code": 18,
+        #         "name": "Kashkadarya region",
+        #         "name_en": "Kashkadarya region",
+        #         "name_uz": "Qashqadaryo viloyati",
+        #         "name_ru": "Кашкадарьинская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 5,
+        #         "code": 21,
+        #         "name": "Navoi region",
+        #         "name_en": "Navoi region",
+        #         "name_uz": "Navoiy viloyati",
+        #         "name_ru": "Навоийская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 6,
+        #         "code": 16,
+        #         "name": "Namangan region",
+        #         "name_en": "Namangan region",
+        #         "name_uz": "Namangan viloyati",
+        #         "name_ru": "Наманганская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 7,
+        #         "code": 14,
+        #         "name": "Samarkand region",
+        #         "name_en": "Samarkand region",
+        #         "name_uz": "Samarqand viloyati",
+        #         "name_ru": "Самаркандская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 8,
+        #         "code": 19,
+        #         "name": "Surkhandarya region",
+        #         "name_en": "Surkhandarya region",
+        #         "name_uz": "Surxondaryo viloyati",
+        #         "name_ru": "Сурхандарьинская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 9,
+        #         "code": 12,
+        #         "name": "Syrdarya region",
+        #         "name_en": "Syrdarya region",
+        #         "name_uz": "Sirdaryo viloyati",
+        #         "name_ru": "Сырдарьинская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 10,
+        #         "code": 10,
+        #         "name": "Tashkent city",
+        #         "name_en": "Tashkent city",
+        #         "name_uz": "Toshkent shahri",
+        #         "name_ru": "город Ташкент",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 11,
+        #         "code": 11,
+        #         "name": "Tashkent region",
+        #         "name_en": "Tashkent region",
+        #         "name_uz": "Toshkent viloyati",
+        #         "name_ru": "Ташкентская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 12,
+        #         "code": 15,
+        #         "name": "Fergana region",
+        #         "name_en": "Fergana region",
+        #         "name_uz": "Farg'ona viloyati",
+        #         "name_ru": "Ферганская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 13,
+        #         "code": 22,
+        #         "name": "Khorezm region",
+        #         "name_en": "Khorezm region",
+        #         "name_uz": "Xorazm viloyati",
+        #         "name_ru": "Хорезмская область",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     },
+        #     {
+        #         "id": 14,
+        #         "code": 23,
+        #         "name": "Republic of Karakalpakstan",
+        #         "name_en": "Republic of Karakalpakstan",
+        #         "name_uz": "Qoraqalpog'iston Respublikasi",
+        #         "name_ru": "Республика Каракалпакстан",
+        #         "created_time": "2020-01-01 00:00:00+00:00",
+        #         "updated_time": "2020-01-01 00:00:00+00:00",
+        #         "created_by": 1
+        #     }
+        # ]
+        #
+        # for region in regions_data:
+        #     region_data = {
+        #         'code': region.get('code'),
+        #         'name': region.get('name_uz'),
+        #         'name_uz': region.get('name_uz'),
+        #         'name_ru': region.get('name_ru'),
+        #         'name_en': region.get('name_en'),
+        #     }
+        #
+        #     # code bo‘yicha mavjudligini tekshiramiz
+        #     region_obj = Region.objects.filter(code=region_data['code']).first()
+        #
+        #     if region_obj:
+        #         # UPDATE
+        #         serializer = RegionSerializer(region_obj, data=region_data, partial=True)
+        #         action = "updated"
+        #     else:
+        #         # CREATE
+        #         serializer = RegionSerializer(data=region_data)
+        #         action = "created"
+        #
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #         print(f"Region {region_data.get('name')} {action} successfully.")
+        #     else:
+        #         print(f"Validation errors for region {region_data.get('name')}: {serializer.errors}")
+        #
+        # return Response({}, status=status.HTTP_201_CREATED)
 
 
 class RegionDetailView(RetrieveUpdateDestroyAPIView):
