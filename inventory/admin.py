@@ -54,17 +54,17 @@ class ProductTypeSizeAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date', 'filial', 'branch', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price', 'is_delete')
-    fields = ('date', 'reserve_limit', 'filial', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete')
-    search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name')
-    list_filter = ('is_delete', 'filial', 'branch', 'model', 'type')
+    list_display = ('id', 'date', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price', 'is_delete')
+    fields = ('date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete')
+    search_fields = ('note', 'filial__name', 'branch__name', 'branch_category__name', 'model__name', 'type__name')
+    list_filter = ('is_delete', 'filial', 'branch', 'branch_category', 'model', 'type')
 
 
 @admin.register(ProductHistory)
 class ProductHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date', 'product', 'filial', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price')
-    fields = ('date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
-    search_fields = ('note', 'product__id', 'purchase_invoice__id', 'branch__name', 'model__name', 'type__name')
+    list_display = ('id', 'date', 'product', 'filial', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price')
+    fields = ('date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+    search_fields = ('note', 'product__id', 'purchase_invoice__id', 'branch__name', 'branch_category__name', 'model__name', 'type__name')
     list_filter = ('date', 'branch', 'model', 'type')
 
 

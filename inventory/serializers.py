@@ -51,7 +51,7 @@ class ProductBranchCategoryListSerializer(serializers.ModelSerializer):
 
 
 class ProductModelListSerializer(serializers.ModelSerializer):
-    branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
+    branch_detail = ProductBranchCategorySerializer(source='branch', read_only=True)
 
     class Meta:
         model = ProductModel
@@ -115,6 +115,7 @@ class ProductImagePublicSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     filial_detail = FilialListSerializer(source='filial', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
     model_detail = ProductModelListSerializer(source='model', read_only=True)
     type_detail = ProductTypeListSerializer(source='type', read_only=True)
     size_detail = ProductTypeSizeListSerializer(source='size', read_only=True)
@@ -123,32 +124,35 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
+        fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'branch_category',
+                  'branch_category_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail',
+                  'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id', 'date', 'reserve_limit', 'filial', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete')
+        fields = ('id', 'date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete')
 
 
 class ProductHistoryListSerializer(serializers.ModelSerializer):
     product_detail = ProductListSerializer(source='product', read_only=True)
     purchase_invoice_detail = PurchaseInvoiceSerializer(source='purchase_invoice', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
     model_detail = ProductModelListSerializer(source='model', read_only=True)
     type_detail = ProductTypeListSerializer(source='type', read_only=True)
     size_detail = ProductTypeSizeListSerializer(source='size', read_only=True)
 
     class Meta:
         model = ProductHistory
-        fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'product_detail', 'purchase_invoice', 'purchase_invoice_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+        fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'product_detail', 'purchase_invoice', 'purchase_invoice_detail', 'branch', 'branch_detail', 'branch_category', 'branch_category_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
 
 
 class ProductHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductHistory
-        fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+        fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     """
@@ -158,7 +162,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            'id', 'date', 'reserve_limit', 'filial', 'branch', 'model', 'type', 'size', 'count', 'real_price', 'unit_price',
+            'id', 'date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price',
             'wholesale_price', 'min_price', 'note', 'is_delete',
         )
         read_only_fields = ('id',)
@@ -173,7 +177,7 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductHistory
         fields = (
-            'id', 'date', 'filial', 'reserve_limit', 'purchase_invoice', 'branch', 'model', 'type', 'size', 'count', 'real_price',
+            'id', 'date', 'filial', 'reserve_limit', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price',
             'unit_price', 'wholesale_price', 'min_price', 'note',
             'product',       # response’da ko‘rinsin
             # 'product_data',  # request’da keladi
@@ -208,6 +212,7 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
             reserve_limit=validated_data.get('reserve_limit'),
             filial=filial,
             branch=validated_data.get('branch'),
+            branch_category=validated_data.get('branch_category'),
             model=validated_data.get('model'),
             type=validated_data.get('type'),
             size=validated_data.get('size'),
