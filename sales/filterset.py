@@ -64,6 +64,8 @@ class OrderHistoryFilter(FilterSet):
             'order': ['exact'],
             'client': ['exact'],
             'employee': ['exact'],
+            'created_by': ['exact'],
+            'order_filial': ['exact'],
             'exchange_rate': ['exact', 'gte', 'lte'],
             'date': ['exact', 'gte', 'lte'],
             # 'all_profit_dollar': ['exact', 'gte', 'lte'],

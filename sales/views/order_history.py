@@ -61,7 +61,7 @@ class OrderHistoryView(ListCreateAPIView):
     def post(self, request):
         serializer = OrderHistorySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=self.request.user, order_filial=self.request.user.order_filial)
         return Response(serializer.data, status.HTTP_201_CREATED)
 
 

@@ -74,6 +74,8 @@ class Order(BaseModel):
 class OrderHistory(BaseModel):
     order = models.ForeignKey(Order, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Order bilan bog'lanish"))
     client = models.ForeignKey(Client, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Client bilan bog'lanish"))
+    order_filial = models.ForeignKey(Filial, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True,
+                               help_text=_("Filial bilan bog'lanish"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Buyurtmani qabul qilgan hodim (User)"))
     exchange_rate = models.DecimalField(_('Exchange rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Kurs"))
     date = models.DateField(_('Date'), null=True, blank=True, help_text=_("Sana"))

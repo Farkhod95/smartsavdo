@@ -109,7 +109,7 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'order', 'client', 'employee', 'date',
+        'id', 'order', 'client', 'order_filial', 'employee', 'date',
         'exchange_rate',
         'all_product_summa', 'discount_amount',
         'summa_total_dollar', 'summa_dollar',
@@ -125,7 +125,7 @@ class OrderHistoryAdmin(admin.ModelAdmin):
         'is_karzinka', 'is_delete',
     )
     search_fields = (
-        'client__full_name', 'client__phone_number',
+        'client__full_name', 'client__phone_number', 'order_filial__name',
         'employee__username', 'employee__first_name', 'employee__last_name',
         'note',
     )
@@ -138,7 +138,7 @@ class OrderHistoryAdmin(admin.ModelAdmin):
         ('Asosiy', {
             'classes': ('wide',),
             'fields': (
-                ('order', 'client'),
+                ('order', 'client', 'order_filial'),
                 ('employee', 'date'),
                 ('exchange_rate',),
                 ('is_delete', 'is_karzinka'),
