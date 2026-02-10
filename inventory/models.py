@@ -38,6 +38,7 @@ class ProductModel(BaseModel):
     branch = models.ForeignKey(ProductBranch, related_name='product_models', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+    elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))
 
     class Meta:
         verbose_name = _('product model')
@@ -53,6 +54,7 @@ class ProductType(BaseModel):
     madel = models.ForeignKey(ProductModel, related_name='product_types', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductModel bilan bog'lanish"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+    elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))
 
     class Meta:
         verbose_name = _('product type')

@@ -21,17 +21,17 @@ class ProductBranchAdmin(admin.ModelAdmin):
 
 @admin.register(ProductModel)
 class ProductModelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'branch', 'sorting', 'is_delete')
-    fields = ('name', 'branch', 'sorting', 'is_delete')
-    search_fields = ('name', 'branch__name')
+    list_display = ('name', 'branch', 'sorting', 'is_delete', 'elegant_id')
+    fields = ('name', 'branch', 'sorting', 'is_delete', 'elegant_id')
+    search_fields = ('name', 'branch__name', 'elegant_id')
     list_filter = ('is_delete', 'branch')
 
 
 @admin.register(ProductType)
 class ProductTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'madel', 'sorting', 'is_delete')
-    fields = ('name', 'madel', 'sorting', 'is_delete')
-    search_fields = ('name', 'madel__name')
+    list_display = ('name', 'madel', 'sorting', 'is_delete', 'elegant_id')
+    fields = ('name', 'madel', 'sorting', 'is_delete', 'elegant_id')
+    search_fields = ('name', 'madel__name', 'elegant_id')
     list_filter = ('is_delete', 'madel')
 
 
