@@ -55,13 +55,13 @@ class ProductModelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'name', 'branch', 'branch_detail', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'branch_category', 'branch_detail', 'sorting', 'is_delete')
 
 
 class ProductModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductModel
-        fields = ('id', 'name', 'branch', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'branch_category', 'sorting', 'is_delete')
 
 
 class ProductTypeListSerializer(serializers.ModelSerializer):

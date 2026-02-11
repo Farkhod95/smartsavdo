@@ -35,7 +35,7 @@ class ProductModelFilter(FilterSet):
         model = ProductModel
         fields = {
             'name': ['exact', 'icontains'],
-            'branch': ['exact'],
+            'branch_category': ['exact'],
             'sorting': ['exact', 'gte', 'lte'],
             'is_delete': ['exact'],
         }

@@ -50,7 +50,7 @@ class ProductBranchCategory(BaseModel):
 
 class ProductModel(BaseModel):
     name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Model nomi (masalan: N-1, Grafin nabor, Termos, Artel, Canon, Samsung)"))
-    branch = models.ForeignKey(ProductBranchCategory, related_name='product_models', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
+    branch_category = models.ForeignKey(ProductBranchCategory, related_name='product_models', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product Branch Category bilan bog'lanish"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))
