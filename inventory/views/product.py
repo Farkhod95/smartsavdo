@@ -1,14 +1,16 @@
 from django.db.models import Prefetch
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from inventory.filterset import ProductFilter
 from inventory.models import Product, ProductImage
-from inventory.serializers import ProductListSerializer, ProductSerializer, ProductListOneImageSerializer
+from inventory.serializers import ProductListSerializer, ProductSerializer, ProductListOneImageSerializer, \
+    ProductImagePublicSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -109,3 +111,23 @@ class ProductDetailView(RetrieveUpdateDestroyAPIView):
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class ProductAttachmentsViewList(ListAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ProductImagePublicSerializer
+    pagination_class = None  # kerak bo'lsa pagination qo'yasiz
+
+    def get_queryset(self):
+        product_id = self.kwargs.get("pk")
+
+        # Product mavjudligini tekshirish + is_delete=False
+        get_object_or_404(Product, pk=product_id)
+
+        # Shu product'ga tegishli fayllar
+        return (
+            ProductImage.objects
+            .filter(product_id=product_id)
+            .exclude(Q(file__isnull=True) | Q(file=""))
+            .order_by("id")
+        )

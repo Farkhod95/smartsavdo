@@ -1,6 +1,7 @@
 from django.urls import re_path, path
 
-from inventory.views.product import ProductView, ProductDetailView, ProductFieldInfoView, ProductViewList
+from inventory.views.product import ProductView, ProductDetailView, ProductFieldInfoView, ProductViewList, \
+    ProductAttachmentsViewList
 from inventory.views.product_branch import ProductBranchView, ProductBranchDetailView, ProductBranchFieldInfoView, \
     ProductBranchViewList
 from inventory.views.product_branch_category import ProductBranchCategoryView, ProductBranchCategoryDetailView, \
@@ -45,6 +46,8 @@ urlpatterns = [
     path('product/<int:pk>', ProductDetailView.as_view(), name='product_detail_view'),
     path('product/fields', ProductFieldInfoView.as_view(), name='product_fields_info'),
     path('product/public', ProductViewList.as_view(), name='product_public_info'),
+    path('product/public/<int:pk>/attachments', ProductAttachmentsViewList.as_view(), name='product_public_attachments_info'),
+
 
     re_path(r'^product-history$', ProductHistoryView.as_view(), name='product_history_view'),
     path('product-history/<int:pk>', ProductHistoryDetailView.as_view(), name='product_history_detail_view'),
