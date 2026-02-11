@@ -109,6 +109,7 @@ class ProductTypeDetailView(RetrieveUpdateDestroyAPIView):
     PUT  /product-type/<id>  -> ProductType + sizes sync
     DELETE /product-type/<id> -> ProductTypeSize delete + ProductType delete
     """
+    serializer_class = ProductTypeSerializer
 
     def get_queryset(self):
         return ProductType.objects.all()
