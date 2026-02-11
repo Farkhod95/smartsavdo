@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
 
-from accounts.serializers import FilialListSerializer
+from accounts.serializers import FilialListSerializer, FilialSerializer
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
     ProductImage, ProductBranchCategory
 from suppliers.serializers import PurchaseInvoiceSerializer
@@ -130,12 +130,12 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductListOneImageSerializer(serializers.ModelSerializer):
-    filial_detail = FilialListSerializer(source='filial', read_only=True)
+    filial_detail = FilialSerializer(source='filial', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
     branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
-    model_detail = ProductModelListSerializer(source='model', read_only=True)
-    type_detail = ProductTypeListSerializer(source='type', read_only=True)
-    size_detail = ProductTypeSizeListSerializer(source='size', read_only=True)
+    model_detail = ProductModelSerializer(source='model', read_only=True)
+    type_detail = ProductTypeSerializer(source='type', read_only=True)
+    size_detail = ProductTypeSizeSerializer(source='size', read_only=True)
 
     images = serializers.SerializerMethodField()
 
