@@ -9,7 +9,8 @@ from inventory.views.product_branch_category import ProductBranchCategoryView, P
 from inventory.views.product_history import ProductHistoryView, ProductHistoryDetailView, ProductHistoryFieldInfoView
 from inventory.views.product_image import ProductImageView, ProductImageDetailView, ProductImageFieldInfoView
 from inventory.views.product_model import ProductModelView, ProductModelDetailView, ProductModelFieldInfoView
-from inventory.views.product_type import ProductTypeView, ProductTypeDetailView, ProductTypeFieldInfoView
+from inventory.views.product_type import ProductTypeView, ProductTypeDetailView, ProductTypeFieldInfoView, \
+    ProductTypeCreateView
 from inventory.views.product_type_size import ProductTypeSizeView, ProductTypeSizeDetailView, \
     ProductTypeSizeFieldInfoView
 from inventory.views.unit import UnitView, UnitDetailView, UnitFieldInfoView
@@ -35,6 +36,7 @@ urlpatterns = [
     path('product-model/fields', ProductModelFieldInfoView.as_view(), name='product_model_fields_info'),
 
     re_path(r'^product-type$', ProductTypeView.as_view(), name='product_type_view'),
+    path('product-type/create', ProductTypeCreateView.as_view(), name='product_type_create'),
     path('product-type/<int:pk>', ProductTypeDetailView.as_view(), name='product_type_detail_view'),
     path('product-type/fields', ProductTypeFieldInfoView.as_view(), name='product_type_fields_info'),
 

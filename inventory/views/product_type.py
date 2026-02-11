@@ -1,13 +1,16 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from inventory.filterset import ProductTypeFilter
-from inventory.models import ProductType
-from inventory.serializers import ProductTypeListSerializer, ProductTypeSerializer
+from inventory.models import ProductType, ProductTypeSize
+from inventory.serializers import ProductTypeListSerializer, ProductTypeSerializer, ProductTypeCreateItemSerializer, \
+    ProductTypeBulkCreateSerializer, ProductTypeBulkCreateResponseSerializer, ProductTypeOutSerializer, \
+    ProductTypeUpdateSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -65,29 +68,123 @@ class ProductTypeView(ListCreateAPIView):
         return Response(serializer.data, status.HTTP_201_CREATED)
 
 
+# class ProductTypeDetailView(RetrieveUpdateDestroyAPIView):
+#     serializer_class = ProductTypeSerializer
+#
+#     def get_queryset(self):
+#         return ProductType.objects.all()
+#
+#     def perform_update(self, serializer):
+#         serializer.save(updated_by=self.request.user)
+#
+#     def get(self, request, pk):
+#         instance = get_object_or_404(ProductType, id=pk)
+#         serializer = ProductTypeListSerializer(instance)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#
+#     def put(self, request, pk):
+#         instance = get_object_or_404(ProductType, id=pk)
+#         serializer = self.serializer_class(instance, data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save(updated_by=self.request.user)
+#         return Response(serializer.data, status.HTTP_202_ACCEPTED)
+#
+#     def delete(self, request, pk):
+#         # instance = get_object_or_404(ProductType, id=pk, is_delete=False)
+#         #
+#         # # 1) ProductTypeSize larni soft delete
+#         # ProductTypeSize.objects.filter(product_type=instance, is_delete=False).update(is_delete=True)
+#         #
+#         # # 2) ProductType ni soft delete
+#         # instance.is_delete = True
+#         # instance.save(update_fields=['is_delete'])
+#
+#         instance = get_object_or_404(ProductType, id=pk)
+#         ProductTypeSize.objects.filter(product_type=instance).delete()
+#         instance.delete()
+#         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
 class ProductTypeDetailView(RetrieveUpdateDestroyAPIView):
-    serializer_class = ProductTypeSerializer
+    """
+    GET  /product-type/<id>  -> [ { ... } ] format
+    PUT  /product-type/<id>  -> ProductType + sizes sync
+    DELETE /product-type/<id> -> ProductTypeSize delete + ProductType delete
+    """
 
     def get_queryset(self):
         return ProductType.objects.all()
 
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
     def get(self, request, pk):
         instance = get_object_or_404(ProductType, id=pk)
-        serializer = ProductTypeListSerializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = ProductTypeOutSerializer(instance, context={"request": request})
+        # front siz so‘raganidek LIST ko‘rinishida qaytaramiz:
+        return Response([serializer.data], status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         instance = get_object_or_404(ProductType, id=pk)
-        serializer = self.serializer_class(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=self.request.user)
-        return Response(serializer.data, status.HTTP_202_ACCEPTED)
 
+        serializer = ProductTypeUpdateSerializer(
+            instance,
+            data=request.data,
+            partial=False,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+
+        # update dan keyin ham frontga GET formatda qaytaramiz:
+        out = ProductTypeOutSerializer(instance, context={"request": request}).data
+        return Response([out], status=status.HTTP_202_ACCEPTED)
+
+    @transaction.atomic
     def delete(self, request, pk):
         instance = get_object_or_404(ProductType, id=pk)
-        instance.is_delete = True
-        instance.save(update_fields=['is_delete'])
-        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+        ProductTypeSize.objects.filter(product_type=instance).delete()
+        instance.delete()
+        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
+
+
+class ProductTypeCreateView(GenericAPIView):
+    """
+    POST /product-type/create
+    Body:
+    [
+      {
+        "madel": 1,
+        "name": "Piyola",
+        "sorting": 1,
+        "product_type_size": [
+          {"size": 12, "unit": 3},
+          {"size": 64, "unit": 3}
+        ]
+      }
+    ]
+    """
+    serializer_class = ProductTypeCreateItemSerializer  # item serializer
+
+    def post(self, request, *args, **kwargs):
+        # many=True -> list payload
+        serializer = ProductTypeCreateItemSerializer(
+            data=request.data,
+            many=True,
+            context={"request": request},
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        # Bulk create (transaction ichida)
+        # DRF many=True bo‘lganda serializer.save() -> ListSerializer.create ishlaydi
+        # Bizning custom ListSerializer ishlashi uchun:
+        # 1) Serializer class Meta.list_serializer_class berish yoki
+        # 2) pastdagi kabi qo‘lda ListSerializer ishlatish
+        #
+        # Eng to‘g‘risi: qo‘lda ListSerializer ishlatamiz:
+        bulk = ProductTypeBulkCreateSerializer(child=ProductTypeCreateItemSerializer())
+        created_objs = bulk.create(serializer.validated_data)
+
+        # Javob: created ProductType larni size’lari bilan qaytarish
+        # N+1 bo‘lmasligi uchun prefetch qilamiz
+        ids = [obj.id for obj in created_objs]
+        qs = ProductType.objects.filter(id__in=ids).prefetch_related("product_type_sizes").order_by("id")
+        out = ProductTypeBulkCreateResponseSerializer(qs, many=True).data
+
+        return Response(out, status=status.HTTP_201_CREATED)
