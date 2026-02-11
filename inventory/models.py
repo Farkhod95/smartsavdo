@@ -115,6 +115,16 @@ class Product(BaseModel):
     class Meta:
         verbose_name = _('product')
         verbose_name_plural = _('products')
+        indexes = [
+            models.Index(fields=['is_delete']),
+            models.Index(fields=['date']),
+            models.Index(fields=['filial']),
+            models.Index(fields=['branch']),
+            models.Index(fields=['branch_category']),
+            models.Index(fields=['model']),
+            models.Index(fields=['type']),
+            models.Index(fields=['size']),
+        ]
 
     def __str__(self):
         return f"Product #{self.pk}" if self.pk else "Product"

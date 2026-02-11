@@ -129,6 +129,32 @@ class ProductListSerializer(serializers.ModelSerializer):
                   'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
 
 
+class ProductListOneImageSerializer(serializers.ModelSerializer):
+    filial_detail = FilialListSerializer(source='filial', read_only=True)
+    branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
+    model_detail = ProductModelListSerializer(source='model', read_only=True)
+    type_detail = ProductTypeListSerializer(source='type', read_only=True)
+    size_detail = ProductTypeSizeListSerializer(source='size', read_only=True)
+
+    images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'branch_category',
+                  'branch_category_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail',
+                  'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
+
+
+    def get_images(self, obj):
+        # prefetched bo'lsa bu DB'ga urilmaydi
+        first = obj.images.all().order_by('id').first()
+        if not first:
+            return None
+        return ProductImagePublicSerializer(first, context=self.context).data
+
+
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product

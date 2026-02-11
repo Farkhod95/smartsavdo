@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
@@ -6,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from inventory.filterset import ProductFilter
-from inventory.models import Product
-from inventory.serializers import ProductListSerializer, ProductSerializer
+from inventory.models import Product, ProductImage
+from inventory.serializers import ProductListSerializer, ProductSerializer, ProductListOneImageSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -36,7 +37,7 @@ class ProductViewList(ListCreateAPIView):
     permission_classes = (AllowAny,)
     # authentication_classes = []
     pagination_class = ResultsSetPagination
-    serializer_class = ProductListSerializer
+    serializer_class = ProductListOneImageSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
     search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name')
@@ -45,25 +46,41 @@ class ProductViewList(ListCreateAPIView):
     # pagination_class = None
 
     def get_queryset(self):
-        return Product.objects.filter(is_delete=False)
+        images_qs = ProductImage.objects.only('id', 'product_id', 'file').order_by('id')
+
+        qs = (
+            Product.objects
+            .filter(is_delete=False)
+            .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
+            .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
+        )
+        return qs
 
 
 class ProductView(ListCreateAPIView):
-    serializer_class = ProductListSerializer
+    serializer_class = ProductListOneImageSerializer
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
-    search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name')
+    search_fields = ('filial__name', 'branch__name', 'model__name', 'type__name')
     ordering = ['pk']
 
     def get_queryset(self):
-        return Product.objects.filter(is_delete=False)
+        images_qs = ProductImage.objects.only('id', 'product_id', 'file').order_by('id')
 
-    def post(self, request):
+        qs = (
+            Product.objects
+            .filter(is_delete=False)
+            .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
+            .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
+        )
+        return qs
+
+    def create(self, request, *args, **kwargs):
         serializer = ProductSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+        serializer.save(created_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ProductDetailView(RetrieveUpdateDestroyAPIView):
