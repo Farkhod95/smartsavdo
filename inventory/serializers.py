@@ -51,11 +51,11 @@ class ProductBranchCategoryListSerializer(serializers.ModelSerializer):
 
 
 class ProductModelListSerializer(serializers.ModelSerializer):
-    branch_detail = ProductBranchCategorySerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch', read_only=True)
 
     class Meta:
         model = ProductModel
-        fields = ('id', 'name', 'branch_category', 'branch_detail', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'branch_category', 'branch_category_detail', 'sorting', 'is_delete')
 
 
 class ProductModelSerializer(serializers.ModelSerializer):
