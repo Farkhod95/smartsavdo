@@ -89,9 +89,15 @@ class ProductTypeSizeListSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeSizeSerializer(serializers.ModelSerializer):
+    unit_name = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductTypeSize
-        fields = ('id', 'product_type', 'size', 'unit', 'sorting', 'is_delete')
+        fields = ('id', 'product_type', 'size', 'unit', 'unit_name', 'sorting', 'is_delete')
+
+    def get_unit_name(self, obj):
+        # Unit.name ni qaytaradi (Unit yo'q bo'lsa None)
+        return obj.unit.name if obj.unit else None
 
 
 # ============================== ProductType Create Start===================================================
