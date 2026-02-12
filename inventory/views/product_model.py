@@ -38,7 +38,7 @@ class ProductModelViewList(ListCreateAPIView):
     serializer_class = ProductModelSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductModelFilter
-    search_fields = ('name', 'branch__name')
+    search_fields = ('name', 'branch_category__name')
     ordering = ['pk']
     http_method_names = ['get']
     pagination_class = None
@@ -52,7 +52,7 @@ class ProductModelView(ListCreateAPIView):
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductModelFilter
-    search_fields = ('name', 'branch__name')
+    search_fields = ('name', 'branch_category__name')
     ordering = ['pk']
 
     def get_queryset(self):

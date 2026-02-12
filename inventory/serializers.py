@@ -51,7 +51,7 @@ class ProductBranchCategoryListSerializer(serializers.ModelSerializer):
 
 
 class ProductModelListSerializer(serializers.ModelSerializer):
-    branch_category_detail = ProductBranchCategorySerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
 
     class Meta:
         model = ProductModel
