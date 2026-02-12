@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductFilter
 from inventory.models import Product, ProductImage
-from inventory.serializers import ProductListSerializer, ProductSerializer, ProductListOneImageSerializer, \
+from inventory.serializer.product import ProductListSerializer, ProductSerializer, ProductListOneImageSerializer, \
     ProductImagePublicSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent

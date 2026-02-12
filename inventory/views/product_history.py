@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductHistoryFilter
 from inventory.models import ProductHistory
-from inventory.serializers import ProductHistoryListSerializer, ProductHistorySerializer, ProductHistoryCreateSerializer
+from inventory.serializer.product_history import ProductHistoryListSerializer, ProductHistorySerializer, ProductHistoryCreateSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -53,7 +53,7 @@ class ProductHistoryView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductHistoryFilter
     search_fields = ('note', 'product__id', 'purchase_invoice__id', 'branch__name', 'model__name', 'type__name')
-    ordering = ['pk']
+    ordering = ['-pk']
 
     def get_queryset(self):
         return ProductHistory.objects.all()

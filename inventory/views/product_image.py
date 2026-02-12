@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductImageFilter
 from inventory.models import ProductImage
-from inventory.serializers import ProductImageListSerializer, ProductImageSerializer
+from inventory.serializer.product_image import ProductImageListSerializer, ProductImageSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -39,7 +39,7 @@ class ProductImageViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductImageFilter
     search_fields = ('file', 'product__id')
-    ordering = ['pk']
+    ordering = ['-pk']
     http_method_names = ['get']
     pagination_class = None
 
@@ -53,7 +53,7 @@ class ProductImageView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductImageFilter
     search_fields = ('file', 'product__id')
-    ordering = ['pk']
+    ordering = ['-pk']
 
     def get_queryset(self):
         return ProductImage.objects.all()

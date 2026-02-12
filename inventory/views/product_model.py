@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductModelFilter
 from inventory.models import ProductModel
-from inventory.serializers import ProductModelListSerializer, ProductModelSerializer
+from inventory.serializer.product_model import ProductModelListSerializer, ProductModelSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -39,7 +39,7 @@ class ProductModelViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductModelFilter
     search_fields = ('name', 'branch_category__name')
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
     http_method_names = ['get']
     pagination_class = None
 
@@ -53,7 +53,7 @@ class ProductModelView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductModelFilter
     search_fields = ('name', 'branch_category__name')
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
 
     def get_queryset(self):
         return ProductModel.objects.filter(is_delete=False)
@@ -91,3 +91,46 @@ class ProductModelDetailView(RetrieveUpdateDestroyAPIView):
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class ProductModelSuggestSortingByBranchCategoryView(APIView):
+    """
+    ProductModel uchun sorting tavsiya (har bir branch_category kesimida).
+    GET /product-model/<int:branch_category>/sorting
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, branch_category):
+        used = (
+            ProductModel.objects
+            .filter(
+                is_delete=False,
+                branch_category_id=branch_category,
+                sorting__isnull=False
+            )
+            .order_by('sorting')
+            .values_list('sorting', flat=True)
+        )
+
+        suggested = 1
+        for s in used:
+            try:
+                s_int = int(s)
+            except (TypeError, ValueError):
+                continue
+
+            if s_int < suggested:
+                continue
+            if s_int == suggested:
+                suggested += 1
+            else:
+                break
+
+        return Response(
+            {
+                "branch_category": branch_category,
+                "suggested_sorting": suggested,
+                "message": "Tavsiya etilgan tartib raqam."
+            },
+            status=status.HTTP_200_OK
+        )

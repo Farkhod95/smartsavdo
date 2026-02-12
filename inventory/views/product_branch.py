@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductBranchFilter
 from inventory.models import ProductBranch
-from inventory.serializers import ProductBranchListSerializer, ProductBranchSerializer
+from inventory.serializer.product_branch import ProductBranchListSerializer, ProductBranchSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -40,7 +40,7 @@ class ProductBranchViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductBranchFilter
     search_fields = ('name',)
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
     http_method_names = ['get']
     # pagination_class = None
 
@@ -54,7 +54,7 @@ class ProductBranchView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductBranchFilter
     search_fields = ('name',)
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
 
     def get_queryset(self):
         return ProductBranch.objects.filter(is_delete=False)
@@ -92,3 +92,45 @@ class ProductBranchDetailView(RetrieveUpdateDestroyAPIView):
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class ProductBranchSuggestSortingView(APIView):
+    """
+    ProductBranch uchun sorting tavsiya qiladi.
+    Hech qanday body yuborilmaydi, faqat GET so'rov.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # is_delete=False bo'lganlar ichidan sorting (NULL emas) larni olamiz
+        used = (
+            ProductBranch.objects
+            .filter(is_delete=False, sorting__isnull=False)
+            .order_by('sorting')
+            .values_list('sorting', flat=True)
+        )
+
+        # Eng kichik bo'sh ijobiy raqamni topamiz: 1..∞
+        suggested = 1
+        for s in used:
+            # sorting float/str bo'lib qolmasligi uchun ehtiyot (sizda IntegerField)
+            try:
+                s_int = int(s)
+            except (TypeError, ValueError):
+                continue
+
+            if s_int < suggested:
+                continue
+            if s_int == suggested:
+                suggested += 1
+            else:
+                # gap topildi (masalan 1,2,4 => suggested=3)
+                break
+
+        return Response(
+            {
+                "suggested_sorting": suggested,
+                "message": "Tavsiya etilgan tartib raqam."
+            },
+            status=status.HTTP_200_OK
+        )

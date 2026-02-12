@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import UnitFilter
 from inventory.models import Unit
-from inventory.serializers import UnitListSerializer, UnitSerializer
+from inventory.serializer.unit import UnitListSerializer, UnitSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 

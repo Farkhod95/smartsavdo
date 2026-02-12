@@ -5,8 +5,11 @@ from django.db import transaction
 from accounts.serializers import RegionListSerializer, DistrictListPublicSerializer, FilialListSerializer, \
     FilialSerializer
 from inventory.models import Product
-from inventory.serializers import ProductBranchListSerializer, ProductModelListSerializer, ProductTypeListSerializer, \
-    ProductTypeSizeListSerializer, ProductSerializer
+from inventory.serializer.product import ProductSerializer
+from inventory.serializer.product_branch import ProductBranchListSerializer
+from inventory.serializer.product_model import ProductModelListSerializer
+from inventory.serializer.product_type import ProductTypeListSerializer
+from inventory.serializer.product_type_size import ProductTypeSizeListSerializer
 from sales.models import Client, ClientKeshbekHistory, Order, OrderHistory, OrderHistoryProduct, VozvratOrder
 from users.serializers import UserViewListShortSerializer
 

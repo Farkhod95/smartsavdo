@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from restapp.pagination import ResultsSetPagination
 from inventory.filterset import ProductBranchCategoryFilter
 from inventory.models import ProductBranchCategory
-from inventory.serializers import ProductBranchCategorySerializer, ProductBranchCategoryListSerializer
+from inventory.serializer.product_branch_category import ProductBranchCategorySerializer, ProductBranchCategoryListSerializer
 
 
 class ProductBranchCategoryFieldInfoView(APIView):
@@ -34,7 +34,7 @@ class ProductBranchCategoryView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductBranchCategoryFilter
     search_fields = ('name',)
-    ordering = ['-pk']
+    ordering = ['sorting', '-id']
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -68,3 +68,43 @@ class ProductBranchCategoryDetailView(RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=self.request.user)
         return Response(serializer.data, status.HTTP_202_ACCEPTED)
+
+
+
+class ProductBranchCategorySuggestSortingByBranchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, product_branch):
+        used = (
+            ProductBranchCategory.objects
+            .filter(
+                is_delete=False,
+                product_branch_id=product_branch,
+                sorting__isnull=False
+            )
+            .order_by('sorting')
+            .values_list('sorting', flat=True)
+        )
+
+        suggested = 1
+        for s in used:
+            try:
+                s_int = int(s)
+            except (TypeError, ValueError):
+                continue
+
+            if s_int < suggested:
+                continue
+            if s_int == suggested:
+                suggested += 1
+            else:
+                break
+
+        return Response(
+            {
+                "product_branch": product_branch,
+                "suggested_sorting": suggested,
+                "message": "Tavsiya etilgan tartib raqam."
+            },
+            status=status.HTTP_200_OK
+        )

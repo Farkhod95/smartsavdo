@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from accounts.models import Filial
@@ -33,8 +34,14 @@ class ProductBranch(BaseModel):
         return self.name or f"ProductBranch #{self.pk}"
 
 class ProductBranchCategory(BaseModel):
-    product_branch = models.ForeignKey(ProductBranch, related_name='branch_categories', on_delete=models.SET_NULL, null=True,
-                               blank=True, help_text=_("ProductBranch bilan bog'lanish"))
+    product_branch = models.ForeignKey(
+        ProductBranch,
+        related_name='branch_categories',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text=_("ProductBranch bilan bog'lanish")
+    )
     name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Mahsulot bo'limi nomi"))
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
@@ -43,14 +50,32 @@ class ProductBranchCategory(BaseModel):
         verbose_name = _('product branch Category')
         verbose_name_plural = _('product branch Categories')
 
+        # ✅ HAR BIR product_branch bo'yicha sorting UNIQUE
+        # sorting NULL bo'lsa unique tekshirmasin (NULL ko'p bo'lishi mumkin)
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['product_branch', 'sorting'],
+        #         condition=Q(sorting__isnull=False),
+        #         name='uq_branchcategory_branch_sorting_notnull'
+        #     )
+        # ]
+
     def __str__(self):
         return self.name or f"ProductBranchCategory #{self.pk}"
 
 
 
 class ProductModel(BaseModel):
-    name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Model nomi (masalan: N-1, Grafin nabor, Termos, Artel, Canon, Samsung)"))
-    branch_category = models.ForeignKey(ProductBranchCategory, related_name='product_models', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product Branch Category bilan bog'lanish"))
+    name = models.CharField(_('Name'), max_length=255, null=True, blank=True,
+                            help_text=_("Model nomi (masalan: N-1, Grafin nabor, Termos, Artel, Canon, Samsung)"))
+    branch_category = models.ForeignKey(
+        ProductBranchCategory,
+        related_name='product_models',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text=_("Product Branch Category bilan bog'lanish")
+    )
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))
@@ -59,6 +84,15 @@ class ProductModel(BaseModel):
         verbose_name = _('product model')
         verbose_name_plural = _('product models')
 
+        # ✅ HAR BIR branch_category bo'yicha sorting UNIQUE (NULL bo'lsa tekshirmaydi)
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['branch_category', 'sorting'],
+        #         condition=Q(sorting__isnull=False),
+        #         name='uq_productmodel_branchcategory_sorting_notnull'
+        #     )
+        # ]
+
     def __str__(self):
         return self.name or f"ProductModel #{self.pk}"
 
@@ -66,7 +100,14 @@ class ProductModel(BaseModel):
 
 class ProductType(BaseModel):
     name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Turi (masalan: Piyola, Kosa, Tarelka, Printer, Monitor)"))
-    madel = models.ForeignKey(ProductModel, related_name='product_types', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductModel bilan bog'lanish"))
+    madel = models.ForeignKey(
+        ProductModel,
+        related_name='product_types',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text=_("ProductModel bilan bog'lanish")
+    )
     sorting = models.IntegerField(null=True, blank=True, help_text=_("Sorting"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     elegant_id = models.IntegerField(null=True, blank=True, help_text=_("Elegant Id"))
@@ -74,6 +115,15 @@ class ProductType(BaseModel):
     class Meta:
         verbose_name = _('product type')
         verbose_name_plural = _('product types')
+
+        # ✅ HAR BIR madel (ProductModel) bo'yicha sorting UNIQUE (sorting NULL bo'lsa tekshirmaydi)
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['madel', 'sorting'],
+        #         condition=Q(sorting__isnull=False),
+        #         name='uq_producttype_model_sorting_notnull'
+        #     )
+        # ]
 
     def __str__(self):
         return self.name or f"ProductType #{self.pk}"

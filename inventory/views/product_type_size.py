@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductTypeSizeFilter
 from inventory.models import ProductTypeSize
-from inventory.serializers import ProductTypeSizeListSerializer, ProductTypeSizeSerializer
+from inventory.serializer.product_type_size import ProductTypeSizeListSerializer, ProductTypeSizeSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -39,7 +39,7 @@ class ProductTypeSizeViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductTypeSizeFilter
     search_fields = ('product_type__name', 'type__code', 'type__name')
-    ordering = ['pk']
+    ordering = ['-pk']
     http_method_names = ['get']
     pagination_class = None
 
@@ -53,7 +53,7 @@ class ProductTypeSizeView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductTypeSizeFilter
     search_fields = ('product_type__name', 'type__code', 'type__name')
-    ordering = ['pk']
+    ordering = ['-pk']
 
     def get_queryset(self):
         return ProductTypeSize.objects.filter(is_delete=False)

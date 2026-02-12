@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from inventory.filterset import ProductTypeFilter
 from inventory.models import ProductType, ProductTypeSize
-from inventory.serializers import ProductTypeListSerializer, ProductTypeSerializer, ProductTypeCreateItemSerializer, \
+from inventory.serializer.product_type import ProductTypeListSerializer, ProductTypeSerializer, ProductTypeCreateItemSerializer, \
     ProductTypeBulkCreateSerializer, ProductTypeBulkCreateResponseSerializer, ProductTypeOutSerializer, \
     ProductTypeUpdateSerializer
 from restapp.pagination import ResultsSetPagination
@@ -42,7 +42,7 @@ class ProductTypeViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductTypeFilter
     search_fields = ('name', 'madel__name')
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
     http_method_names = ['get']
     pagination_class = None
 
@@ -56,7 +56,7 @@ class ProductTypeView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductTypeFilter
     search_fields = ('name', 'madel__name')
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
 
     def get_queryset(self):
         return ProductType.objects.filter(is_delete=False)
@@ -189,3 +189,46 @@ class ProductTypeCreateView(GenericAPIView):
         out = ProductTypeBulkCreateResponseSerializer(qs, many=True).data
 
         return Response(out, status=status.HTTP_201_CREATED)
+
+
+class ProductTypeSuggestSortingByModelView(APIView):
+    """
+    ProductType uchun sorting tavsiya (har bir madel kesimida).
+    GET /product-type/<int:madel>/sorting
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, madel):
+        used = (
+            ProductType.objects
+            .filter(
+                is_delete=False,
+                madel_id=madel,
+                sorting__isnull=False
+            )
+            .order_by('sorting')
+            .values_list('sorting', flat=True)
+        )
+
+        suggested = 1
+        for s in used:
+            try:
+                s_int = int(s)
+            except (TypeError, ValueError):
+                continue
+
+            if s_int < suggested:
+                continue
+            if s_int == suggested:
+                suggested += 1
+            else:
+                break
+
+        return Response(
+            {
+                "madel": madel,
+                "suggested_sorting": suggested,
+                "message": "Tavsiya etilgan tartib raqam."
+            },
+            status=status.HTTP_200_OK
+        )
