@@ -10,6 +10,7 @@ from inventory.views.product_history import ProductHistoryView, ProductHistoryDe
 from inventory.views.product_image import ProductImageView, ProductImageDetailView, ProductImageFieldInfoView
 from inventory.views.product_model import ProductModelView, ProductModelDetailView, ProductModelFieldInfoView, \
     ProductModelSuggestSortingByBranchCategoryView
+from inventory.views.product_stock import ProductStockView, ProductStockDetailView, ProductStockFieldInfoView
 from inventory.views.product_type import ProductTypeView, ProductTypeDetailView, ProductTypeFieldInfoView, \
     ProductTypeCreateView, ProductTypeSuggestSortingByModelView
 from inventory.views.product_type_size import ProductTypeSizeView, ProductTypeSizeDetailView, \
@@ -66,4 +67,8 @@ urlpatterns = [
     re_path(r'^product-image$', ProductImageView.as_view(), name='product_image_view'),
     path('product-image/<int:pk>', ProductImageDetailView.as_view(), name='product_image_detail_view'),
     path('product-image/fields', ProductImageFieldInfoView.as_view(), name='product_image_fields_info'),
+
+    re_path(r'^product-stock/$', ProductStockView.as_view(), name='product_stock_view'),
+    path('product-stock/<int:pk>', ProductStockDetailView.as_view(), name='product_stock_detail_view'),
+    path('product-stock/fields', ProductStockFieldInfoView.as_view(), name='product_stock_fields_info'),
 ]

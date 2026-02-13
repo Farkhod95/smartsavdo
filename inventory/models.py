@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from accounts.models import Filial
+from accounts.models import Filial, Sklad
 from restapp.models import BaseModel
 from suppliers.models import PurchaseInvoice
 
@@ -186,6 +186,9 @@ class ProductHistory(BaseModel):
     product = models.ForeignKey(Product, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product bilan bog'lanish"))
     filial = models.ForeignKey(Filial, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True,
                                help_text=_("Filial bilan bog'lanish"))
+    sklad = models.ForeignKey(Sklad, related_name='product_histories', on_delete=models.SET_NULL, null=True,
+                               blank=True,
+                               help_text=_("Filial bilan bog'lanish"))
     purchase_invoice = models.ForeignKey(PurchaseInvoice, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("PurchaseInvoice bilan bog'lanish"))
     branch = models.ForeignKey(ProductBranch, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     branch_category = models.ForeignKey(ProductBranchCategory, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch Category bilan bog'lanish"))
@@ -205,6 +208,24 @@ class ProductHistory(BaseModel):
 
     def __str__(self):
         return f"ProductHistory #{self.pk}" if self.pk else "ProductHistory"
+
+
+class ProductStock(BaseModel):
+    product = models.ForeignKey(Product, related_name='product_stocks', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product bilan bog'lanish"))
+    sklad = models.ForeignKey(Sklad, related_name='product_stocks', on_delete=models.SET_NULL, null=True, blank=True,
+                              help_text=_("Sklad bilan bog'lanish"))
+    count = models.IntegerField(_('Count'), null=True, blank=True, help_text=_("Miqdor"))
+
+    class Meta:
+        verbose_name = _('Product Stock')
+        verbose_name_plural = _('Product Stocks')
+        indexes = [
+            models.Index(fields=['product']),
+            models.Index(fields=['sklad']),
+        ]
+
+    def __str__(self):
+        return f"Product Stock #{self.pk}" if self.pk else "Product Stock"
 
 
 class ProductImage(BaseModel):

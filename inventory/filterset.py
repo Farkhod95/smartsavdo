@@ -1,6 +1,6 @@
 from django_filters import FilterSet
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
-    ProductImage, ProductBranchCategory
+    ProductImage, ProductBranchCategory, ProductStock
 
 
 class UnitFilter(FilterSet):
@@ -91,6 +91,8 @@ class ProductHistoryFilter(FilterSet):
         fields = {
             'date': ['exact', 'gte', 'lte'],
             'reserve_limit': ['exact', 'gte', 'lte'],
+            'filial': ['exact'],
+            'sklad': ['exact'],
             'product': ['exact'],
             'purchase_invoice': ['exact'],
             'branch': ['exact'],
@@ -112,3 +114,10 @@ class ProductImageFilter(FilterSet):
         fields = {
             'product': ['exact'],
         }
+
+
+class ProductStockFilter(FilterSet):
+
+    class Meta:
+        model = ProductStock
+        fields = ('product', 'sklad', 'count')

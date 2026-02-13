@@ -1,6 +1,6 @@
 from django.contrib import admin
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
-    ProductImage, ProductBranchCategory
+    ProductImage, ProductBranchCategory, ProductStock
 
 
 @admin.register(Unit)
@@ -62,8 +62,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductHistory)
 class ProductHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date', 'product', 'filial', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price')
-    fields = ('date', 'reserve_limit', 'product', 'filial', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
+    list_display = ('id', 'date', 'product', 'filial', 'sklad', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price')
+    fields = ('date', 'reserve_limit', 'product', 'filial', 'sklad', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
     search_fields = ('note', 'product__id', 'purchase_invoice__id', 'branch__name', 'branch_category__name', 'model__name', 'type__name')
     list_filter = ('date', 'branch', 'model', 'type')
 
@@ -74,3 +74,12 @@ class ProductImageAdmin(admin.ModelAdmin):
     fields = ('product', 'file')
     search_fields = ('file', 'product__id')
     list_filter = ('product',)
+
+
+@admin.register(ProductStock)
+class ProductStockAdmin(admin.ModelAdmin):
+    list_display = ('product', 'sklad', 'count')
+    list_select_related = ('product', 'sklad')
+    list_filter = ('sklad',)
+    search_fields = ('product__name',)
+    fields = ('product', 'sklad', 'count')
