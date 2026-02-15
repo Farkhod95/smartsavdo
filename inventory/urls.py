@@ -5,14 +5,14 @@ from inventory.views.product import ProductView, ProductDetailView, ProductField
 from inventory.views.product_branch import ProductBranchView, ProductBranchDetailView, ProductBranchFieldInfoView, \
     ProductBranchViewList, ProductBranchSuggestSortingView
 from inventory.views.product_branch_category import ProductBranchCategoryView, ProductBranchCategoryDetailView, \
-    ProductBranchCategoryFieldInfoView, ProductBranchCategorySuggestSortingByBranchView
+    ProductBranchCategoryFieldInfoView, ProductBranchCategorySuggestSortingByBranchView, ProductBranchCategoryPublicView
 from inventory.views.product_history import ProductHistoryView, ProductHistoryDetailView, ProductHistoryFieldInfoView
 from inventory.views.product_image import ProductImageView, ProductImageDetailView, ProductImageFieldInfoView
 from inventory.views.product_model import ProductModelView, ProductModelDetailView, ProductModelFieldInfoView, \
-    ProductModelSuggestSortingByBranchCategoryView
+    ProductModelSuggestSortingByBranchCategoryView, ProductModelViewList
 from inventory.views.product_stock import ProductStockView, ProductStockDetailView, ProductStockFieldInfoView
 from inventory.views.product_type import ProductTypeView, ProductTypeDetailView, ProductTypeFieldInfoView, \
-    ProductTypeCreateView, ProductTypeSuggestSortingByModelView
+    ProductTypeCreateView, ProductTypeSuggestSortingByModelView, ProductTypeViewList
 from inventory.views.product_type_size import ProductTypeSizeView, ProductTypeSizeDetailView, \
     ProductTypeSizeFieldInfoView
 from inventory.views.unit import UnitView, UnitDetailView, UnitFieldInfoView
@@ -33,18 +33,21 @@ urlpatterns = [
          name='product_branch_category_detail_view'),
     path('product-branch-category/fields/', ProductBranchCategoryFieldInfoView.as_view(),
          name='product_branch_category_fields_info'),
+    path('product-branch-category/public', ProductBranchCategoryPublicView.as_view(), name='product-branch-category-public'),
     path('product-branch-category/<int:product_branch>/sorting', ProductBranchCategorySuggestSortingByBranchView.as_view(),
         name='product_branch_category_suggest_sorting'),
 
     re_path(r'^product-model$', ProductModelView.as_view(), name='product_model_view'),
     path('product-model/<int:pk>', ProductModelDetailView.as_view(), name='product_model_detail_view'),
     path('product-model/fields', ProductModelFieldInfoView.as_view(), name='product_model_fields_info'),
+    path('product-model/public', ProductModelViewList.as_view(), name='product-model-public'),
     path('product-model/<int:branch_category>/sorting', ProductModelSuggestSortingByBranchCategoryView.as_view(),
         name='product_model_suggest_sorting'),
 
     re_path(r'^product-type$', ProductTypeView.as_view(), name='product_type_view'),
     path('product-type/create', ProductTypeCreateView.as_view(), name='product_type_create'),
     path('product-type/<int:pk>', ProductTypeDetailView.as_view(), name='product_type_detail_view'),
+    path('product-type/public', ProductTypeViewList.as_view(), name='product-type-public'),
     path('product-type/fields', ProductTypeFieldInfoView.as_view(), name='product_type_fields_info'),
     path('product-type/<int:madel>/sorting', ProductTypeSuggestSortingByModelView.as_view(),
         name='product_type_suggest_sorting'),

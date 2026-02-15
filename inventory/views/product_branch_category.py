@@ -1,9 +1,9 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, get_object_or_404
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from restapp.pagination import ResultsSetPagination
 from inventory.filterset import ProductBranchCategoryFilter
@@ -26,6 +26,22 @@ class ProductBranchCategoryFieldInfoView(APIView):
                 "choices": dict(field.choices) if field.choices else None
             })
         return Response(field_info)
+
+
+class ProductBranchCategoryPublicView(ListCreateAPIView):
+    permission_classes = (AllowAny,)
+    # authentication_classes = []
+    pagination_class = ResultsSetPagination
+    serializer_class = ProductBranchCategoryListSerializer
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = ProductBranchCategoryFilter
+    search_fields = ('name',)
+    ordering = ['sorting', '-id']
+    http_method_names = ['get']
+    # pagination_class = None
+
+    def get_queryset(self):
+        return ProductBranchCategory.objects.filter(is_delete=False)
 
 
 class ProductBranchCategoryView(ListCreateAPIView):
