@@ -5,7 +5,7 @@ from django.db import transaction
 from accounts.models import Sklad
 from accounts.serializers import RegionListSerializer, DistrictListPublicSerializer, FilialListSerializer, \
     FilialSerializer
-from inventory.models import Product
+from inventory.models import Product, ProductStock
 from inventory.serializer.product import ProductSerializer
 from inventory.serializer.product_branch import ProductBranchListSerializer
 from inventory.serializer.product_model import ProductModelListSerializer
@@ -344,7 +344,6 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
             'is_delete', 'cargo_terminal',
             'price_difference', 'status_order', 'is_karzinka'
         )
-        # Productdan olinadigan maydonlar user yubormaydi
         read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
 
     def validate(self, attrs):
@@ -354,10 +353,8 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
 
         if not product:
             raise serializers.ValidationError({"product": "product majburiy."})
-
         if not sklad:
             raise serializers.ValidationError({"sklad": "sklad majburiy."})
-
         if count is None:
             raise serializers.ValidationError({"count": "count majburiy."})
 
@@ -369,7 +366,7 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
         if count_int <= 0:
             raise serializers.ValidationError({"count": "count 0 dan katta bo‘lishi kerak."})
 
-        if product.is_delete:
+        if getattr(product, "is_delete", False):
             raise serializers.ValidationError({"product": "Bu product o‘chirilgan (is_delete=True)."})
 
         return attrs
@@ -383,57 +380,57 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
         sklad: Sklad = validated_data["sklad"]
         order_count = int(validated_data["count"])
 
-        # ✅ MUHIM: select_related() YO‘Q !!!
-        # ✅ Django 4.2 da of=('self',) bilan faqat Product jadvalini lock qilamiz
+        # 1) Product row lock
         locked_product = (
             Product.objects
-            .select_for_update(of=('self',))
+            .select_for_update(of=("self",))
             .get(pk=product.pk)
-        )
-        locked_sklad = (
-            Sklad.objects
-            .select_for_update(of=('self',))
-            .get(pk=sklad.pk)
         )
 
         if locked_product.is_delete:
             raise serializers.ValidationError({"product": "Bu product o‘chirilgan (is_delete=True)."})
 
-        current_stock = int(locked_product.count or 0)
+        # 2) ProductStock row lock (ENG MUHIM)
+        product_stock = (
+            ProductStock.objects
+            .select_for_update()
+            .filter(product_id=locked_product.pk, sklad_id=sklad.pk)
+            .first()
+        )
+
+        current_stock = int(product_stock.count or 0) if product_stock else 0
+
         if current_stock < order_count:
             raise serializers.ValidationError({
                 "count": f"Qoldiq yetarli emas. Omborda: {current_stock}, so‘raldi: {order_count}."
             })
 
-        # ✅ Productdan FK larni ko‘chiramiz (JOIN shart emas)
+        # Productdan FKlarni ko‘chiramiz
         validated_data["branch"] = locked_product.branch
         validated_data["model"] = locked_product.model
         validated_data["type"] = locked_product.type
         validated_data["size"] = locked_product.size
-
-        # (xohlasangiz real_price ni ham productdan olib qo‘yasiz)
         validated_data["real_price"] = locked_product.real_price
 
-        # given_count kelmasa = count
         if validated_data.get("given_count") is None:
             validated_data["given_count"] = order_count
 
-        # created_by / updated_by (BaseModel bo‘lsa)
         if user and getattr(user, "is_authenticated", False):
             validated_data["created_by"] = user
             validated_data["updated_by"] = user
 
-        # OrderHistoryProduct yaratamiz
         instance = super().create(validated_data)
 
-        # ✅ Product.count kamaytiramiz
-        locked_product.count = current_stock - order_count
-        locked_product.save(update_fields=["count", "updated_time"])
+        # 3) ProductStock kamaytiramiz
+        #    (ProductStock yo‘q bo‘lsa bu yerga kelmaydi, chunki current_stock=0 bo‘ladi va yuqorida xato qaytadi)
+        product_stock.count = current_stock - order_count
+        product_stock.save(update_fields=["count", "updated_time"])
 
-        # ✅ Sklad.count kamaytiramiz
-        current_stock_sklad = int(locked_sklad.count or 0)
-        locked_sklad.count = current_stock_sklad - order_count
-        locked_sklad.save(update_fields=["count", "updated_time"])
+        # 4) Agar Product.count ham real ishlatilsa (umumiy qoldiq):
+        if locked_product.count is not None:
+            locked_product.count = int(locked_product.count or 0) - order_count
+            locked_product.save(update_fields=["count", "updated_time"])
+
         return instance
 
 
