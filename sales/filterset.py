@@ -99,6 +99,7 @@ class OrderHistoryProductFilter(FilterSet):
             'date': ['exact', 'gte', 'lte'],
             'order_history': ['exact'],
             'product': ['exact'],
+            'sklad': ['exact'],
             'vozvrat_order': ['exact'],
             'branch': ['exact'],
             'model': ['exact'],

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from decimal import Decimal
 from django.db import transaction
 
+from accounts.models import Sklad
 from accounts.serializers import RegionListSerializer, DistrictListPublicSerializer, FilialListSerializer, \
     FilialSerializer
 from inventory.models import Product
@@ -307,6 +308,7 @@ class VozvratOrderSerializer(serializers.ModelSerializer):
 class OrderHistoryProductListSerializer(serializers.ModelSerializer):
     order_history_detail = OrderHistoryListSerializer(source='order_history', read_only=True)
     product_detail = ProductSerializer(source='product', read_only=True)
+    sklad_detail = ProductSerializer(source='sklad', read_only=True)
     vozvrat_order_detail = VozvratOrderSerializer(source='vozvrat_order', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
     model_detail = ProductModelListSerializer(source='model', read_only=True)
@@ -315,7 +317,10 @@ class OrderHistoryProductListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderHistoryProduct
-        fields = ('id', 'date', 'order_history', 'order_history_detail', 'vozvrat_order', 'vozvrat_order_detail', 'product', 'product_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka')
+        fields = ('id', 'date', 'order_history', 'order_history_detail', 'vozvrat_order', 'vozvrat_order_detail',
+                  'product', 'product_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail',
+                  'size', 'size_detail', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price',
+                  'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka', 'sklad', 'sklad_detail')
 
 
 class OrderHistoryProductSerializer(serializers.ModelSerializer):
@@ -323,7 +328,7 @@ class OrderHistoryProductSerializer(serializers.ModelSerializer):
         model = OrderHistoryProduct
         fields = ('id', 'date', 'order_history', 'vozvrat_order', 'product', 'branch', 'model', 'type', 'size', 'count',
                   'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal',
-                  'price_difference', 'status_order', 'is_karzinka')
+                  'price_difference', 'status_order', 'is_karzinka', 'sklad')
 
 
 class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
@@ -332,7 +337,7 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'date',
             'order_history', 'vozvrat_order',
-            'product',
+            'product', 'sklad',
             'branch', 'model', 'type', 'size',
             'count', 'given_count',
             'real_price', 'unit_price', 'wholesale_price',
@@ -344,10 +349,14 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         product = attrs.get("product")
+        sklad = attrs.get("sklad")
         count = attrs.get("count")
 
         if not product:
             raise serializers.ValidationError({"product": "product majburiy."})
+
+        if not sklad:
+            raise serializers.ValidationError({"sklad": "sklad majburiy."})
 
         if count is None:
             raise serializers.ValidationError({"count": "count majburiy."})
@@ -371,6 +380,7 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
         user = getattr(request, "user", None)
 
         product: Product = validated_data["product"]
+        sklad: Sklad = validated_data["sklad"]
         order_count = int(validated_data["count"])
 
         # ✅ MUHIM: select_related() YO‘Q !!!
@@ -379,6 +389,11 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
             Product.objects
             .select_for_update(of=('self',))
             .get(pk=product.pk)
+        )
+        locked_sklad = (
+            Sklad.objects
+            .select_for_update(of=('self',))
+            .get(pk=sklad.pk)
         )
 
         if locked_product.is_delete:
@@ -415,6 +430,10 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
         locked_product.count = current_stock - order_count
         locked_product.save(update_fields=["count", "updated_time"])
 
+        # ✅ Sklad.count kamaytiramiz
+        current_stock_sklad = int(locked_sklad.count or 0)
+        locked_sklad.count = current_stock_sklad - order_count
+        locked_sklad.save(update_fields=["count", "updated_time"])
         return instance
 
 

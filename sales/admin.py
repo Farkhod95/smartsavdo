@@ -227,7 +227,7 @@ class VozvratOrderAdmin(admin.ModelAdmin):
 class OrderHistoryProductAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'date',
-        'order_history', 'vozvrat_order', 'product',
+        'order_history', 'vozvrat_order', 'product', 'sklad',
         'branch', 'model', 'type', 'size',
         'count', 'given_count',
         'real_price', 'unit_price', 'wholesale_price',
@@ -246,7 +246,7 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
             'classes': ('wide',),
             'fields': (
                 ('date',),
-                ('order_history', 'vozvrat_order', 'product'),
+                ('order_history', 'vozvrat_order', 'product', 'sklad'),
                 ('is_delete', 'is_karzinka'),
             )
         }),
