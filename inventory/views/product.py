@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Exists, OuterRef, Prefetch
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
@@ -50,9 +50,12 @@ class ProductViewList(ListCreateAPIView):
     def get_queryset(self):
         images_qs = ProductImage.objects.only('id', 'product_id', 'file').order_by('id')
 
+        has_image_subq = ProductImage.objects.filter(product_id=OuterRef('pk'))
+
         qs = (
             Product.objects
             .filter(is_delete=False)
+            .annotate(has_image=Exists(has_image_subq))
             .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
             .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
             .order_by('-has_image', 'pk')   # rasmli tepada, rasmsiz oxirida
