@@ -198,11 +198,13 @@ class ProductTypeSuggestSortingByModelView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, madel):
+    def get(self, request, branch, branch_category, madel):
         used = (
             ProductType.objects
             .filter(
                 is_delete=False,
+                branch_id=branch,
+                branch_category_id=branch_category,
                 madel_id=madel,
                 sorting__isnull=False
             )
@@ -226,6 +228,8 @@ class ProductTypeSuggestSortingByModelView(APIView):
 
         return Response(
             {
+                "branch": branch,
+                "branch_category": branch_category,
                 "madel": madel,
                 "suggested_sorting": suggested,
                 "message": "Tavsiya etilgan tartib raqam."
