@@ -29,7 +29,7 @@ class ProductTypeListSerializer(serializers.ModelSerializer):
 class ProductTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductType
-        fields = ('id', 'name', 'branch', 'madel', 'branch_category', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'branch', 'branch_category', 'madel', 'sorting', 'is_delete')
 
     def _suggest_sorting_first_free(self, branch_id: int, branch_category_id: int, madel_id: int) -> int:
         used = (
@@ -106,6 +106,8 @@ class ProductTypeSizeCreateSerializer(serializers.Serializer):
 
 
 class ProductTypeCreateItemSerializer(serializers.Serializer):
+    branch = serializers.IntegerField(required=False, allow_null=True)
+    branch_category = serializers.IntegerField(required=False, allow_null=True)
     madel = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     sorting = serializers.IntegerField(required=False, allow_null=True, default=0)
@@ -123,6 +125,8 @@ class ProductTypeCreateItemSerializer(serializers.Serializer):
 
         # ProductType yaratamiz
         product_type = ProductType.objects.create(
+            branch_id=validated_data.get('branch'),
+            branch_category_id=validated_data.get('branch_category'),
             madel_id=validated_data.get('madel'),
             name=validated_data.get('name'),
             sorting=validated_data.get('sorting') if validated_data.get('sorting') is not None else 0,
@@ -182,7 +186,7 @@ class ProductTypeBulkCreateResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductType
-        fields = ("id", "name", "madel", "sorting", "is_delete", "product_type_sizes")
+        fields = ("id", "name", "branch", "branch_category", "madel", "sorting", "is_delete", "product_type_sizes")
 
     def get_product_type_sizes(self, obj):
         qs = obj.product_type_sizes.all().order_by("id")
@@ -216,12 +220,14 @@ class ProductTypeSizeOutSerializer(serializers.ModelSerializer):
 
 
 class ProductTypeOutSerializer(serializers.ModelSerializer):
-    madel_detail = ProductModelListSerializer(source='madel', read_only=True)
+    branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
+    madel_detail = ProductModelSerializer(source='madel', read_only=True)
     product_type_size = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductType
-        fields = ("id", "madel", "madel_detail", "name", "sorting", "is_delete", "product_type_size")
+        fields = ("id", "branch", "branch_detail", "branch_category", "branch_category_detail", "madel", "madel_detail", "name", "sorting", "is_delete", "product_type_size")
 
     def get_product_type_size(self, obj):
         qs = obj.product_type_sizes.all().order_by("sorting", "id")
@@ -250,7 +256,7 @@ class ProductTypeUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductType
-        fields = ("madel", "name", "sorting", "is_delete", "product_type_size")
+        fields = ("branch", "branch_category", "madel", "name", "sorting", "is_delete", "product_type_size")
 
     @transaction.atomic
     def update(self, instance, validated_data):
