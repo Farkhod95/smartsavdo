@@ -43,7 +43,7 @@ class ProductViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
     search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name')
-    ordering = ['pk']
+    ordering = ['-has_image', 'pk']
     http_method_names = ['get']
     # pagination_class = None
 
@@ -55,6 +55,7 @@ class ProductViewList(ListCreateAPIView):
             .filter(is_delete=False)
             .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
             .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
+            .order_by('-has_image', 'pk')   # rasmli tepada, rasmsiz oxirida
         )
         return qs
 
