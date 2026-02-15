@@ -1,35 +1,41 @@
 from rest_framework import serializers
 from django.db import transaction
 from inventory.models import ProductType, ProductTypeSize
-from inventory.serializer.product_model import ProductModelListSerializer
+from inventory.serializer.product_branch import ProductBranchListSerializer
+from inventory.serializer.product_branch_category import ProductBranchCategorySerializer
+from inventory.serializer.product_model import ProductModelListSerializer, ProductModelSerializer
 from inventory.serializer.unit import UnitListSerializer
 
 
 class ProductTypeListSerializer(serializers.ModelSerializer):
-    madel_detail = ProductModelListSerializer(source='madel', read_only=True)
+    branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
+    branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
+    madel_detail = ProductModelSerializer(source='madel', read_only=True)
 
-    # ✅ BranchCategory (id + name)
-    # branch_category = serializers.IntegerField(source='madel.branch_category_id', read_only=True)
-    branch_category_name = serializers.CharField(source='madel.branch_category.name', read_only=True)
-
-    # ✅ ProductBranch (id + name)
-    # product_branch = serializers.IntegerField(source='madel.branch_category.product_branch_id', read_only=True)
-    branch_name = serializers.CharField(source='madel.branch_category.product_branch.name', read_only=True)
+    # # ✅ BranchCategory (id + name)
+    # # branch_category = serializers.IntegerField(source='madel.branch_category_id', read_only=True)
+    # branch_category_name = serializers.CharField(source='madel.branch_category.name', read_only=True)
+    #
+    # # ✅ ProductBranch (id + name)
+    # # product_branch = serializers.IntegerField(source='madel.branch_category.product_branch_id', read_only=True)
+    # branch_name = serializers.CharField(source='madel.branch_category.product_branch.name', read_only=True)
 
     class Meta:
         model = ProductType
-        fields = ('id', 'name', 'branch_name', 'branch_category_name', 'madel', 'madel_detail', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'branch', 'branch_detail', 'branch_category', 'branch_category_detail', 'madel',
+                  'madel_detail', 'sorting', 'is_delete')
 
 
 class ProductTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductType
-        fields = ('id', 'name', 'madel', 'sorting', 'is_delete')
+        fields = ('id', 'name', 'branch', 'madel', 'branch_category', 'sorting', 'is_delete')
 
-    def _suggest_sorting_first_free(self, madel_id: int) -> int:
+    def _suggest_sorting_first_free(self, branch_id: int, branch_category_id: int, madel_id: int) -> int:
         used = (
             ProductType.objects
-            .filter(is_delete=False, madel_id=madel_id, sorting__isnull=False)
+            .filter(is_delete=False, branch_id=branch_id, branch_category_id=branch_category_id, madel_id=madel_id,
+                    sorting__isnull=False)
             .order_by('sorting')
             .values_list('sorting', flat=True)
         )
@@ -51,6 +57,8 @@ class ProductTypeSerializer(serializers.ModelSerializer):
         return suggested
 
     def validate(self, attrs):
+        branch = attrs.get('branch', getattr(self.instance, 'branch', None))
+        branch_category = attrs.get('branch_category', getattr(self.instance, 'branch_category', None))
         madel = attrs.get('madel', getattr(self.instance, 'madel', None))
         sorting = attrs.get('sorting', getattr(self.instance, 'sorting', None))
         is_delete = attrs.get('is_delete', getattr(self.instance, 'is_delete', False))
@@ -64,6 +72,8 @@ class ProductTypeSerializer(serializers.ModelSerializer):
             return attrs
 
         qs = ProductType.objects.filter(
+            branch=branch,
+            branch_category=branch_category,
             madel=madel,
             sorting=sorting,
             is_delete=False
@@ -74,7 +84,7 @@ class ProductTypeSerializer(serializers.ModelSerializer):
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
-            suggestion = self._suggest_sorting_first_free(madel_id=madel.id)
+            suggestion = self._suggest_sorting_first_free(branch_id=branch.id, branch_category_id=branch_category.id , madel_id=madel.id)
             raise serializers.ValidationError({
                 "sorting": f"Bu tartib raqam band. Bo‘sh tartib raqam: {suggestion}"
             })

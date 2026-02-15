@@ -38,10 +38,10 @@ class ProductModelAdmin(admin.ModelAdmin):
 
 @admin.register(ProductType)
 class ProductTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'madel', 'sorting', 'is_delete', 'elegant_id')
-    fields = ('name', 'madel', 'sorting', 'is_delete', 'elegant_id')
+    list_display = ('name', 'branch', 'branch_category', 'madel', 'sorting', 'is_delete', 'elegant_id')
+    fields = ('name', 'branch', 'branch_category', 'madel', 'sorting', 'is_delete', 'elegant_id')
     search_fields = ('name', 'madel__name', 'elegant_id')
-    list_filter = ('is_delete', 'madel')
+    list_filter = ('is_delete', 'branch', 'branch_category', 'madel')
 
 
 @admin.register(ProductTypeSize)

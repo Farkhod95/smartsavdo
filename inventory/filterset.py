@@ -47,6 +47,8 @@ class ProductTypeFilter(FilterSet):
         model = ProductType
         fields = {
             'name': ['exact', 'icontains'],
+            'branch': ['exact'],
+            'branch_category': ['exact'],
             'madel': ['exact'],
             'sorting': ['exact', 'gte', 'lte'],
             'is_delete': ['exact'],
