@@ -42,7 +42,7 @@ class ProductViewList(ListCreateAPIView):
     serializer_class = ProductListOneImageSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
-    search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name')
+    search_fields = ('note', 'filial__name', 'branch__name', 'model__name', 'type__name', "size__name")
     ordering = ['-has_image', 'pk']
     http_method_names = ['get']
     # pagination_class = None
@@ -68,7 +68,7 @@ class ProductView(ListCreateAPIView):
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
-    search_fields = ('filial__name', 'branch__name', 'model__name', 'type__name')
+    search_fields = ('filial__name', 'branch__name', 'model__name', 'type__name', "size__name")
     ordering = ['pk']
 
     def get_queryset(self):

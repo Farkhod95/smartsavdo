@@ -35,7 +35,7 @@ class ProductBranchCategoryPublicView(ListCreateAPIView):
     serializer_class = ProductBranchCategoryListSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductBranchCategoryFilter
-    search_fields = ('name',)
+    search_fields = ('name', 'product_branch__name')
     ordering = ['sorting', '-id']
     http_method_names = ['get']
     # pagination_class = None
@@ -49,7 +49,7 @@ class ProductBranchCategoryView(ListCreateAPIView):
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductBranchCategoryFilter
-    search_fields = ('name',)
+    search_fields = ('name', 'product_branch__name')
     ordering = ['sorting', '-id']
     permission_classes = [IsAuthenticated]
 
