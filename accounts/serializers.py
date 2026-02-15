@@ -145,3 +145,17 @@ class SkladSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sklad
         fields = ('id', 'sorting', 'name', 'filial', 'region', 'district', 'address', 'phone_number', 'is_active', 'is_delete')
+
+    def validate(self, attrs):
+        filial = attrs.get("filial") or getattr(self.instance, "filial", None)
+        sorting = attrs.get("sorting") if "sorting" in attrs else getattr(self.instance, "sorting", None)
+
+        qs = Sklad.objects.filter(is_delete=False, filial=filial, sorting=sorting)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if filial and sorting is not None and qs.exists():
+            raise serializers.ValidationError({
+                "sorting": "Bu sorting ushbu filial uchun band. Boshqa raqam tanlang."
+            })
+        return attrs

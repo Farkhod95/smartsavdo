@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
+from django.db.models import Q
 from restapp.models import BaseModel
 
 
@@ -96,17 +96,28 @@ class FilialAccount(BaseModel):
 class Sklad(BaseModel):
     sorting = models.IntegerField(_('Sorting'), help_text=_("Sorting"))
     name = models.CharField(_('Warehouse name'), max_length=255, null=True, blank=True, help_text=_("Sklad nomi"))
-    filial = models.ForeignKey(Filial, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial jadvali bilan bog'lanish"))
-    region = models.ForeignKey(Region, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Viloyat jadvali bilan bog'lanish"))
-    district = models.ForeignKey(District, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Tuman jadvali bilan bog'lanish"))
-    address = models.TextField(_('Address'), null=True, blank=True, help_text=_("Manzil"))
-    phone_number = models.CharField(_('Phone number'), max_length=64, null=True, blank=True, help_text=_("Telefon raqam"))
+    filial = models.ForeignKey(
+        Filial, related_name='sklads', on_delete=models.SET_NULL,
+        null=True, blank=True, help_text=_("Filial jadvali bilan bog'lanish")
+    )
+    region = models.ForeignKey(Region, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True)
+    district = models.ForeignKey(District, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True)
+    address = models.TextField(_('Address'), null=True, blank=True)
+    phone_number = models.CharField(_('Phone number'), max_length=64, null=True, blank=True)
     is_active = models.BooleanField(default=True, help_text=_("Is active?"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
 
     class Meta:
         verbose_name = _('Sklad')
         verbose_name_plural = _('Sklads')
+        constraints = [
+            # Faqat o‘chirilmaganlarda unique bo‘lsin desangiz:
+            models.UniqueConstraint(
+                fields=['filial', 'sorting'],
+                condition=Q(is_delete=False),
+                name='uniq_sklad_sorting_per_filial_not_deleted'
+            ),
+        ]
 
     def __str__(self):
         return self.name or f"Warehouse #{self.pk}"
