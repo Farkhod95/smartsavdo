@@ -43,7 +43,7 @@ class FilialAccountAdmin(admin.ModelAdmin):
 
 @admin.register(Sklad)
 class SkladAdmin(admin.ModelAdmin):
-    list_display = ('name', 'filial', 'region', 'district', 'phone_number', 'is_active', 'is_delete')
-    fields = ('name', 'filial', 'region', 'district', 'address', 'phone_number', 'is_active', 'is_delete')
+    list_display = ('sorting', 'name', 'filial', 'region', 'district', 'phone_number', 'is_active', 'is_delete')
+    fields = ('sorting', 'name', 'filial', 'region', 'district', 'address', 'phone_number', 'is_active', 'is_delete')
     search_fields = ('name', 'phone_number', 'address', 'filial__name')
     list_filter = ('is_active', 'is_delete', 'filial', 'region', 'district')

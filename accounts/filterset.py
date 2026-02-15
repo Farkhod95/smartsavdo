@@ -65,6 +65,7 @@ class SkladFilter(FilterSet):
         model = Sklad
         fields = {
             'name': ['exact', 'icontains'],
+            'sorting': ['exact'],
             'filial': ['exact'],
             'region': ['exact'],
             'district': ['exact'],

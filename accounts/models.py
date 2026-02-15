@@ -94,6 +94,7 @@ class FilialAccount(BaseModel):
 
 
 class Sklad(BaseModel):
+    sorting = models.IntegerField(_('Sorting'), help_text=_("Sorting"))
     name = models.CharField(_('Warehouse name'), max_length=255, null=True, blank=True, help_text=_("Sklad nomi"))
     filial = models.ForeignKey(Filial, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial jadvali bilan bog'lanish"))
     region = models.ForeignKey(Region, related_name='sklads', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Viloyat jadvali bilan bog'lanish"))

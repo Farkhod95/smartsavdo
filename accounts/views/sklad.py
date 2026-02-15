@@ -39,7 +39,7 @@ class SkladViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SkladFilter
     search_fields = ('name', 'phone_number', 'address', 'filial__name')
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
     http_method_names = ['get']
     pagination_class = None
 
@@ -53,7 +53,7 @@ class SkladView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SkladFilter
     search_fields = ('name', 'phone_number', 'address', 'filial__name')
-    ordering = ['pk']
+    ordering = ['sorting', '-id']
 
     def get_queryset(self):
         return Sklad.objects.filter(is_delete=False)
@@ -91,3 +91,46 @@ class SkladDetailView(RetrieveUpdateDestroyAPIView):
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class ProductTypeSuggestSortingByModelView(APIView):
+    """
+    ProductType uchun sorting tavsiya (har bir madel kesimida).
+    GET /product-type/<int:madel>/sorting
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, madel):
+        used = (
+            Sklad.objects
+            .filter(
+                is_delete=False,
+                madel_id=madel,
+                sorting__isnull=False
+            )
+            .order_by('sorting')
+            .values_list('sorting', flat=True)
+        )
+
+        suggested = 1
+        for s in used:
+            try:
+                s_int = int(s)
+            except (TypeError, ValueError):
+                continue
+
+            if s_int < suggested:
+                continue
+            if s_int == suggested:
+                suggested += 1
+            else:
+                break
+
+        return Response(
+            {
+                "madel": madel,
+                "suggested_sorting": suggested,
+                "message": "Tavsiya etilgan tartib raqam."
+            },
+            status=status.HTTP_200_OK
+        )

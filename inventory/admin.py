@@ -30,10 +30,10 @@ class ProductBranchCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(ProductModel)
 class ProductModelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'branch_category', 'sorting', 'is_delete', 'elegant_id')
-    fields = ('name', 'branch_category', 'sorting', 'is_delete', 'elegant_id')
+    list_display = ('name', 'branch', 'branch_category', 'sorting', 'is_delete', 'elegant_id')
+    fields = ('name', 'branch', 'branch_category', 'sorting', 'is_delete', 'elegant_id')
     search_fields = ('name', 'branch_category__name', 'elegant_id')
-    list_filter = ('is_delete', 'branch_category')
+    list_filter = ('is_delete','branch', 'branch_category')
 
 
 @admin.register(ProductType)
