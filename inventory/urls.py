@@ -49,7 +49,7 @@ urlpatterns = [
     path('product-type/<int:pk>', ProductTypeDetailView.as_view(), name='product_type_detail_view'),
     path('product-type/public', ProductTypeViewList.as_view(), name='product-type-public'),
     path('product-type/fields', ProductTypeFieldInfoView.as_view(), name='product_type_fields_info'),
-    path('product-type/<int:madel>/sorting', ProductTypeSuggestSortingByModelView.as_view(),
+    path('product-type/<int:branch>/<int:branch_category>/<int:madel>/sorting', ProductTypeSuggestSortingByModelView.as_view(),
         name='product_type_suggest_sorting'),
 
     re_path(r'^product-type-size$', ProductTypeSizeView.as_view(), name='product_type_size_view'),
