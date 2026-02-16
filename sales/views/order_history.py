@@ -57,10 +57,11 @@ class OrderHistorySelfView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = OrderHistoryFilter
     search_fields = ('order__id', 'client__full_name', 'employee__username', 'note', 'driver_info')
-    ordering = ['-date', '-pk']   # date bo‘yicha yangi->eski
+    ordering = ['-date', '-pk']
     http_method_names = ['get']
 
     def get_queryset(self):
+        # tezlik uchun select_related (N+1 ni yo'qotadi)
         return (
             OrderHistory.objects
             .filter(is_delete=False, created_by=self.request.user)
@@ -68,10 +69,10 @@ class OrderHistorySelfView(ListCreateAPIView):
         )
 
     def list(self, request, *args, **kwargs):
-        # 1) filter/search/ordering lar ishlasin
+        # 1) filter/search/ordering ishlaydi
         queryset = self.filter_queryset(self.get_queryset())
 
-        # 2) Guruhlanadigan sana: date bo‘lsa o‘sha, bo‘lmasa created_time dan sana olamiz
+        # 2) group_date: date bo'lsa date, bo'lmasa created_time dan sana
         queryset = queryset.annotate(
             group_date=Coalesce(
                 'date',
@@ -80,42 +81,57 @@ class OrderHistorySelfView(ListCreateAPIView):
             )
         )
 
-        # 3) Avval faqat distinct sanalarni olamiz (pagination aynan shu sanalarga bo‘ladi)
-        dates_qs = queryset.values_list('group_date', flat=True).distinct().order_by('-group_date')
+        # 3) distinct sanalar -> pagination aynan sanalar bo'yicha
+        dates_qs = (
+            queryset.values_list('group_date', flat=True)
+            .distinct()
+            .order_by('-group_date')
+        )
 
         page_dates = self.paginate_queryset(dates_qs)
         if page_dates is None:
             page_dates = list(dates_qs)
+        else:
+            page_dates = list(page_dates)
 
-        # 4) Shu sahifadagi sanalarga tegishli history larni olib kelamiz
-        items_qs = queryset.filter(group_date__in=page_dates).order_by('-group_date', '-pk')
+        # 4) shu sahifadagi sanalarga tegishli itemlar
+        items_qs = (
+            queryset
+            .filter(group_date__in=page_dates)
+            .order_by('-group_date', '-pk')  # ko'rinish: yuqorida yangilari
+        )
 
         serializer = self.get_serializer(items_qs, many=True)
         items = serializer.data
 
-        # 5) Natijani date bo‘yicha guruhlab chiqamiz (page_dates tartibini saqlaymiz)
-        grouped = OrderedDict()
-        for d in page_dates:
-            grouped[str(d)] = []
+        # 5) group qilib joylash (page_dates tartibini saqlaymiz)
+        grouped = OrderedDict((str(d), []) for d in page_dates)
 
         for row in items:
-            # row['date'] null bo‘lishi mumkin, shuning uchun annotate qilingan group_date kerak bo‘lardi,
-            # lekin serializerda u yo‘q. Shuning uchun date null bo‘lsa created_time dan sana kesamiz.
-            # created_time serializerda bor (siz fieldsga qo‘ygansiz).
+            # kalit: row['date'] bo'lsa shu, bo'lmasa created_time dan YYYY-MM-DD kesib olamiz
             if row.get('date'):
                 key = row['date']
             else:
-                # "2026-02-16T10:12:00Z" -> "2026-02-16"
                 ct = row.get('created_time')
                 key = ct[:10] if ct else None
 
             if key in grouped:
                 grouped[key].append(row)
 
-        data = [{"date": date_str, "items": rows} for date_str, rows in grouped.items()]
+        # 6) har bir date guruhida "pastdan yuqoriga" nomeratsiya:
+        # yuqoridagi birinchi item -> max, pastdagi oxirgi -> 1
+        results = []
+        for date_str, rows in grouped.items():
+            total = len(rows)
+            for i, r in enumerate(rows):
+                r['number'] = total - i  # 66..1
+            results.append({
+                "date": date_str,
+                "count": total,
+                "items": rows
+            })
 
-        return self.get_paginated_response(data)
-
+        return self.get_paginated_response(results)
 
 class OrderHistoryView(ListCreateAPIView):
     serializer_class = OrderHistoryListSerializer
