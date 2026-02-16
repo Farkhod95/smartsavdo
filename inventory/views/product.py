@@ -98,10 +98,10 @@ class ProductPublicGroupedView(ListAPIView):
         Ruxsat etilgan: has_image, min_pk
         """
         ordering_param = self.request.query_params.get('ordering')
-
         allowed = {'has_image', 'min_pk'}
 
         if not ordering_param:
+            # ✅ rasmli tepada, rasmsiz oxirida
             return grouped_qs.order_by('-has_image', 'min_pk')
 
         parts = [p.strip() for p in ordering_param.split(',') if p.strip()]
@@ -118,6 +118,12 @@ class ProductPublicGroupedView(ListAPIView):
             order_fields = ['-has_image', 'min_pk']
 
         return grouped_qs.order_by(*order_fields)
+
+    def _http_to_https(self, url: str) -> str:
+        if not url:
+            return url
+        # ✅ settingssiz: faqat http bo'lsa https qilamiz
+        return url.replace("http://", "https://", 1)
 
     def list(self, request, *args, **kwargs):
         # 1) Search + Filter avval Product ustida ishlaydi (tez)
@@ -157,21 +163,29 @@ class ProductPublicGroupedView(ListAPIView):
             s.id: s for s in ProductTypeSize.objects.select_related('unit', 'product_type').filter(id__in=size_ids)
         }
 
-        # 6) Serializer input
-        payload = [
-            {
-                "filial": x["filial_id"],
-                "branch": x["branch_id"],
-                "branch_category": x["branch_category_id"],
-                "model": x["model_id"],
-                "type": x["type_id"],
-                "min_pk": x["min_pk"],
-                "size_ids": x.get("size_ids") or [],
-                "has_image": bool(x.get("has_image")),
-                "first_image": x.get("first_image"),
-            }
-            for x in rows
-        ]
+        # 6) Serializer input  ✅ first_image emas -> images
+        payload = []
+        for x in rows:
+            img_url = None
+            if x.get("first_image"):
+                # build absolute url
+                img_url = request.build_absolute_uri(x["first_image"].url if hasattr(x["first_image"], "url") else f"/media/{x['first_image']}")
+                img_url = self._http_to_https(img_url)
+
+            payload.append(
+                {
+                    "filial": x["filial_id"],
+                    "branch": x["branch_id"],
+                    "branch_category": x["branch_category_id"],
+                    "model": x["model_id"],
+                    "type": x["type_id"],
+                    "min_pk": x["min_pk"],
+                    "size_ids": x.get("size_ids") or [],
+                    "has_image": bool(x.get("has_image")),
+                    # ✅ serializer "images" kutyapti
+                    "images": {"file": img_url} if img_url else None,
+                }
+            )
 
         ser = self.get_serializer(
             payload,
@@ -190,7 +204,6 @@ class ProductPublicGroupedView(ListAPIView):
         if page is not None:
             return self.get_paginated_response(ser.data)
         return Response(ser.data)
-
 
 class ProductViewList(ListCreateAPIView):
     """
