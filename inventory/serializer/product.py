@@ -1,7 +1,8 @@
 from rest_framework import serializers
+from django.conf import settings
 
 from accounts.serializers import FilialListSerializer, FilialSerializer
-from inventory.models import ProductImage, Product
+from inventory.models import ProductImage, Product, ProductTypeSize
 from inventory.serializer.product_branch import ProductBranchListSerializer
 from inventory.serializer.product_branch_category import ProductBranchCategorySerializer
 from inventory.serializer.product_model import ProductModelListSerializer, ProductModelSerializer
@@ -43,6 +44,107 @@ class ProductListSerializer(serializers.ModelSerializer):
                   'branch_category_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail',
                   'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
 
+
+
+class ProductPublicGroupedSerializer(serializers.Serializer):
+    # Group key (id lar)
+    filial = serializers.IntegerField(allow_null=True)
+    branch = serializers.IntegerField(allow_null=True)
+    branch_category = serializers.IntegerField(allow_null=True)
+    model = serializers.IntegerField(allow_null=True)
+    type = serializers.IntegerField(allow_null=True)
+
+    # Extra
+    min_pk = serializers.IntegerField()
+    has_image = serializers.BooleanField()
+    first_image = serializers.CharField(allow_null=True, required=False)
+
+    # Siz xohlagan "node" (biz response’da node deb beramiz)
+    node = serializers.SerializerMethodField()
+
+    # Detail lar
+    filial_detail = serializers.SerializerMethodField()
+    branch_detail = serializers.SerializerMethodField()
+    branch_category_detail = serializers.SerializerMethodField()
+    model_detail = serializers.SerializerMethodField()
+    type_detail = serializers.SerializerMethodField()
+
+    # Size lar ro‘yxati (detail bilan)
+    sizes = serializers.SerializerMethodField()
+
+    # Agar rasmni ham groupga bitta qilib qaytarmoqchi bo‘lsang:
+    image = serializers.SerializerMethodField()
+
+    def _map_get(self, map_name: str, obj_id):
+        m = self.context.get(map_name) or {}
+        return m.get(obj_id)
+
+    def get_filial_detail(self, obj):
+        inst = self._map_get("filial_map", obj.get("filial"))
+        return FilialSerializer(inst, context=self.context).data if inst else None
+
+    def get_branch_detail(self, obj):
+        inst = self._map_get("branch_map", obj.get("branch"))
+        return ProductBranchListSerializer(inst, context=self.context).data if inst else None
+
+    def get_branch_category_detail(self, obj):
+        inst = self._map_get("branch_category_map", obj.get("branch_category"))
+        return ProductBranchCategorySerializer(inst, context=self.context).data if inst else None
+
+    def get_model_detail(self, obj):
+        inst = self._map_get("model_map", obj.get("model"))
+        return ProductModelSerializer(inst, context=self.context).data if inst else None
+
+    def get_type_detail(self, obj):
+        inst = self._map_get("type_map", obj.get("type"))
+        return ProductTypeSerializer(inst, context=self.context).data if inst else None
+
+    def get_sizes(self, obj):
+        size_ids = obj.get("size_ids") or []
+        size_map = self.context.get("size_map") or {}
+
+        items = []
+        for sid in size_ids:
+            s = size_map.get(sid)
+            if not s:
+                continue
+            items.append(ProductTypeSizeSerializer(s, context=self.context).data)
+        return items
+
+    def get_node(self, obj):
+        """
+        Siz aytgandek: "size=1 detaili va size=2 detaili" ko‘rinishida.
+        (Istasangiz formatini o‘zgartirib yuboraman.)
+        """
+        size_ids = obj.get("size_ids") or []
+        size_map: dict[int, ProductTypeSize] = self.context.get("size_map") or {}
+
+        parts = []
+        for sid in size_ids:
+            s = size_map.get(sid)
+            if not s:
+                continue
+            # Masalan: "12 dona" yoki "1.5 litr"
+            unit_name = getattr(s.unit, "name", "") if getattr(s, "unit_id", None) else ""
+            parts.append(f"{s.size} {unit_name}".strip())
+
+        return " | ".join(parts) if parts else ""
+
+    def get_image(self, obj):
+        """
+        DB’dan group bo‘yicha birinchi topilgan rasm fayl nomini olib keldik.
+        Shuni URL qilib qaytaramiz.
+        """
+        file_name = obj.get("first_image")
+        if not file_name:
+            return None
+
+        request = self.context.get("request")
+        # MEDIA_URL bilan absolute url
+        if request:
+            # file_name odatda "product-image/2026/02/..." bo‘ladi
+            return request.build_absolute_uri(f"{settings.MEDIA_URL}{file_name}")
+        return f"{settings.MEDIA_URL}{file_name}"
 
 class ProductListOneImageSerializer(serializers.ModelSerializer):
     filial_detail = FilialSerializer(source='filial', read_only=True)
