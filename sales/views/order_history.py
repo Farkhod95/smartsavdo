@@ -1,3 +1,7 @@
+from collections import OrderedDict
+from django.db.models.functions import TruncDate, Coalesce
+from django.db.models import DateField
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
@@ -53,14 +57,64 @@ class OrderHistorySelfView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = OrderHistoryFilter
     search_fields = ('order__id', 'client__full_name', 'employee__username', 'note', 'driver_info')
-    ordering = ['pk']
+    ordering = ['-date', '-pk']   # date bo‘yicha yangi->eski
     http_method_names = ['get']
 
     def get_queryset(self):
-        return OrderHistory.objects.filter(
-            is_delete=False,
-            created_by=self.request.user
+        return (
+            OrderHistory.objects
+            .filter(is_delete=False, created_by=self.request.user)
+            .select_related('order', 'client', 'order_filial', 'created_by', 'employee')
         )
+
+    def list(self, request, *args, **kwargs):
+        # 1) filter/search/ordering lar ishlasin
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # 2) Guruhlanadigan sana: date bo‘lsa o‘sha, bo‘lmasa created_time dan sana olamiz
+        queryset = queryset.annotate(
+            group_date=Coalesce(
+                'date',
+                TruncDate('created_time'),
+                output_field=DateField()
+            )
+        )
+
+        # 3) Avval faqat distinct sanalarni olamiz (pagination aynan shu sanalarga bo‘ladi)
+        dates_qs = queryset.values_list('group_date', flat=True).distinct().order_by('-group_date')
+
+        page_dates = self.paginate_queryset(dates_qs)
+        if page_dates is None:
+            page_dates = list(dates_qs)
+
+        # 4) Shu sahifadagi sanalarga tegishli history larni olib kelamiz
+        items_qs = queryset.filter(group_date__in=page_dates).order_by('-group_date', '-pk')
+
+        serializer = self.get_serializer(items_qs, many=True)
+        items = serializer.data
+
+        # 5) Natijani date bo‘yicha guruhlab chiqamiz (page_dates tartibini saqlaymiz)
+        grouped = OrderedDict()
+        for d in page_dates:
+            grouped[str(d)] = []
+
+        for row in items:
+            # row['date'] null bo‘lishi mumkin, shuning uchun annotate qilingan group_date kerak bo‘lardi,
+            # lekin serializerda u yo‘q. Shuning uchun date null bo‘lsa created_time dan sana kesamiz.
+            # created_time serializerda bor (siz fieldsga qo‘ygansiz).
+            if row.get('date'):
+                key = row['date']
+            else:
+                # "2026-02-16T10:12:00Z" -> "2026-02-16"
+                ct = row.get('created_time')
+                key = ct[:10] if ct else None
+
+            if key in grouped:
+                grouped[key].append(row)
+
+        data = [{"date": date_str, "items": rows} for date_str, rows in grouped.items()]
+
+        return self.get_paginated_response(data)
 
 
 class OrderHistoryView(ListCreateAPIView):

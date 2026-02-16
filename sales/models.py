@@ -106,6 +106,11 @@ class OrderHistory(BaseModel):
         verbose_name = _('order history')
         verbose_name_plural = _('order histories')
 
+        indexes = [
+            models.Index(fields=['created_by', 'is_delete', 'date']),
+            models.Index(fields=['created_by', 'is_delete', 'created_time']),
+        ]
+
     def __str__(self):
         return f"OrderHistory #{self.pk}" if self.pk else "OrderHistory"
 
