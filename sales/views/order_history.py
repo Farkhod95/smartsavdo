@@ -61,7 +61,7 @@ class OrderHistorySelfView(ListCreateAPIView):
     http_method_names = ['get']
 
     def get_queryset(self):
-        # tezlik uchun select_related (N+1 ni yo'qotadi)
+        # tezlik uchun (serializer detail lar N+1 bo'lib ketmasin)
         return (
             OrderHistory.objects
             .filter(is_delete=False, created_by=self.request.user)
@@ -69,11 +69,11 @@ class OrderHistorySelfView(ListCreateAPIView):
         )
 
     def list(self, request, *args, **kwargs):
-        # 1) filter/search/ordering ishlaydi
-        queryset = self.filter_queryset(self.get_queryset())
+        # 1) filter/search/ordering lar ishlasin
+        qs = self.filter_queryset(self.get_queryset())
 
-        # 2) group_date: date bo'lsa date, bo'lmasa created_time dan sana
-        queryset = queryset.annotate(
+        # 2) Guruh sanasi: date bo'lsa o'sha, bo'lmasa created_time sanasi
+        qs = qs.annotate(
             group_date=Coalesce(
                 'date',
                 TruncDate('created_time'),
@@ -81,9 +81,9 @@ class OrderHistorySelfView(ListCreateAPIView):
             )
         )
 
-        # 3) distinct sanalar -> pagination aynan sanalar bo'yicha
+        # 3) Pagination faqat sanalar bo'yicha (date lar ro'yxati)
         dates_qs = (
-            queryset.values_list('group_date', flat=True)
+            qs.values_list('group_date', flat=True)
             .distinct()
             .order_by('-group_date')
         )
@@ -94,21 +94,20 @@ class OrderHistorySelfView(ListCreateAPIView):
         else:
             page_dates = list(page_dates)
 
-        # 4) shu sahifadagi sanalarga tegishli itemlar
+        # 4) Shu sahifadagi sanalarga tegishli historylar
         items_qs = (
-            queryset
-            .filter(group_date__in=page_dates)
-            .order_by('-group_date', '-pk')  # ko'rinish: yuqorida yangilari
+            qs.filter(group_date__in=page_dates)
+              .order_by('-group_date', '-pk')  # har bir date ichida ham ko'rinish: yangisi yuqorida
         )
 
         serializer = self.get_serializer(items_qs, many=True)
         items = serializer.data
 
-        # 5) group qilib joylash (page_dates tartibini saqlaymiz)
+        # 5) page_dates tartibini saqlagan holda guruhlash
         grouped = OrderedDict((str(d), []) for d in page_dates)
 
         for row in items:
-            # kalit: row['date'] bo'lsa shu, bo'lmasa created_time dan YYYY-MM-DD kesib olamiz
+            # key: row['date'] bo'lsa shu, bo'lmasa created_time dan YYYY-MM-DD
             if row.get('date'):
                 key = row['date']
             else:
@@ -118,16 +117,20 @@ class OrderHistorySelfView(ListCreateAPIView):
             if key in grouped:
                 grouped[key].append(row)
 
-        # 6) har bir date guruhida "pastdan yuqoriga" nomeratsiya:
-        # yuqoridagi birinchi item -> max, pastdagi oxirgi -> 1
+        # 6) Har bir date ichida nomeratsiya 1 dan boshlansin,
+        # lekin yuqorida katta raqam ko‘rinsin (N..1)
         results = []
         for date_str, rows in grouped.items():
-            total = len(rows)
-            for i, r in enumerate(rows):
-                r['number'] = total - i  # 66..1
+            n = len(rows)
+
+            # rows tartibi: yuqorida yangisi (biz -pk qilganmiz)
+            # shuning uchun birinchi ko'rinadigan item = n, oxiri = 1
+            for idx, r in enumerate(rows):
+                r['number'] = n - idx  # N..1 (har date uchun alohida)
+
             results.append({
                 "date": date_str,
-                "count": total,
+                "count": n,
                 "items": rows
             })
 
