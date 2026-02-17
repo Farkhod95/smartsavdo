@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from sales.filterset import VozvratOrderFilter
 from sales.models import VozvratOrder
-from sales.serializers import VozvratOrderListSerializer, VozvratOrderSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.serializer.vozvrat_order import VozvratOrderSerializer, VozvratOrderListSerializer
 
 
 class VozvratOrderFieldInfoView(APIView):

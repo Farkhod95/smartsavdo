@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from sales.filterset import ClientKeshbekHistoryFilter
 from sales.models import ClientKeshbekHistory
-from sales.serializers import ClientKeshbekHistoryListSerializer, ClientKeshbekHistorySerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.serializer.client_keshbek_history import ClientKeshbekHistorySerializer, ClientKeshbekHistoryListSerializer
 
 
 class ClientKeshbekHistoryFieldInfoView(APIView):

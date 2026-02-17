@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from accounts.serializers import FilialListSerializer
 from finance.models import ExchangeRate, ExpenseCategory, Expense, DebtRepayment
-from sales.serializers import ClientListSerializer
+from sales.serializer.client import ClientListSerializer
 from users.serializers import UserViewListSerializer
 
 

@@ -77,6 +77,9 @@ class OrderHistory(BaseModel):
     order_filial = models.ForeignKey(Filial, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True,
                                help_text=_("Filial bilan bog'lanish"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Buyurtmani qabul qilgan hodim (User)"))
+    currency = models.ForeignKey(Currency, related_name='order_histories', on_delete=models.SET_NULL, null=True,
+                                 blank=True,
+                                 help_text=_("Valyuta bilan bog'lanish"))
     exchange_rate = models.DecimalField(_('Exchange rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Kurs"))
     date = models.DateField(_('Date'), null=True, blank=True, help_text=_("Sana"))
     note = models.TextField(_('Note'), null=True, blank=True, help_text=_("Izoh"))
@@ -149,8 +152,6 @@ class OrderHistoryProduct(BaseModel):
     vozvrat_order = models.ForeignKey(VozvratOrder, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("VozvratOrder bilan bog'lanish"))
     sklad = models.ForeignKey(Sklad, related_name='Order_products', on_delete=models.SET_NULL, null=True, blank=True,
                                help_text=_("Filial bilan bog'lanish"))
-    currency = models.ForeignKey(Currency, related_name='products_order_history', on_delete=models.SET_NULL, null=True, blank=True,
-                               help_text=_("Valyuta bilan bog'lanish"))
     branch = models.ForeignKey(ProductBranch, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     model = models.ForeignKey(ProductModel, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductModel bilan bog'lanish"))
     type = models.ForeignKey(ProductType, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductType bilan bog'lanish"))

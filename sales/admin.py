@@ -109,7 +109,7 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'order', 'client', 'order_filial', 'employee', 'date',
+        'id', 'order', 'client', 'order_filial', 'employee', 'currency', 'date',
         'exchange_rate',
         'all_product_summa', 'discount_amount',
         'summa_total_dollar', 'summa_dollar',
@@ -139,7 +139,7 @@ class OrderHistoryAdmin(admin.ModelAdmin):
             'classes': ('wide',),
             'fields': (
                 ('order', 'client', 'order_filial'),
-                ('employee', 'date'),
+                ('employee', 'currency', 'date'),
                 ('exchange_rate',),
                 ('is_delete', 'is_karzinka'),
             )
@@ -227,7 +227,7 @@ class VozvratOrderAdmin(admin.ModelAdmin):
 class OrderHistoryProductAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'date',
-        'order_history', 'vozvrat_order', 'product', 'sklad', 'currency',
+        'order_history', 'vozvrat_order', 'product', 'sklad',
         'branch', 'model', 'type', 'size',
         'count', 'given_count',
         'real_price', 'unit_price', 'wholesale_price',
@@ -246,7 +246,7 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
             'classes': ('wide',),
             'fields': (
                 ('date',),
-                ('order_history', 'vozvrat_order', 'product', 'sklad', 'currency'),
+                ('order_history', 'vozvrat_order', 'product', 'sklad'),
                 ('is_delete', 'is_karzinka'),
             )
         }),

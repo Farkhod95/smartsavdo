@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from sales.filterset import OrderFilter
 from sales.models import Order
-from sales.serializers import OrderListSerializer, OrderSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.serializer.order import OrderSerializer, OrderListSerializer
 
 
 class OrderFieldInfoView(APIView):

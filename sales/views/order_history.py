@@ -13,7 +13,7 @@ from sales.filterset import OrderHistoryFilter
 from sales.models import OrderHistory
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
-from sales.serializers import OrderHistorySerializer, OrderHistoryListSerializer, OrderHistoryUpdateSerializer
+from sales.serializer.order_history import OrderHistorySerializer, OrderHistoryListSerializer
 
 
 class OrderHistoryFieldInfoView(APIView):

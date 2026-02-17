@@ -7,10 +7,11 @@ from rest_framework.views import APIView
 
 from sales.filterset import OrderHistoryProductFilter
 from sales.models import OrderHistoryProduct
-from sales.serializers import OrderHistoryProductListSerializer, OrderHistoryProductSerializer, \
-    OrderHistoryProductCreateSerializer
+
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.serializer.order_history_product import OrderHistoryProductSerializer, OrderHistoryProductListSerializer, \
+    OrderHistoryProductCreateSerializer
 
 
 class OrderHistoryProductFieldInfoView(APIView):

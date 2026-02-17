@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from sales.filterset import ClientFilter
 from sales.models import Client
-from sales.serializers import ClientListSerializer, ClientSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.serializer.client import ClientSerializer, ClientListSerializer
 
 
 class ClientFieldInfoView(APIView):
