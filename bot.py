@@ -129,7 +129,7 @@ async def has_user_by_telegram_id(telegram_id: int) -> bool:
     - 401 -> secret xato (bu holatni alohida ko'rsatamiz)
     """
     async with aiohttp.ClientSession() as session:
-        resp = await api_post(session, "/auth/telegram/token/", {"telegram_id": telegram_id})
+        resp = await api_post(session, "/auth/telegram/token", {"telegram_id": telegram_id})
 
     if resp.get("_error"):
         status = resp.get("status")
@@ -169,7 +169,7 @@ WEBAPP_LOGIN_URL = "https://savdo.elegantchinni.uz/"
 def token_button_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         # [InlineKeyboardButton(text="🔑 Tizimga kirish (token olish)", callback_data="get_token")],
-        [InlineKeyboardButton(text="🌐 Savdo saytini ochish", web_app=WebAppInfo(url=WEBAPP_LOGIN_URL))],
+        [InlineKeyboardButton(text="🌐 Katalogni ochish", web_app=WebAppInfo(url=WEBAPP_LOGIN_URL))],
     ])
 
 
@@ -221,10 +221,17 @@ async def main() -> None:
             return
 
         if exists:
+            # await message.answer(
+            #     "Assalomu alaykum! 👋\n"
+            #     "Siz avval ro‘yxatdan o‘tib bo‘lgansiz.\n\n"
+            #     "Token olish uchun tugmani bosing. 🔑",
+            #     reply_markup=token_button_keyboard()
+            # )
             await message.answer(
                 "Assalomu alaykum! 👋\n"
-                "Siz avval ro‘yxatdan o‘tib bo‘lgansiz.\n\n"
-                "Token olish uchun tugmani bosing. 🔑",
+                "🎉 <b>Siz ro‘yxatdan o‘tib bo‘lgansiz</b>\n\n"
+                "📦 <b>Katalogni ko‘rish</b> uchun pastdagi tugmani bosing 👇",
+                parse_mode="HTML",
                 reply_markup=token_button_keyboard()
             )
             return
@@ -232,9 +239,10 @@ async def main() -> None:
         # Aks holda registratsiya davom etadi
         await state.set_state(RegisterState.full_name)
         await message.answer(
-            "Assalomu alaykum! 👋\n"
-            "Tizimga ulanish uchun avval ro‘yxatdan o‘tamiz.\n\n"
-            "Iltimos, FIO (to‘liq ism-familiya) ni kiriting:"
+            "👋 <b>Assalomu alaykum!</b>\n\n"
+            "✅ <b>Tizimga kirish</b> uchun <b>ro‘yxatdan o‘tamiz</b>.\n"
+            "📝 Iltimos, <b>Ism-familiyangizni kiriting.</b>\n\n",
+            parse_mode="HTML"
         )
 
     @dp.message(RegisterState.full_name)
@@ -249,11 +257,15 @@ async def main() -> None:
         try:
             kb = await build_regions_keyboard()
         except Exception as e:
-            await message.answer(f"Regionlarni olishda xatolik. {short_err(e)}")
+            await message.answer(f"Viloyatni olishda xatolik. {short_err(e)}")
             return
 
         await state.set_state(RegisterState.region)
-        await message.answer("Viloyatingizni tanlang:", reply_markup=kb)
+        await message.answer(
+            "📍 <b>Viloyatni tanlang:</b> 👇",
+            parse_mode="HTML",
+            reply_markup=kb
+        )
 
     @dp.callback_query(RegisterState.region, F.data.startswith("region:"))
     async def handle_region(call: CallbackQuery, state: FSMContext):
@@ -273,10 +285,12 @@ async def main() -> None:
             return
 
         await state.set_state(RegisterState.district)
+        text = "🏘 <b>Tumanni tanlang:</b> 👇"
+
         try:
-            await call.message.edit_text("Tumanni tanlang:", reply_markup=kb)
+            await call.message.edit_text(text, parse_mode="HTML", reply_markup=kb)
         except Exception:
-            await call.message.answer("Tumanni tanlang:", reply_markup=kb)
+            await call.message.answer(text, parse_mode="HTML", reply_markup=kb)
 
         await call.answer()
 
@@ -292,9 +306,12 @@ async def main() -> None:
         await state.set_state(RegisterState.phone)
 
         await call.message.answer(
-            "Endi telefon raqamingizni yuboring (Contact tugmasi orqali):",
+            "📞 <b>Telefon raqamingizni yuboring:</b> 👇\n"
+            "<i>(Telefon tugmasi orqali)</i>",
+            parse_mode="HTML",
             reply_markup=phone_keyboard()
         )
+
         await call.answer()
 
     @dp.message(RegisterState.phone, F.contact)
@@ -325,9 +342,9 @@ async def main() -> None:
             return
 
         await message.answer(
-            "✅ Ma’lumotlaringiz saqlandi.\n\n"
-            "Endi tizimga kirish uchun token olish tugmasini bosing.\n"
-            "🔁 Har safar bossangiz yangi token beriladi.",
+            "🎉 <b>Muvaffaqiyatli ro‘yxatdan o‘tdingiz!</b>\n\n"
+            "📦 <b>Katalogni ko‘rish</b> uchun pastdagi tugmani bosing 👇",
+            parse_mode="HTML",
             reply_markup=token_button_keyboard()
         )
 
