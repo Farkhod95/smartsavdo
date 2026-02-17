@@ -8,7 +8,7 @@ from users.models import User, Role, AppModule, Company
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
+        (None, {'fields': ('username', 'password', 'telegram_id')}),
         (_('Personal info'), {'fields': ('full_name', 'email', 'phone_number', 'gender', 'date_of_birthday', 'avatar', 'address')}),
         (_('Company & Location'), {'fields': ('filials', 'order_filial', 'region', 'district')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'roles', )}),
