@@ -157,13 +157,14 @@ class OrderHistoryProduct(BaseModel):
     type = models.ForeignKey(ProductType, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductType bilan bog'lanish"))
     size = models.ForeignKey(ProductTypeSize, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductTypeSize bilan bog'lanish"))
     count = models.IntegerField(_('Count'), null=True, blank=True, help_text=_("Miqdor"))
+    price_dollar = models.DecimalField(_('Price dollar'), max_digits=20, decimal_places=2, default=0,
+                                       help_text=_("Narxi dollarda"))
+    price_sum = models.DecimalField(_('Price sum'), max_digits=20, decimal_places=2, default=0,
+                                    help_text=_("Narxi so'mda"))
     given_count = models.IntegerField(_('Given count'), null=True, blank=True, help_text=_("Mijozga berilgan mahsulot soni"))
-    price = models.DecimalField(_('Price'), max_digits=20, decimal_places=2, default=0, help_text=_("Narxi"))
     real_price = models.DecimalField(_('Real price'), max_digits=20, decimal_places=2, default=0, help_text=_("Xaqiqiy narxi"))
     unit_price = models.DecimalField(_('Unit price'), max_digits=20, decimal_places=2, default=0, help_text=_("Dona narxi"))
     wholesale_price = models.DecimalField(_('Wholesale price'), max_digits=20, decimal_places=2, default=0, help_text=_("Optom narxi"))
-    total_summa_dollar = models.DecimalField(_('Total summa dollar'), max_digits=20, decimal_places=2, default=0, help_text=_("Umumiy narxi dollarda"))
-    total_summa_sum = models.DecimalField(_('Total summa sum'), max_digits=20, decimal_places=2, default=0, help_text=_("Umumiy narxi so'mda"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     cargo_terminal = models.CharField(_('Cargo terminal'), max_length=255, null=True, blank=True, help_text=_("Do'kon yoki Sklad (Yuk chiqish joyi)"))
     price_difference = models.BooleanField(default=False, help_text=_("Narxda farq bormi? (Sotilgan narx real dan kichikmi)"))

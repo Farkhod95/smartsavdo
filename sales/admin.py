@@ -229,8 +229,8 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
         'id', 'date',
         'order_history', 'vozvrat_order', 'product', 'sklad',
         'branch', 'model', 'type', 'size',
-        'count', 'given_count', 'price',
-        'real_price', 'unit_price', 'wholesale_price', 'total_summa_dollar', 'total_summa_sum',
+        'count', 'given_count', 'price_dollar', 'price_sum',
+        'real_price', 'unit_price', 'wholesale_price',
         'cargo_terminal',
         'price_difference', 'status_order',
         'is_karzinka', 'is_delete',
@@ -268,9 +268,8 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
         ('Narxlar', {
             'classes': ('wide',),
             'fields': (
-                ('real_price', 'price'),
+                ('real_price', 'price_dollar', 'price_sum'),
                 ( 'unit_price', 'wholesale_price', 'price_difference'),
-                ('total_summa_dollar', 'total_summa_sum'),
             )
         }),
     )

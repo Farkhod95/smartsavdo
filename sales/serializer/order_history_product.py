@@ -28,17 +28,17 @@ class OrderHistoryProductListSerializer(serializers.ModelSerializer):
         model = OrderHistoryProduct
         fields = ('id', 'date', 'order_history', 'order_history_detail', 'vozvrat_order', 'vozvrat_order_detail',
                   'product', 'product_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail',
-                  'size', 'size_detail', 'count', 'given_count', 'price', 'real_price', 'unit_price', 'wholesale_price',
+                  'size', 'size_detail', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price',
                   'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka', 'sklad', 'sklad_detail',
-                  'total_summa_dollar', 'total_summa_sum')
+                  'price_dollar', 'price_sum')
 
 
 class OrderHistoryProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderHistoryProduct
         fields = ('id', 'date', 'order_history', 'vozvrat_order', 'product', 'branch', 'model', 'type', 'size', 'count',
-                  'given_count', 'price', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal',
-                  'price_difference', 'status_order', 'is_karzinka', 'sklad', 'total_summa_dollar', 'total_summa_sum')
+                  'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal',
+                  'price_difference', 'status_order', 'is_karzinka', 'sklad', 'price_dollar', 'price_sum')
 
 
 class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
@@ -49,8 +49,8 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
             'order_history', 'vozvrat_order',
             'product', 'sklad',
             'branch', 'model', 'type', 'size',
-            'count', 'given_count', 'price',
-            'real_price', 'unit_price', 'wholesale_price', 'total_summa_dollar', 'total_summa_sum',
+            'count', 'given_count', 'price_dollar', 'price_sum',
+            'real_price', 'unit_price', 'wholesale_price',
             'is_delete', 'cargo_terminal',
             'price_difference', 'status_order', 'is_karzinka'
         )
