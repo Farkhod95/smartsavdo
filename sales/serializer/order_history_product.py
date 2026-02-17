@@ -120,6 +120,7 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
 
         # Productdan FKlarni ko‘chiramiz
         validated_data["branch"] = locked_product.branch
+        validated_data["branch_category"] = locked_product.branch_category
         validated_data["model"] = locked_product.model
         validated_data["type"] = locked_product.type
         validated_data["size"] = locked_product.size
