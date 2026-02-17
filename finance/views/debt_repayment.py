@@ -39,7 +39,7 @@ class DebtRepaymentViewList(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
-    ordering = ['pk']
+    ordering = ['-pk']
     http_method_names = ['get']
     pagination_class = None
 
@@ -53,7 +53,7 @@ class DebtRepaymentView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
-    ordering = ['pk']
+    ordering = ['-pk']
 
     def get_queryset(self):
         return DebtRepayment.objects.filter(is_delete=False)
@@ -90,4 +90,39 @@ class DebtRepaymentDetailView(RetrieveUpdateDestroyAPIView):
         instance = get_object_or_404(DebtRepayment, id=pk)
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
+        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+
+class DebtRepaymentKarzinkaView(ListCreateAPIView):
+    serializer_class = DebtRepaymentListSerializer
+    pagination_class = ResultsSetPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = DebtRepaymentFilter
+    search_fields = ('client__full_name', 'employee__username', 'note')
+    ordering = ['-pk']
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        return DebtRepayment.objects.filter(is_delete=True)
+
+
+class DebtRepaymentDetailKarzinkaView(RetrieveUpdateDestroyAPIView):
+    serializer_class = DebtRepaymentSerializer
+    http_method_names = ['delete', 'get']
+
+    def get_queryset(self):
+        return DebtRepayment.objects.all()
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def get(self, request, pk):
+        instance = get_object_or_404(DebtRepayment, id=pk)
+        serializer = DebtRepaymentListSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        instance = get_object_or_404(DebtRepayment, id=pk)
+        instance.delete()
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
