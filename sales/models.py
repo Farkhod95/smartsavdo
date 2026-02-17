@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from accounts.models import Region, District, Filial, Sklad, Currency
-from inventory.models import ProductBranch, ProductModel, ProductType, ProductTypeSize, Product
+from inventory.models import ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductBranchCategory
 from restapp.models import BaseModel
 from django.conf import settings
 
@@ -153,6 +153,8 @@ class OrderHistoryProduct(BaseModel):
     sklad = models.ForeignKey(Sklad, related_name='Order_products', on_delete=models.SET_NULL, null=True, blank=True,
                                help_text=_("Filial bilan bog'lanish"))
     branch = models.ForeignKey(ProductBranch, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
+    branch_category = models.ForeignKey(ProductBranchCategory, related_name='order_history_products',
+                                        on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch Category bilan bog'lanish"))
     model = models.ForeignKey(ProductModel, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductModel bilan bog'lanish"))
     type = models.ForeignKey(ProductType, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductType bilan bog'lanish"))
     size = models.ForeignKey(ProductTypeSize, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductTypeSize bilan bog'lanish"))

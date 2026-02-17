@@ -103,6 +103,7 @@ class OrderHistoryProductFilter(FilterSet):
             'sklad': ['exact'],
             'vozvrat_order': ['exact'],
             'branch': ['exact'],
+            'branch_category': ['exact'],
             'model': ['exact'],
             'type': ['exact'],
             'size': ['exact'],

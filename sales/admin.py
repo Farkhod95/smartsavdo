@@ -228,7 +228,7 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'date',
         'order_history', 'vozvrat_order', 'product', 'sklad',
-        'branch', 'model', 'type', 'size',
+        'branch', 'branch_category', 'model', 'type', 'size',
         'count', 'given_count', 'price_dollar', 'price_sum',
         'real_price', 'unit_price', 'wholesale_price',
         'cargo_terminal',
@@ -237,7 +237,7 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'cargo_terminal',
-        'branch__name', 'model__name', 'type__name', 'size__name',
+        'branch__name', 'branch_category__name', 'model__name', 'type__name', 'size__name',
     )
     list_filter = ('is_delete', 'date', 'status_order', 'price_difference', 'is_karzinka')
 
@@ -253,7 +253,7 @@ class OrderHistoryProductAdmin(admin.ModelAdmin):
         ('Mahsulot', {
             'classes': ('wide',),
             'fields': (
-                ('branch', 'model'),
+                ('branch', 'branch_category', 'model'),
                 ('type', 'size'),
                 ('cargo_terminal',),
             )

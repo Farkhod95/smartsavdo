@@ -72,3 +72,10 @@ class ProductBranchCategoryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductBranchCategory
         fields = ('id', 'product_branch', 'product_branch_detail', 'name', 'sorting', 'is_delete')
+
+
+class ProductBranchCategoryForSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductBranchCategory
+        fields = ('id', 'product_branch', 'name', 'sorting', 'is_delete')
