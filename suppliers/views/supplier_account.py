@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from suppliers.filterset import SupplierAccountFilter
 from suppliers.models import SupplierAccount
-from suppliers.serializers import SupplierAccountListSerializer, SupplierAccountSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from suppliers.serializer.supplier_account import SupplierAccountSerializer, SupplierAccountListSerializer
 
 
 class SupplierAccountFieldInfoView(APIView):

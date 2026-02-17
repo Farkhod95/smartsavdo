@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from finance.filterset import DebtRepaymentFilter
 from finance.models import DebtRepayment
-from finance.serializers import DebtRepaymentListSerializer, DebtRepaymentSerializer
+from finance.serializer.debt_repayment import DebtRepaymentSerializer, DebtRepaymentListSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 

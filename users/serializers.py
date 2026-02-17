@@ -144,7 +144,9 @@ class UserListPublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'roles_detail','filials','filials_detail', 'order_filial', 'order_filial_detail','region','region_detail','district','district_detail','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email',
+                  'date_joined', 'roles', 'roles_detail','filials','filials_detail', 'order_filial',
+                  'order_filial_detail','region','region_detail','district','district_detail','address')
 
 
 
@@ -155,7 +157,9 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email','date_joined', 'roles', 'role_detail','filials', 'filials_detail', 'order_filial', 'order_filial_detail','region','district','address')
+        fields = ('id','username','full_name','is_active','date_of_birthday','gender','phone_number','avatar','email',
+                  'date_joined', 'roles', 'role_detail','filials', 'filials_detail', 'order_filial',
+                  'order_filial_detail','region','district','address')
 
 
 

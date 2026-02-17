@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from finance.filterset import ExpenseCategoryFilter
 from finance.models import ExpenseCategory
-from finance.serializers import ExpenseCategoryListSerializer, ExpenseCategorySerializer
+from finance.serializer.expense_category import ExpenseCategorySerializer, ExpenseCategoryListSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 

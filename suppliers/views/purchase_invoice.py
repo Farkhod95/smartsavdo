@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 
 from suppliers.filterset import PurchaseInvoiceFilter
 from suppliers.models import PurchaseInvoice
-from suppliers.serializers import PurchaseInvoiceListSerializer, PurchaseInvoiceSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from suppliers.serializer.purchase_invoice import PurchaseInvoiceSerializer, PurchaseInvoiceListSerializer
 
 
 class PurchaseInvoiceFieldInfoView(APIView):

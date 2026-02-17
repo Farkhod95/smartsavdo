@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from finance.filterset import ExchangeRateFilter
 from finance.models import ExchangeRate
-from finance.serializers import ExchangeRateListSerializer, ExchangeRateSerializer
+from finance.serializer.exchange_rate import ExchangeRateSerializer, ExchangeRateListSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 

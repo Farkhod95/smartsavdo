@@ -7,9 +7,10 @@ from rest_framework.views import APIView
 
 from suppliers.filterset import SupplierDebtRepaymentFilter
 from suppliers.models import SupplierDebtRepayment
-from suppliers.serializers import SupplierDebtRepaymentListSerializer, SupplierDebtRepaymentSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from suppliers.serializer.supplier_debt_repayment import SupplierDebtRepaymentSerializer, \
+    SupplierDebtRepaymentListSerializer
 
 
 class SupplierDebtRepaymentFieldInfoView(APIView):

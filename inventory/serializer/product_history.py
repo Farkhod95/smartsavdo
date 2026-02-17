@@ -10,7 +10,7 @@ from inventory.serializer.product_branch_category import ProductBranchCategorySe
 from inventory.serializer.product_model import ProductModelSerializer
 from inventory.serializer.product_type import ProductTypeSerializer
 from inventory.serializer.product_type_size import ProductTypeSizeSerializer
-from suppliers.serializers import PurchaseInvoiceSerializer
+from suppliers.serializer.purchase_invoice import PurchaseInvoiceSerializer
 
 
 class ProductHistoryListSerializer(serializers.ModelSerializer):
