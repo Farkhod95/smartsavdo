@@ -54,7 +54,7 @@ class ProductViewList(ListCreateAPIView):
 
         qs = (
             Product.objects
-            .filter(is_delete=False)
+            .filter(is_delete=False, is_active=True)
             .annotate(has_image=Exists(has_image_subq))
             .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
             .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
