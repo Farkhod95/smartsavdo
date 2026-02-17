@@ -211,8 +211,7 @@ class ProductHistory(BaseModel):
     filial = models.ForeignKey(Filial, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True,
                                help_text=_("Filial bilan bog'lanish"))
     sklad = models.ForeignKey(Sklad, related_name='product_histories', on_delete=models.SET_NULL, null=True,
-                               blank=True,
-                               help_text=_("Filial bilan bog'lanish"))
+                               blank=True, help_text=_("Filial bilan bog'lanish"))
     purchase_invoice = models.ForeignKey(PurchaseInvoice, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("PurchaseInvoice bilan bog'lanish"))
     branch = models.ForeignKey(ProductBranch, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     branch_category = models.ForeignKey(ProductBranchCategory, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch Category bilan bog'lanish"))

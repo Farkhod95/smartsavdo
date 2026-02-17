@@ -1,6 +1,6 @@
 from django.contrib import admin
 from accounts.models import (
-    District, Region, Country, Filial, FilialAccount, Sklad
+    District, Region, Country, Filial, FilialAccount, Sklad, Currency
 )
 
 
@@ -47,3 +47,10 @@ class SkladAdmin(admin.ModelAdmin):
     fields = ('sorting', 'name', 'filial', 'region', 'district', 'address', 'phone_number', 'is_active', 'is_delete')
     search_fields = ('name', 'phone_number', 'address', 'filial__name')
     list_filter = ('is_active', 'is_delete', 'filial', 'region', 'district')
+
+
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name')
+    search_fields = ('code', 'name')
+    fields = ('code', 'name')

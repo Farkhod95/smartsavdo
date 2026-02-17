@@ -119,7 +119,7 @@ TELEGRAM_BOT_API_SECRET = os.getenv("TELEGRAM_BOT_API_SECRET", "change-me-strong
 #     }
 # }
 
-#
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',

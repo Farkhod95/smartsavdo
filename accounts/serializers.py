@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Region, District, Country, Filial, FilialAccount, Sklad
+from .models import Region, District, Country, Filial, FilialAccount, Sklad, Currency
 
 
 # Tarjima asosiy serializeri
@@ -159,3 +159,19 @@ class SkladSerializer(serializers.ModelSerializer):
                 "sorting": "Bu sorting ushbu filial uchun band. Boshqa raqam tanlang."
             })
         return attrs
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ('id', 'code', 'name')
+        extra_kwargs = {
+            'code': {"required": False, "allow_blank": True, "allow_null": True},
+            'name': {"required": False, "allow_blank": True, "allow_null": True},
+        }
+
+
+class CurrencyListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ('id', 'code', 'name')

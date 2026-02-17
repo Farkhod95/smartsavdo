@@ -4,7 +4,7 @@ from django.db import transaction
 
 from accounts.models import Sklad
 from accounts.serializers import RegionListSerializer, DistrictListPublicSerializer, FilialListSerializer, \
-    FilialSerializer
+    FilialSerializer, CurrencySerializer
 from inventory.models import Product, ProductStock
 from inventory.serializer.product import ProductSerializer
 from inventory.serializer.product_branch import ProductBranchListSerializer
@@ -309,6 +309,7 @@ class OrderHistoryProductListSerializer(serializers.ModelSerializer):
     order_history_detail = OrderHistoryListSerializer(source='order_history', read_only=True)
     product_detail = ProductSerializer(source='product', read_only=True)
     sklad_detail = ProductSerializer(source='sklad', read_only=True)
+    currency_detail = CurrencySerializer(source='currency', read_only=True)
     vozvrat_order_detail = VozvratOrderSerializer(source='vozvrat_order', read_only=True)
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
     model_detail = ProductModelListSerializer(source='model', read_only=True)
@@ -320,7 +321,8 @@ class OrderHistoryProductListSerializer(serializers.ModelSerializer):
         fields = ('id', 'date', 'order_history', 'order_history_detail', 'vozvrat_order', 'vozvrat_order_detail',
                   'product', 'product_detail', 'branch', 'branch_detail', 'model', 'model_detail', 'type', 'type_detail',
                   'size', 'size_detail', 'count', 'given_count', 'real_price', 'unit_price', 'wholesale_price',
-                  'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka', 'sklad', 'sklad_detail')
+                  'is_delete', 'cargo_terminal', 'price_difference', 'status_order', 'is_karzinka', 'sklad',
+                  'sklad_detail', 'currency', 'currency_detail')
 
 
 class OrderHistoryProductSerializer(serializers.ModelSerializer):
@@ -328,7 +330,7 @@ class OrderHistoryProductSerializer(serializers.ModelSerializer):
         model = OrderHistoryProduct
         fields = ('id', 'date', 'order_history', 'vozvrat_order', 'product', 'branch', 'model', 'type', 'size', 'count',
                   'given_count', 'real_price', 'unit_price', 'wholesale_price', 'is_delete', 'cargo_terminal',
-                  'price_difference', 'status_order', 'is_karzinka', 'sklad')
+                  'price_difference', 'status_order', 'is_karzinka', 'sklad', 'currency')
 
 
 class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
@@ -337,7 +339,7 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'date',
             'order_history', 'vozvrat_order',
-            'product', 'sklad',
+            'product', 'sklad', 'currency',
             'branch', 'model', 'type', 'size',
             'count', 'given_count',
             'real_price', 'unit_price', 'wholesale_price',

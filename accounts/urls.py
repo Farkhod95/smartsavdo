@@ -1,6 +1,7 @@
 from django.urls import re_path, path
 
 from .views.country import CountryView, CountryDetailView, CountryFieldInfoView
+from .views.currency import CurrencyView, CurrencyDetailView, CurrencyFieldInfoView
 from .views.district import DistrictView, DistrictDetailView, DistrictFieldInfoView, DistrictViewList
 from .views.filial import FilialView, FilialDetailView, FilialFieldInfoView
 from .views.filial_account import FilialAccountView, FilialAccountDetailView, FilialAccountFieldInfoView
@@ -36,5 +37,9 @@ urlpatterns = [
     re_path(r'^sklad$', SkladView.as_view(), name='sklad_view'),
     path('sklad/<int:pk>', SkladDetailView.as_view(), name='sklad_detail_view'),
     path('sklad/fields', SkladFieldInfoView.as_view(), name='sklad_fields_info'),
+
+    re_path(r'^currency/$', CurrencyView.as_view(), name='currency_view'),
+    path('currency/<int:pk>', CurrencyDetailView.as_view(), name='currency_detail_view'),
+    path('currency/fields/', CurrencyFieldInfoView.as_view(), name='currency_fields_info'),
 
 ]

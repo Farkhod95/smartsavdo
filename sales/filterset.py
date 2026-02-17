@@ -100,6 +100,7 @@ class OrderHistoryProductFilter(FilterSet):
             'order_history': ['exact'],
             'product': ['exact'],
             'sklad': ['exact'],
+            'currency': ['exact'],
             'vozvrat_order': ['exact'],
             'branch': ['exact'],
             'model': ['exact'],

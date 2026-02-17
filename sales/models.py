@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from accounts.models import Region, District, Filial, Sklad
+from accounts.models import Region, District, Filial, Sklad, Currency
 from inventory.models import ProductBranch, ProductModel, ProductType, ProductTypeSize, Product
 from restapp.models import BaseModel
 from django.conf import settings
@@ -149,6 +149,8 @@ class OrderHistoryProduct(BaseModel):
     vozvrat_order = models.ForeignKey(VozvratOrder, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("VozvratOrder bilan bog'lanish"))
     sklad = models.ForeignKey(Sklad, related_name='Order_products', on_delete=models.SET_NULL, null=True, blank=True,
                                help_text=_("Filial bilan bog'lanish"))
+    currency = models.ForeignKey(Currency, related_name='products_order_history', on_delete=models.SET_NULL, null=True, blank=True,
+                               help_text=_("Valyuta bilan bog'lanish"))
     branch = models.ForeignKey(ProductBranch, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductBranch bilan bog'lanish"))
     model = models.ForeignKey(ProductModel, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductModel bilan bog'lanish"))
     type = models.ForeignKey(ProductType, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductType bilan bog'lanish"))

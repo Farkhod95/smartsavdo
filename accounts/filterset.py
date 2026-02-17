@@ -1,6 +1,6 @@
 from django_filters.rest_framework import FilterSet
 
-from accounts.models import District, Region, Country, Filial, FilialAccount, Sklad
+from accounts.models import District, Region, Country, Filial, FilialAccount, Sklad, Currency
 
 
 class DistrictFilter(FilterSet):
@@ -72,4 +72,14 @@ class SkladFilter(FilterSet):
             'phone_number': ['exact', 'icontains'],
             'is_active': ['exact'],
             'is_delete': ['exact'],
+        }
+
+
+class CurrencyFilter(FilterSet):
+
+    class Meta:
+        model = Currency
+        fields = {
+            'name': ['exact', 'icontains'],
+            'code': ['exact'],
         }

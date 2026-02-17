@@ -121,3 +121,15 @@ class Sklad(BaseModel):
 
     def __str__(self):
         return self.name or f"Warehouse #{self.pk}"
+
+
+class Currency(BaseModel):
+    code = models.CharField(_('Currency code'), max_length=50, null=True, blank=True, help_text=_("Valyuta kodi"))
+    name = models.CharField(max_length=255, null=True, blank=True, help_text=_("Valyuta nomi"))
+
+    class Meta:
+        verbose_name = _('Currency')
+        verbose_name_plural = _('Currencies')
+
+    def __str__(self):
+        return f"{self.name}"
