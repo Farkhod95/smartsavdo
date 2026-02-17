@@ -185,12 +185,14 @@ class Product(BaseModel):
     min_price = models.DecimalField(_('Min price'), max_digits=20, decimal_places=2, default=0, help_text=_("Minimal narxi"))
     note = models.TextField(_('Note'), null=True, blank=True, help_text=_("Izoh"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+    is_active = models.BooleanField(default=True, help_text=_("Is active?"))
 
     class Meta:
         verbose_name = _('product')
         verbose_name_plural = _('products')
         indexes = [
             models.Index(fields=['is_delete']),
+            models.Index(fields=['is_active']),
             models.Index(fields=['date']),
             models.Index(fields=['filial']),
             models.Index(fields=['branch']),

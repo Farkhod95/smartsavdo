@@ -85,6 +85,7 @@ class ProductFilter(FilterSet):
             # 'wholesale_price': ['exact', 'gte', 'lte'],
             # 'min_price': ['exact', 'gte', 'lte'],
             'is_delete': ['exact'],
+            'is_active': ['exact'],
         }
 
 

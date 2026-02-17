@@ -41,7 +41,8 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'branch_category',
                   'branch_category_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail',
-                  'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
+                  'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images',
+                  'is_active')
 
 
 class ProductListOneImageSerializer(serializers.ModelSerializer):
@@ -58,7 +59,8 @@ class ProductListOneImageSerializer(serializers.ModelSerializer):
         model = Product
         fields = ('id', 'date', 'reserve_limit', 'filial', 'filial_detail', 'branch', 'branch_detail', 'branch_category',
                   'branch_category_detail', 'model', 'model_detail', 'type', 'type_detail', 'size', 'size_detail',
-                  'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images')
+                  'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'images',
+                  'is_active')
 
 
     def get_images(self, obj):
@@ -73,7 +75,8 @@ class ProductListOneImageSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id', 'date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete')
+        fields = ('id', 'date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count',
+                  'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'is_active')
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
@@ -85,6 +88,6 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             'id', 'date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price',
-            'wholesale_price', 'min_price', 'note', 'is_delete',
+            'wholesale_price', 'min_price', 'note', 'is_delete', 'is_active'
         )
         read_only_fields = ('id',)
