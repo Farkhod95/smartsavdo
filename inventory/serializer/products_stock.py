@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from accounts.serializers import SkladListSerializer
+from accounts.serializers import SkladListSerializer, SkladListViewSerializer
 from inventory.models import ProductStock
-from inventory.serializer.product import ProductListSerializer
+from inventory.serializer.product import ProductListSerializer, ProductSerializer
 
 
 class ProductStockSerializer(serializers.ModelSerializer):
@@ -17,8 +17,8 @@ class ProductStockSerializer(serializers.ModelSerializer):
 
 
 class ProductStockListSerializer(serializers.ModelSerializer):
-    product_detail = ProductListSerializer(source='product', read_only=True)
-    sklad_detail = SkladListSerializer(source='sklad', read_only=True)
+    product_detail = ProductSerializer(source='product', read_only=True)
+    sklad_detail = SkladListViewSerializer(source='sklad', read_only=True)
 
     class Meta:
         model = ProductStock

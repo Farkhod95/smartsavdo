@@ -131,6 +131,12 @@ class FilialAccountSerializer(serializers.ModelSerializer):
         fields = ('id', 'filial', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer')
 
 
+class SkladListViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sklad
+        fields = ('id', 'sorting', 'name', 'filial', 'region', 'district', 'address', 'phone_number', 'is_active', 'is_delete')
+
+
 class SkladListSerializer(serializers.ModelSerializer):
     filial_detail = FilialListSerializer(source='filial', read_only=True)
     region_detail = RegionListSerializer(source='region', read_only=True)
