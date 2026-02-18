@@ -11,7 +11,7 @@ from sales.models import OrderHistoryProduct
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 from sales.serializer.order_history_product import OrderHistoryProductSerializer, OrderHistoryProductListSerializer, \
-    OrderHistoryProductCreateSerializer
+    OrderHistoryProductCreateSerializer, OrderHistoryProductVozvratCreateSerializer
 
 
 class OrderHistoryProductFieldInfoView(APIView):
@@ -93,3 +93,22 @@ class OrderHistoryProductDetailView(RetrieveUpdateDestroyAPIView):
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class OrderHistoryProductVozvratView(ListCreateAPIView):
+    serializer_class = OrderHistoryProductListSerializer
+    pagination_class = ResultsSetPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = OrderHistoryProductFilter
+    search_fields = ('order_history__id', 'vozvrat_order__id', 'cargo_terminal', 'model__name', 'type__name')
+    ordering = ['pk']
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        return OrderHistoryProduct.objects.filter(is_delete=False)
+
+    def post(self, request):
+        serializer = OrderHistoryProductVozvratCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(created_by=self.request.user)
+        return Response(serializer.data, status.HTTP_201_CREATED)
