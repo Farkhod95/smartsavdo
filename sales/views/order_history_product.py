@@ -102,7 +102,6 @@ class OrderHistoryProductVozvratView(ListCreateAPIView):
     filterset_class = OrderHistoryProductFilter
     search_fields = ('order_history__id', 'vozvrat_order__id', 'cargo_terminal', 'model__name', 'type__name')
     ordering = ['pk']
-    http_method_names = ['get']
 
     def get_queryset(self):
         return OrderHistoryProduct.objects.filter(is_delete=False)
