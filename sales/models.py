@@ -136,6 +136,7 @@ class VozvratOrder(BaseModel):
     discount_amount = models.DecimalField(_('Discount amount'), max_digits=20, decimal_places=2, default=0, help_text=_("Chegirma"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     is_vazvrat_status = models.BooleanField(default=False, help_text=_("Tasdiqlandimi?"))
+    is_karzinka = models.BooleanField(default=True, help_text=_("Karzinkaga qoshilganmi?"))
 
     class Meta:
         verbose_name = _('vozvrat order')

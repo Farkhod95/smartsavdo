@@ -13,7 +13,7 @@ class VozvratOrderListSerializer(serializers.ModelSerializer):
         fields = ('id', 'filial', 'filial_detail', 'client', 'client_detail', 'employee', 'exchange_rate', 'date',
                   'note', 'old_total_debt_client', 'total_debt_client', 'summa_total_dollar', 'summa_dollar',
                   'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount', 'is_delete',
-                  'is_vazvrat_status')
+                  'is_vazvrat_status', 'is_karzinka')
 
 
 class VozvratOrderSerializer(serializers.ModelSerializer):
@@ -21,4 +21,4 @@ class VozvratOrderSerializer(serializers.ModelSerializer):
         model = VozvratOrder
         fields = ('id', 'filial', 'client', 'employee', 'exchange_rate', 'date', 'note', 'old_total_debt_client',
                   'total_debt_client', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik',
-                  'summa_terminal', 'summa_transfer', 'discount_amount', 'is_delete', 'is_vazvrat_status')
+                  'summa_terminal', 'summa_transfer', 'discount_amount', 'is_delete', 'is_vazvrat_status', 'is_karzinka')

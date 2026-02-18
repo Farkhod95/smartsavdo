@@ -186,10 +186,10 @@ class VozvratOrderAdmin(admin.ModelAdmin):
         'summa_total_dollar', 'summa_dollar',
         'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer',
         'discount_amount',
-        'is_vazvrat_status', 'is_delete',
+        'is_vazvrat_status', 'is_delete', 'is_karzinka',
     )
     search_fields = ('client__full_name', 'client__phone_number', 'filial__name', 'note')
-    list_filter = ('is_delete', 'is_vazvrat_status', 'date', 'filial')
+    list_filter = ('is_delete', 'is_vazvrat_status',  'is_karzinka', 'date', 'filial')
 
     fieldsets = (
         ('Asosiy', {
@@ -198,7 +198,7 @@ class VozvratOrderAdmin(admin.ModelAdmin):
                 ('filial', 'client'),
                 ('employee', 'date'),
                 ('exchange_rate',),
-                ('is_vazvrat_status', 'is_delete'),
+                ('is_vazvrat_status', 'is_delete',  'is_karzinka'),
             )
         }),
         ('Qaytarilgan to‘lovlar', {
