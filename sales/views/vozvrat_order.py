@@ -4,12 +4,16 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIV
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from decimal import Decimal
+from django.db import transaction
+from django.db.models import Q
 
 from sales.filterset import VozvratOrderFilter
-from sales.models import VozvratOrder
+from sales.models import VozvratOrder, OrderHistoryProduct, Order, Client
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
-from sales.serializer.vozvrat_order import VozvratOrderSerializer, VozvratOrderListSerializer
+from sales.serializer.vozvrat_order import VozvratOrderSerializer, VozvratOrderListSerializer, \
+    VozvratOrderUpdateSerializer
 
 
 class VozvratOrderFieldInfoView(APIView):
@@ -80,14 +84,79 @@ class VozvratOrderDetailView(RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        instance = get_object_or_404(VozvratOrder, id=pk)
-        serializer = self.serializer_class(instance, data=request.data)
+        instance = get_object_or_404(VozvratOrder, id=pk, is_delete=False)
+
+        serializer = VozvratOrderUpdateSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
         serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=self.request.user)
-        return Response(serializer.data, status.HTTP_202_ACCEPTED)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     def delete(self, request, pk):
         instance = get_object_or_404(VozvratOrder, id=pk)
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class VozvratOrderHardDeleteView(APIView):
+    """
+    Faqat is_delete=True bo'lgan VozvratOrder ni DB'dan butunlay o'chiradi.
+    O'chirishdan oldin Order va Client balanslarini orqaga qaytaradi.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def delete(self, request, pk: int):
+        # 1) Faqat soft delete qilinganini o'chiramiz
+        vozvrat = get_object_or_404(VozvratOrder.objects.select_for_update(), pk=pk)
+
+        if vozvrat.is_delete is False:
+            return Response(
+                {"detail": "Avval soft delete qiling (is_delete=True) keyin hard delete qilish mumkin."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2) Hisob-kitoblarni qaytarish faqat is_karzinka=False bo'lsa (ya'ni balansga ta'sir qilgan bo'lsa)
+        # effect = new_total_debt_client - old_total_debt_client
+        # delete paytida: balanslardan effect ni AYIRAMIZ (teskari qilamiz)
+        if vozvrat.is_karzinka is False:
+            if vozvrat.client_id is None:
+                return Response({"detail": "VozvratOrder.client null. Balansni qaytarib bo'lmaydi."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if vozvrat.filial_id is None:
+                return Response({"detail": "VozvratOrder.filial null. Order topib bo'lmaydi."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            client = Client.objects.select_for_update().filter(pk=vozvrat.client_id).first()
+            if not client:
+                return Response({"detail": "Client topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+            order = Order.objects.select_for_update().filter(client_id=vozvrat.client_id, filial_id=vozvrat.filial_id).first()
+            if not order:
+                return Response({"detail": "Order topilmadi (client+filial bo'yicha)."}, status=status.HTTP_404_NOT_FOUND)
+
+            old_debt = vozvrat.old_total_debt_client or Decimal("0")
+            new_debt = vozvrat.total_debt_client or Decimal("0")
+            effect = new_debt - old_debt  # balansga qo'shilgan delta
+
+            # Reversal (teskari)
+            order.total_debt_old_client = order.total_debt_client
+            order.total_debt_client = (order.total_debt_client or Decimal("0")) - effect
+            order.save(update_fields=["total_debt_old_client", "total_debt_client"])
+
+            client.total_debt = (client.total_debt or Decimal("0")) - effect
+            client.save(update_fields=["total_debt"])
+
+        # 3) Shu vozvratga bog'langan mahsulotlarni ham hard delete qilamiz
+        # FK SET_NULL bo'lsa ham, “tozalash” uchun o'chirib yuboramiz
+        OrderHistoryProduct.objects.filter(vozvrat_order_id=vozvrat.id).delete()
+
+        # 4) VozvratOrder ni butunlay o'chiramiz
+        vozvrat.delete()
+
+        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)

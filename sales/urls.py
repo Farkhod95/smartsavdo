@@ -9,7 +9,8 @@ from sales.views.order_history import OrderHistoryView, OrderHistoryFieldInfoVie
 from sales.views.order_history_product import OrderHistoryProductView, OrderHistoryProductDetailView, \
     OrderHistoryProductFieldInfoView, OrderHistoryProductVozvratView
 from sales.views.order_history_product_grouped import OrderHistoryProductByModelView
-from sales.views.vozvrat_order import VozvratOrderView, VozvratOrderDetailView, VozvratOrderFieldInfoView
+from sales.views.vozvrat_order import VozvratOrderView, VozvratOrderDetailView, VozvratOrderFieldInfoView, \
+    VozvratOrderHardDeleteView
 
 urlpatterns = [
     re_path(r'^client$', ClientView.as_view(), name='client_view'),
@@ -36,6 +37,7 @@ urlpatterns = [
 
     re_path(r'^vozvrat-order$', VozvratOrderView.as_view(), name='vozvrat_order_view'),
     path('vozvrat-order/<int:pk>', VozvratOrderDetailView.as_view(), name='vozvrat_order_detail_view'),
+    path('vozvrat-order/<int:pk>/hard-delete', VozvratOrderHardDeleteView.as_view(), name='vozvrat_order_hard_delete'),
     path('vozvrat-order/fields', VozvratOrderFieldInfoView.as_view(), name='vozvrat_order_fields_info'),
 
     re_path(r'^order-history-product$', OrderHistoryProductView.as_view(), name='order_history_product_view'),
