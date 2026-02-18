@@ -8,7 +8,7 @@ from sales.views.order_history import OrderHistoryView, OrderHistoryFieldInfoVie
     OrderHistorySelfView, OrderHistoryKarzinkaView, OrderHistoryDetailKarzinkaView
 from sales.views.order_history_product import OrderHistoryProductView, OrderHistoryProductDetailView, \
     OrderHistoryProductFieldInfoView
-from sales.views.order_history_product_group import OrderHistoryProductByModelView
+from sales.views.order_history_product_grouped import OrderHistoryProductByModelView
 from sales.views.vozvrat_order import VozvratOrderView, VozvratOrderDetailView, VozvratOrderFieldInfoView
 
 urlpatterns = [
