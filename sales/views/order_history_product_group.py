@@ -1,4 +1,6 @@
-from django.db.models import Sum, Value, IntegerField
+from decimal import Decimal
+
+from django.db.models import Sum, Value, IntegerField, DecimalField
 from django.db.models.functions import Coalesce
 from django.contrib.postgres.aggregates import ArrayAgg
 
@@ -18,7 +20,6 @@ class OrderHistoryProductByModelView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk: int):
-        # 1) OrderHistory ni tez olish (select_related bilan)
         order_history = get_object_or_404(
             OrderHistory.objects.select_related(
                 "order", "client", "employee", "order_filial", "currency", "created_by"
@@ -29,8 +30,9 @@ class OrderHistoryProductByModelView(APIView):
 
         order_history_data = OrderHistoryListSerializer(order_history, context={"request": request}).data
 
-        # 2) Productlarni model bo‘yicha group qilish (bitta tez query)
-        #    is_delete=False ni albatta qo‘ydik
+        # DecimalField lar uchun 0 ni Decimal qilib, output_field ni aniq beramiz
+        money_field = DecimalField(max_digits=20, decimal_places=2)
+
         qs = (
             OrderHistoryProduct.objects
             .filter(order_history_id=order_history.pk, is_delete=False)
@@ -38,10 +40,18 @@ class OrderHistoryProductByModelView(APIView):
             .annotate(
                 total_count=Coalesce(Sum("count"), Value(0), output_field=IntegerField()),
                 total_given_count=Coalesce(Sum("given_count"), Value(0), output_field=IntegerField()),
-                total_price_sum=Coalesce(Sum("price_sum"), Value(0)),
-                total_price_dollar=Coalesce(Sum("price_dollar"), Value(0)),
 
-                # yordamchi listlar (distinct) — keyin detail chiqarish / UI uchun qulay
+                total_price_sum=Coalesce(
+                    Sum("price_sum", output_field=money_field),
+                    Value(Decimal("0.00")),
+                    output_field=money_field
+                ),
+                total_price_dollar=Coalesce(
+                    Sum("price_dollar", output_field=money_field),
+                    Value(Decimal("0.00")),
+                    output_field=money_field
+                ),
+
                 type_ids=ArrayAgg("type_id", distinct=True),
                 size_ids=ArrayAgg("size_id", distinct=True),
                 product_ids=ArrayAgg("id", distinct=True),
@@ -51,7 +61,6 @@ class OrderHistoryProductByModelView(APIView):
 
         group_rows = list(qs)
 
-        # 3) Detail'lar uchun bitta marta bulk fetch (N+1 bo‘lmasin)
         model_ids = [r["model_id"] for r in group_rows if r["model_id"]]
         branch_ids = [r["branch_id"] for r in group_rows if r["branch_id"]]
         bc_ids = [r["branch_category_id"] for r in group_rows if r["branch_category_id"]]
@@ -60,7 +69,6 @@ class OrderHistoryProductByModelView(APIView):
         branch_map = ProductBranch.objects.in_bulk(branch_ids) if branch_ids else {}
         branch_category_map = ProductBranchCategory.objects.in_bulk(bc_ids) if bc_ids else {}
 
-        # 4) Serializer: group list
         products_grouped = OrderHistoryProductByModelGroupSerializer(
             group_rows,
             many=True,
