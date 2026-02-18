@@ -147,6 +147,12 @@ class SkladListSerializer(serializers.ModelSerializer):
         fields = ('id', 'sorting', 'name', 'filial', 'filial_detail', 'region', 'region_detail', 'district', 'district_detail', 'address', 'phone_number', 'is_active', 'is_delete')
 
 
+class SkladForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sklad
+        fields = ('id', 'sorting', 'name', 'filial', 'region', 'district', 'address', 'phone_number', 'is_active', 'is_delete')
+
+
 class SkladSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sklad

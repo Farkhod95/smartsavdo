@@ -3,6 +3,12 @@ from rest_framework import serializers
 from inventory.models import  ProductBranch
 
 
+class ProductBranchForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductBranch
+        fields = ('id', 'name', 'sorting', 'is_delete')
+
+
 class ProductBranchListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductBranch

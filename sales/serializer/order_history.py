@@ -10,6 +10,21 @@ from sales.serializer.order import OrderSerializer
 from users.serializers import UserViewListShortSerializer
 
 
+class OrderHistoryForSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = OrderHistory
+        fields = (
+            'id', 'order', 'client', 'employee', 'exchange_rate', 'date', 'note',
+            'all_profit_dollar', 'total_debt_client', 'total_debt_today_client',
+            'all_product_summa', 'summa_total_dollar', 'summa_dollar', 'summa_naqt',
+            'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount',
+            'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
+            'is_debtor_product', 'status_order_dukon', 'status_order_sklad',
+            'driver_info', 'is_karzinka', 'order_filial', 'currency'
+        )
+
+
 class OrderHistoryListSerializer(serializers.ModelSerializer):
     order_detail = OrderSerializer(source='order', read_only=True)
     client_detail = ClientSerializer(source='client', read_only=True)

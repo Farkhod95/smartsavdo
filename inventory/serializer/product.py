@@ -71,6 +71,12 @@ class ProductListOneImageSerializer(serializers.ModelSerializer):
         return ProductImagePublicSerializer(first, context=self.context).data
 
 
+class ProductForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('id', 'date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count',
+                  'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'is_active')
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

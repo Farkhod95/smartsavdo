@@ -5,6 +5,13 @@ from inventory.serializer.product_type import ProductTypeListSerializer
 from inventory.serializer.unit import UnitListSerializer
 
 
+class ProductTypeSizeForSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductTypeSize
+        fields = ('id', 'product_type', 'size', 'unit', 'sorting', 'is_delete')
+
+
 class ProductTypeSizeListSerializer(serializers.ModelSerializer):
     product_type_detail = ProductTypeListSerializer(source='product_type', read_only=True)
     unit_detail = UnitListSerializer(source='unit', read_only=True)

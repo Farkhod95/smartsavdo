@@ -6,6 +6,12 @@ from inventory.serializer.product_branch import ProductBranchListSerializer
 from inventory.serializer.product_branch_category import ProductBranchCategorySerializer
 
 
+class ProductModelForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductModel
+        fields = ('id', 'name', 'branch', 'branch_category', 'sorting', 'is_delete')
+
+
 class ProductModelListSerializer(serializers.ModelSerializer):
     branch_detail = ProductBranchListSerializer(source='branch', read_only=True)
     branch_category_detail = ProductBranchCategorySerializer(source='branch_category', read_only=True)
