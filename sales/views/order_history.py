@@ -1,7 +1,9 @@
 from collections import OrderedDict
 from django.db.models.functions import TruncDate, Coalesce
 from django.db.models import DateField
+from decimal import Decimal
 from django.db import transaction
+from django.db.models import F
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
@@ -11,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from sales.filterset import OrderHistoryFilter
-from sales.models import OrderHistory, OrderHistoryProduct
+from sales.models import OrderHistory, OrderHistoryProduct, Order, Client, ClientKeshbekHistory
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 from sales.serializer.order_history import OrderHistorySerializer, OrderHistoryListSerializer, \
@@ -254,7 +256,7 @@ class OrderHistoryEditView(RetrieveUpdateDestroyAPIView):
     def put(self, request, pk):
         instance = get_object_or_404(OrderHistory, id=pk, is_delete=False)
 
-        serializer = OrderHistoryUpdateSerializer(
+        serializer = OrderHistorySellSerializer(
             instance,
             data=request.data,
             context={"request": request},
@@ -391,9 +393,6 @@ class OrderHistoryDetailKarzinkaView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return OrderHistory.objects.all()
 
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
     def get(self, request, pk):
         instance = get_object_or_404(OrderHistory, id=pk)
         serializer = OrderHistoryListSerializer(instance)
@@ -401,9 +400,51 @@ class OrderHistoryDetailKarzinkaView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def delete(self, request, pk):
-        instance = get_object_or_404(OrderHistory, id=pk)
+        """
+        HARD DELETE:
+        - Agar OrderHistory posted bo'lsa (order_status=True) -> Order, Client, Cashback hisoblarini rollback qiladi
+        - Keyin OrderHistoryProduct larni hard delete qiladi
+        - Keyin OrderHistory ni hard delete qiladi
+        """
 
+        # 1) OrderHistory ni lock qilib olamiz
+        oh = get_object_or_404(
+            OrderHistory.objects.select_for_update().select_related("order", "client"),
+            id=pk
+        )
+
+        # 2) Agar posted bo'lsa: rollback
+        if oh.order_status:
+            old_profit = oh.all_profit_dollar or Decimal("0")
+            old_debt_today = oh.total_debt_today_client or Decimal("0")
+            old_product_sum = oh.all_product_summa or Decimal("0")
+            old_paid_total = oh.summa_total_dollar or Decimal("0")
+
+            # Order rollback
+            if oh.order_id:
+                order = Order.objects.select_for_update().get(pk=oh.order_id)
+                Order.objects.filter(pk=order.pk).update(
+                    all_profit_dollar=F("all_profit_dollar") - old_profit,
+                    total_debt_old_client=F("total_debt_client"),
+                    total_debt_client=F("total_debt_client") - old_debt_today,
+                    all_product_summa=F("all_product_summa") - old_product_sum,
+                    summa_total_dollar=F("summa_total_dollar") - old_paid_total,
+                )
+
+            # Client rollback
+            if oh.client_id:
+                client = Client.objects.select_for_update().get(pk=oh.client_id)
+                Client.objects.filter(pk=client.pk).update(
+                    total_debt=F("total_debt") - old_debt_today
+                )
+
+            # Cashback rollback
+            ClientKeshbekHistory.objects.filter(order_history=oh.id).delete()
+
+        # 3) OrderHistoryProduct larni hard delete
         OrderHistoryProduct.objects.filter(order_history_id=pk).delete()
-        instance.delete()
+
+        # 4) OrderHistory ni hard delete
+        oh.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)

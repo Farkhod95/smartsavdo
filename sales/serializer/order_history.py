@@ -337,6 +337,11 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         return self._q2(uzs / rate)
 
     def _get_or_create_first_order(self, client, filial, date=None):
+        """
+        MUHIM: get_or_create emas!
+        - bir nechta order bo'lsa ham .first() bilan birinchisini oladi
+        - bo'lmasa yaratadi
+        """
         order = (
             Order.objects
             .filter(client=client, filial=filial, is_delete=False)
@@ -345,6 +350,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         )
         if order:
             return order, False
+
         order = Order.objects.create(
             client=client,
             filial=filial,
@@ -378,7 +384,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
 
             line_sum_usd = count * sold_usd_unit
 
-            # real_price (sizda USDga o‘xshaydi) — unit
+            # real_price (USD) — unit
             real_unit = self._to_decimal(p.real_price)
             line_cost_usd = count * real_unit
 
@@ -405,32 +411,32 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         paid = summa_dollar + naqt_usd + klik_usd + terminal_usd + transfer_usd - discount - zdacha_usd
         return self._q2(paid)
 
-    def _apply_delta_to_order_and_client(self, *, order: Order, client: Client, delta_profit: Decimal,
-                                        delta_debt: Decimal, delta_product_sum: Decimal, delta_paid: Decimal,
-                                        date_last=None):
+    def _sync_cashback_history(self, *, client: Client, order_history_id: int, paid_total_usd: Decimal, is_posted: bool):
         """
-        delta_* qiymatlarni Order va Clientga qo‘shib/ayirib beradi.
+        Idempotent cashback:
+        - is_posted=False bo‘lsa: cashback history'ni o‘chiradi (rollback)
+        - is_posted=True bo‘lsa: update_or_create orqali bitta yozuvni yangilaydi
         """
-        # Order
-        Order.objects.filter(pk=order.pk).update(
-            all_profit_dollar=F("all_profit_dollar") + delta_profit,
-            total_debt_old_client=F("total_debt_client"),
-            total_debt_client=F("total_debt_client") + delta_debt,
-            all_product_summa=F("all_product_summa") + delta_product_sum,
-            summa_total_dollar=F("summa_total_dollar") + delta_paid,
-            summa_dollar=F("summa_dollar") + self._to_decimal(delta_paid) * Decimal("0"),  # pastda alohida yangilaymiz
-        )
-        # yuqorida summa_dollarni shunchaki ko‘paytirib qo‘ymaymiz, chunki delta_paid ichida hammasi aralash
-        # shuning uchun payment turlarini ham delta bilan yuritmoqchi bo‘lsangiz alohida delta'lar kerak bo‘ladi.
-        # Hozirgi Order modelida ham turlari bor — delta bilan yuritish uchun pastda aniq beramiz.
+        if not order_history_id:
+            return
 
-        # Client
-        Client.objects.filter(pk=client.pk).update(
-            total_debt=F("total_debt") + delta_debt
-        )
+        if not is_posted:
+            ClientKeshbekHistory.objects.filter(order_history=order_history_id).delete()
+            return
 
-        if date_last:
-            Order.objects.filter(pk=order.pk).update(date_last_order=date_last)
+        paid_total_usd = self._q2(paid_total_usd if paid_total_usd > 0 else Decimal("0"))
+        keshbek_percent = self._to_decimal(client.keshbek)
+
+        cashback_sum = self._q2((paid_total_usd * keshbek_percent) / Decimal("100"))
+
+        ClientKeshbekHistory.objects.update_or_create(
+            order_history=order_history_id,
+            defaults={
+                "client": client,
+                "keshbek": keshbek_percent,
+                "keshbek_summa": cashback_sum,
+            }
+        )
 
     # ---------------- main update ----------------
 
@@ -453,7 +459,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         # filial normalize
         validated_data["order_filial"] = self._get_filial_for_order(validated_data, instance=instance)
 
-        # eski "posted" qiymatlarni saqlab olamiz (delta uchun)
+        # eski "posted" snapshot qiymatlarni saqlab olamiz (delta uchun)
         old_posted = bool(instance.order_status)
         old_profit = self._to_decimal(instance.all_profit_dollar)
         old_debt_today = self._to_decimal(instance.total_debt_today_client)
@@ -482,23 +488,23 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             updated_instance.order = order
             updated_instance.save(update_fields=["order"])
 
-        # Endi yangi hisob-kitoblarni topamiz
+        # yangi hisob-kitob
         new_product_sum, new_profit = self._calc_products_totals(updated_instance)
         new_paid_total = self._calc_payments_usd(updated_instance)
         new_debt_today = self._q2(new_product_sum - new_paid_total)
 
-        # OrderHistory fields ni yangilab qo‘yamiz (har doim)
+        # OrderHistory snapshotlarni yangilaymiz (har doim)
         updated_instance.all_product_summa = new_product_sum
         updated_instance.all_profit_dollar = new_profit
         updated_instance.total_debt_today_client = new_debt_today
 
-        # total_debt_client maydoni sizda “mijoz qarzi” deb turibdi — uni “client.total_debt”ga tenglab qo‘yish yaxshiroq.
-        # Aks holda u ham double-count bo‘ladi.
-        # Shuning uchun:
+        # total_debt_client: bu maydon "mijozning umumiy qarzi" bo‘lsa, uni Client.total_debt dan oling
+        # (delta bilan qo‘shmang!)
         updated_instance.total_debt_client = self._to_decimal(updated_instance.client.total_debt)
 
-        # summa_total_dollar ni ham hisoblangan paid_total bilan tenglaymiz
+        # summa_total_dollar: har doim hisoblangan qiymat bilan tenglab boring
         updated_instance.summa_total_dollar = new_paid_total
+
         updated_instance.save(update_fields=[
             "all_product_summa",
             "all_profit_dollar",
@@ -507,45 +513,41 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             "summa_total_dollar",
         ])
 
-        # status o‘zgarishiga qarab Order/Clientga delta qo‘llaymiz
+        # posted holat
         new_posted = bool(updated_instance.order_status)
 
-        # old -> new delta
+        # delta
         if not old_posted and new_posted:
-            # 1) POST: bir marta qo‘shamiz
             delta_profit = new_profit
             delta_debt = new_debt_today
             delta_product = new_product_sum
             delta_paid = new_paid_total
 
         elif old_posted and new_posted:
-            # 2) RE-POST: farqini qo‘shamiz (eski-posted ni ayirib, yangisini qo‘shish)
             delta_profit = new_profit - old_profit
             delta_debt = new_debt_today - old_debt_today
             delta_product = new_product_sum - old_product_sum
             delta_paid = new_paid_total - old_paid_total
 
         elif old_posted and not new_posted:
-            # 3) ROLLBACK: old qiymatlarni qaytarib tashlaymiz
             delta_profit = Decimal("0") - old_profit
             delta_debt = Decimal("0") - old_debt_today
             delta_product = Decimal("0") - old_product_sum
             delta_paid = Decimal("0") - old_paid_total
 
         else:
-            # not posted -> not posted (draft)
             delta_profit = Decimal("0")
             delta_debt = Decimal("0")
             delta_product = Decimal("0")
             delta_paid = Decimal("0")
 
-        # delta larni Order/Clientga qo‘llaymiz
+        # delta apply
         if delta_profit != 0 or delta_debt != 0 or delta_product != 0 or delta_paid != 0:
             # lock order & client
             order = Order.objects.select_for_update().get(pk=order.pk)
             client = Client.objects.select_for_update().get(pk=updated_instance.client_id)
 
-            # Order: umumiy maydonlar
+            # Order
             Order.objects.filter(pk=order.pk).update(
                 all_profit_dollar=F("all_profit_dollar") + delta_profit,
                 total_debt_old_client=F("total_debt_client"),
@@ -555,24 +557,27 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
                 date_last_order=updated_instance.date,
             )
 
-            # Client: total debt
+            # Client
             Client.objects.filter(pk=client.pk).update(
                 total_debt=F("total_debt") + delta_debt
             )
 
-            # Keshbek: faqat posted bo‘lsa va paid > 0 bo‘lsa
-            # (rollback bo‘lsa, alohida delete/reverse qilish kerak — bu yerda soddalashtirdim)
-            if (not old_posted and new_posted) or (old_posted and new_posted and delta_paid != 0):
-                # Bu yerda sizning siyosatingiz: cashback faqat real paymentdanmi?
-                paid_for_cashback = new_paid_total if new_paid_total > 0 else Decimal("0")
-                k = self._to_decimal(client.keshbek)
-                cashback_sum = self._q2((paid_for_cashback * k) / Decimal("100"))
-
-                ClientKeshbekHistory.objects.create(
-                    client=client,
-                    keshbek=client.keshbek,
-                    keshbek_summa=cashback_sum,
-                    order_history=updated_instance.id,
-                )
+            # Cashback history: posted bo'lsa update/create, rollback bo'lsa delete
+            self._sync_cashback_history(
+                client=client,
+                order_history_id=updated_instance.id,
+                paid_total_usd=new_paid_total,   # cashback real to‘lovdan
+                is_posted=new_posted
+            )
+        else:
+            # delta bo‘lmasa ham: order_status o‘zgargan bo‘lishi mumkin (ba'zi holatlarda)
+            # Shuning uchun cashback’ni ham sync qilib qo‘yib ketamiz
+            client = Client.objects.select_for_update().get(pk=updated_instance.client_id)
+            self._sync_cashback_history(
+                client=client,
+                order_history_id=updated_instance.id,
+                paid_total_usd=new_paid_total,
+                is_posted=new_posted
+            )
 
         return updated_instance
