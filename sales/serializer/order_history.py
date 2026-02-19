@@ -445,12 +445,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         user = self._get_user()
 
         # lock: double request bo‘lsa ham safe
-        instance = (
-            OrderHistory.objects
-            .select_for_update()
-            .select_related("client", "order", "order_filial")
-            .get(pk=instance.pk)
-        )
+        instance = OrderHistory.objects.select_for_update().get(pk=instance.pk)
 
         # default employee
         if validated_data.get("employee") is None:
