@@ -15,7 +15,7 @@ from sales.models import OrderHistory, OrderHistoryProduct
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 from sales.serializer.order_history import OrderHistorySerializer, OrderHistoryListSerializer, \
-    OrderHistoryUpdateSerializer
+    OrderHistoryUpdateSerializer, OrderHistorySellSerializer
 
 
 class OrderHistoryFieldInfoView(APIView):
@@ -230,6 +230,40 @@ class OrderHistoryView(ListCreateAPIView):
         return Response(serializer.data, status.HTTP_201_CREATED)
 
 
+class OrderHistorySellView(RetrieveUpdateDestroyAPIView):
+    serializer_class = OrderHistorySerializer
+    http_method_names = ['put']
+
+    def put(self, request, pk):
+        instance = get_object_or_404(OrderHistory, id=pk, is_delete=False)
+
+        serializer = OrderHistorySellSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class OrderHistoryEditView(RetrieveUpdateDestroyAPIView):
+    serializer_class = OrderHistorySerializer
+    http_method_names = ['put']
+
+    def put(self, request, pk):
+        instance = get_object_or_404(OrderHistory, id=pk, is_delete=False)
+
+        serializer = OrderHistoryUpdateSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
 class OrderHistoryDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = OrderHistorySerializer
 
@@ -261,7 +295,6 @@ class OrderHistoryDetailView(RetrieveUpdateDestroyAPIView):
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
-
 
 # ============================== Karzinka  ===============================
 
