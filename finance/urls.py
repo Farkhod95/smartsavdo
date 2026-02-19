@@ -1,7 +1,7 @@
 from django.urls import re_path, path
 
 from finance.views.debt_repayment import DebtRepaymentView, DebtRepaymentDetailView, DebtRepaymentFieldInfoView, \
-    DebtRepaymentKarzinkaView, DebtRepaymentDetailKarzinkaView
+    DebtRepaymentKarzinkaView, DebtRepaymentDetailKarzinkaView, DebtRepaymentGroupedByDateView
 from finance.views.exchange_rate import ExchangeRateView, ExchangeRateDetailView, ExchangeRateFieldInfoView
 from finance.views.expense import ExpenseView, ExpenseDetailView, ExpenseFieldInfoView
 from finance.views.expense_category import ExpenseCategoryView, ExpenseCategoryDetailView, ExpenseCategoryFieldInfoView
@@ -20,6 +20,7 @@ urlpatterns = [
     path('expense/fields', ExpenseFieldInfoView.as_view(), name='expense_fields_info'),
 
     re_path(r'^debt-repayment$', DebtRepaymentView.as_view(), name='debt_repayment_view'),
+    path('debt-repayment/grouped-by-date', DebtRepaymentGroupedByDateView.as_view(), name='debt_repayment_grouped_by_date'),
     path('debt-repayment/<int:pk>', DebtRepaymentDetailView.as_view(), name='debt_repayment_detail_view'),
     path('debt-repayment/karzinka', DebtRepaymentKarzinkaView.as_view(), name='debt_repayment_karzinka_view'),
     path('debt-repayment/karzinka/<int:pk>', DebtRepaymentDetailKarzinkaView.as_view(),

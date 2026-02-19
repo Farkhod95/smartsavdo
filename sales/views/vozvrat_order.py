@@ -4,9 +4,11 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIV
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from decimal import Decimal
 from django.db import transaction
-from django.db.models import Q
+from collections import OrderedDict
+from decimal import Decimal
+from django.db.models import QuerySet
+from rest_framework.generics import ListAPIView
 
 from sales.filterset import VozvratOrderFilter
 from sales.models import VozvratOrder, OrderHistoryProduct, Order, Client
@@ -49,6 +51,75 @@ class VozvratOrderViewList(ListCreateAPIView):
 
     def get_queryset(self):
         return VozvratOrder.objects.filter(is_delete=False)
+
+
+class VozvratOrderGroupedByDateView(ListAPIView):
+    serializer_class = VozvratOrderListSerializer
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = VozvratOrderFilter
+    search_fields = ('client__full_name', 'employee__username', 'note')
+    ordering = ['-created_time', '-pk']  # ichida tartib
+
+    def get_queryset(self):
+        return VozvratOrder.objects.filter(is_delete=False).order_by('-created_time', '-pk')
+
+    def _d(self, v) -> Decimal:
+        if v in (None, "", "null"):
+            return Decimal("0")
+        try:
+            return Decimal(str(v))
+        except Exception:
+            return Decimal("0")
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        ser = self.get_serializer(qs, many=True)
+
+        grouped = OrderedDict()
+
+        for row in ser.data:
+            # ✅ group_date: date bo‘lsa o‘sha, bo‘lmasa created_time.date()
+            if row.get("date"):
+                group_date = row["date"]  # already YYYY-MM-DD
+            else:
+                ct = row.get("created_time")  # ISO datetime
+                group_date = (str(ct)[:10] if ct else "no-date")
+
+            if group_date not in grouped:
+                grouped[group_date] = {
+                    "date": group_date,
+                    "count": 0,
+                    "totals": {
+                        "summa_total_dollar": "0.00",
+                        "summa_dollar": "0.00",
+                        "summa_naqt": "0.00",
+                        "summa_kilik": "0.00",
+                        "summa_terminal": "0.00",
+                        "summa_transfer": "0.00",
+                        "discount_amount": "0.00",
+                    },
+                    "items": []
+                }
+
+            g = grouped[group_date]
+            g["items"].append(row)
+            g["count"] += 1
+
+            t = g["totals"]
+            t["summa_total_dollar"] = str(self._d(t["summa_total_dollar"]) + self._d(row.get("summa_total_dollar")))
+            t["summa_dollar"] = str(self._d(t["summa_dollar"]) + self._d(row.get("summa_dollar")))
+            t["summa_naqt"] = str(self._d(t["summa_naqt"]) + self._d(row.get("summa_naqt")))
+            t["summa_kilik"] = str(self._d(t["summa_kilik"]) + self._d(row.get("summa_kilik")))
+            t["summa_terminal"] = str(self._d(t["summa_terminal"]) + self._d(row.get("summa_terminal")))
+            t["summa_transfer"] = str(self._d(t["summa_transfer"]) + self._d(row.get("summa_transfer")))
+            t["discount_amount"] = str(self._d(t["discount_amount"]) + self._d(row.get("discount_amount")))
+
+        # ✅ 2 xonali format
+        for g in grouped.values():
+            for k, v in g["totals"].items():
+                g["totals"][k] = f"{self._d(v):.2f}"
+
+        return Response(list(grouped.values()))
 
 
 class VozvratOrderView(ListCreateAPIView):

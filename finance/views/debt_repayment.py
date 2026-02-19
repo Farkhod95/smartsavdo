@@ -7,6 +7,9 @@ from rest_framework.views import APIView
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import F
+from collections import OrderedDict
+from django.db.models import QuerySet
+from rest_framework.generics import ListAPIView
 
 from finance.filterset import DebtRepaymentFilter
 from finance.models import DebtRepayment
@@ -50,6 +53,76 @@ class DebtRepaymentViewList(ListCreateAPIView):
 
     def get_queryset(self):
         return DebtRepayment.objects.filter(is_delete=False)
+
+
+class DebtRepaymentGroupedByDateView(ListAPIView):
+    serializer_class = DebtRepaymentListSerializer
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = DebtRepaymentFilter
+    search_fields = ('client__full_name', 'employee__username', 'note')
+    ordering = ['-date', '-pk']
+
+    def get_queryset(self) -> QuerySet:
+        return DebtRepayment.objects.filter(is_delete=False).order_by('-date', '-pk')
+
+    def _d(self, v) -> Decimal:
+        # serializer ko‘pincha string qaytaradi, shuni Decimalga o‘tkazamiz
+        if v in (None, "", "null"):
+            return Decimal("0")
+        try:
+            return Decimal(str(v))
+        except Exception:
+            return Decimal("0")
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        ser = self.get_serializer(qs, many=True)
+
+        grouped = OrderedDict()
+
+        for row in ser.data:
+            d = row.get("date") or "no-date"
+
+            if d not in grouped:
+                grouped[d] = {
+                    "date": d,
+                    "count": 0,
+                    "totals": {
+                        "summa_total_dollar": "0.00",
+                        "summa_dollar": "0.00",
+                        "summa_naqt": "0.00",
+                        "summa_kilik": "0.00",
+                        "summa_terminal": "0.00",
+                        "summa_transfer": "0.00",
+                        "discount_amount": "0.00",
+                        "zdacha_dollar": "0.00",
+                        "zdacha_som": "0.00",
+                    },
+                    "items": []
+                }
+
+            g = grouped[d]
+            g["items"].append(row)
+            g["count"] += 1
+
+            # yig‘indilar
+            g_tot = g["totals"]
+            g_tot["summa_total_dollar"] = str(self._d(g_tot["summa_total_dollar"]) + self._d(row.get("summa_total_dollar")))
+            g_tot["summa_dollar"] = str(self._d(g_tot["summa_dollar"]) + self._d(row.get("summa_dollar")))
+            g_tot["summa_naqt"] = str(self._d(g_tot["summa_naqt"]) + self._d(row.get("summa_naqt")))
+            g_tot["summa_kilik"] = str(self._d(g_tot["summa_kilik"]) + self._d(row.get("summa_kilik")))
+            g_tot["summa_terminal"] = str(self._d(g_tot["summa_terminal"]) + self._d(row.get("summa_terminal")))
+            g_tot["summa_transfer"] = str(self._d(g_tot["summa_transfer"]) + self._d(row.get("summa_transfer")))
+            g_tot["discount_amount"] = str(self._d(g_tot["discount_amount"]) + self._d(row.get("discount_amount")))
+            g_tot["zdacha_dollar"] = str(self._d(g_tot["zdacha_dollar"]) + self._d(row.get("zdacha_dollar")))
+            g_tot["zdacha_som"] = str(self._d(g_tot["zdacha_som"]) + self._d(row.get("zdacha_som")))
+
+        # format: 2 xonali ko‘rinishda qaytaramiz
+        for g in grouped.values():
+            for k, v in g["totals"].items():
+                g["totals"][k] = f"{self._d(v):.2f}"
+
+        return Response(list(grouped.values()))
 
 
 class DebtRepaymentView(ListCreateAPIView):
