@@ -50,10 +50,6 @@ def d(value) -> Decimal:
 
 
 def recompute_order_totals(order: Order) -> Order:
-    """
-    Shu Orderga bog'langan (is_delete=False) OrderHistory lar ichidan
-    FAQAT is_karzinka=False bo'lganlarini hisobga oladi.
-    """
     qs = order.order_histories.filter(is_delete=False, is_karzinka=False).order_by("id")
 
     if not qs.exists():
@@ -128,11 +124,6 @@ def recompute_order_totals(order: Order) -> Order:
 
 
 class OrderHistoryUpdateSerializer(serializers.ModelSerializer):
-    """
-    - Filial doim request.user.order_filial dan olinadi.
-    - Order create/update HISOB-KITOB faqat is_karzinka=False bo'lganda ishlaydi.
-    """
-
     class Meta:
         model = OrderHistory
         fields = (
@@ -149,103 +140,130 @@ class OrderHistoryUpdateSerializer(serializers.ModelSerializer):
             "employee": {"required": False, "allow_null": True},
         }
 
-    def _get_user_filial(self):
+    def _get_user(self):
         request = self.context.get("request")
         user = getattr(request, "user", None)
-        filial = getattr(user, "order_filial", None)
-
         if not user or not user.is_authenticated:
             raise serializers.ValidationError({"detail": "Autentifikatsiya talab qilinadi."})
+        return user
 
+    def _get_filial_for_order(self, validated_data, instance=None):
+        """
+        Sizning talablarga ko'ra: OrderHistory dagi filial bo'yicha order topish.
+        OrderHistory modelida filial = order_filial.
+        Create: validated_data orqali keladi, kelmasa user.order_filial.
+        Update: kelmasa instance.order_filial, bo'lmasa user.order_filial.
+        """
+        user = self._get_user()
+        if "order_filial" in validated_data and validated_data["order_filial"] is not None:
+            return validated_data["order_filial"]
+        if instance is not None and instance.order_filial is not None:
+            return instance.order_filial
+        filial = getattr(user, "order_filial", None)
         if filial is None:
-            raise serializers.ValidationError({
-                "detail": "Sizga order_filial biriktirilmagan. (User.order_filial = null)"
-            })
-
+            raise serializers.ValidationError({"detail": "Sizga order_filial biriktirilmagan. (User.order_filial = null)"})
         return filial
 
     def _is_karzinka_false(self, validated_data, instance=None) -> bool:
-        """
-        Create: validated_data['is_karzinka'] default True (model default).
-        Update: agar request yubormasa, instancedan olamiz.
-        """
         if "is_karzinka" in validated_data:
             return validated_data.get("is_karzinka") is False
         if instance is not None:
             return instance.is_karzinka is False
-        # create bo'lsa va yuborilmasa model default True, demak ishlamasin
         return False
+
+    def _get_or_create_first_order(self, client, filial, date=None):
+        """
+        MUHIM: get_or_create emas!
+        - bir nechta order bo'lsa ham .first() bilan birinchisini oladi
+        - bo'lmasa yaratadi
+        """
+        order = (
+            Order.objects
+            .filter(client=client, filial=filial, is_delete=False)
+            .order_by("id")
+            .first()
+        )
+        if order:
+            return order, False
+
+        order = Order.objects.create(
+            client=client,
+            filial=filial,
+            date_last_order=date,
+            is_delete=False,
+        )
+        return order, True
 
     @transaction.atomic
     def create(self, validated_data):
-        # employee bo'sh kelsa -> user
-        request = self.context.get("request")
-        if validated_data.get("employee") is None and request and request.user.is_authenticated:
-            validated_data["employee"] = request.user
+        user = self._get_user()
 
-        # Avval OrderHistory ni yaratamiz
+        # employee bo'sh kelsa -> user
+        if validated_data.get("employee") is None:
+            validated_data["employee"] = user
+
+        # agar order_filial yuborilmasa ham, baribir to'ldirib qo'yamiz
+        validated_data["order_filial"] = self._get_filial_for_order(validated_data, instance=None)
+
         instance = super().create(validated_data)
 
-        # Faqat is_karzinka=False bo'lsa Orderga tegamiz
         if instance.is_karzinka is False:
-            client = instance.client
-            if client is None:
+            if instance.client is None:
                 raise serializers.ValidationError({"client": "client majburiy"})
 
-            filial = self._get_user_filial()
-
-            order, _created = Order.objects.get_or_create(
-                client=client,
+            filial = instance.order_filial  # OrderHistory dagi filial
+            order, _created = self._get_or_create_first_order(
+                client=instance.client,
                 filial=filial,
-                defaults={
-                    "date_last_order": instance.date,
-                    "is_delete": False,
-                }
+                date=instance.date
             )
 
-            # history ni orderga bog'laymiz
             instance.order = order
             instance.save(update_fields=["order"])
 
-            # totals
             recompute_order_totals(order)
 
         return instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        request = self.context.get("request")
-        if validated_data.get("employee") is None and request and request.user.is_authenticated:
-            validated_data["employee"] = request.user
+        user = self._get_user()
+
+        old_order_id = instance.order_id  # keyin eski orderni ham recompute qilish uchun
+
+        if validated_data.get("employee") is None:
+            validated_data["employee"] = user
+
+        # order_filialni ham doim to'g'rilab qo'yamiz (agar bo'sh qolib ketmasin)
+        validated_data["order_filial"] = self._get_filial_for_order(validated_data, instance=instance)
 
         updated_instance = super().update(instance, validated_data)
 
-        # Faqat is_karzinka=False bo'lsa Orderga tegamiz
         if updated_instance.is_karzinka is False:
-            client = updated_instance.client
-            if client is None:
+            if updated_instance.client is None:
                 raise serializers.ValidationError({"client": "client majburiy"})
 
-            filial = self._get_user_filial()
-
-            order, _created = Order.objects.get_or_create(
-                client=client,
+            filial = updated_instance.order_filial
+            order, _created = self._get_or_create_first_order(
+                client=updated_instance.client,
                 filial=filial,
-                defaults={
-                    "date_last_order": updated_instance.date,
-                    "is_delete": False,
-                }
+                date=updated_instance.date
             )
 
-            # history ni orderga bog'laymiz
             if updated_instance.order_id != order.id:
                 updated_instance.order = order
                 updated_instance.save(update_fields=["order"])
 
+            # yangi order totals
             recompute_order_totals(order)
 
-        return updated_instance
+            # agar order almashgan bo'lsa eski order totals ham qayta hisoblanishi kerak
+            if old_order_id and old_order_id != order.id:
+                old_order = Order.objects.filter(id=old_order_id).first()
+                if old_order:
+                    recompute_order_totals(old_order)
 
+        return updated_instance
 
 class OrderHistorySerializer(serializers.ModelSerializer):
     class Meta:
