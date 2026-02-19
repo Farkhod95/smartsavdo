@@ -4,12 +4,17 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIV
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from decimal import Decimal
+from django.db import transaction
+from django.db.models import F
 
 from finance.filterset import DebtRepaymentFilter
 from finance.models import DebtRepayment
-from finance.serializer.debt_repayment import DebtRepaymentSerializer, DebtRepaymentListSerializer
+from finance.serializer.debt_repayment import DebtRepaymentSerializer, DebtRepaymentListSerializer, \
+    DebtRepaymentAccountingSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from sales.models import Client
 
 
 class DebtRepaymentFieldInfoView(APIView):
@@ -59,20 +64,17 @@ class DebtRepaymentView(ListCreateAPIView):
         return DebtRepayment.objects.filter(is_delete=False)
 
     def post(self, request):
-        serializer = DebtRepaymentSerializer(data=request.data)
+        serializer = DebtRepaymentAccountingSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=request.user)
         return Response(serializer.data, status.HTTP_201_CREATED)
 
 
 class DebtRepaymentDetailView(RetrieveUpdateDestroyAPIView):
-    serializer_class = DebtRepaymentSerializer
+    serializer_class = DebtRepaymentAccountingSerializer
 
     def get_queryset(self):
         return DebtRepayment.objects.all()
-
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
 
     def get(self, request, pk):
         instance = get_object_or_404(DebtRepayment, id=pk)
@@ -80,17 +82,42 @@ class DebtRepaymentDetailView(RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        instance = get_object_or_404(DebtRepayment, id=pk)
-        serializer = self.serializer_class(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=self.request.user)
-        return Response(serializer.data, status.HTTP_202_ACCEPTED)
+        instance = get_object_or_404(DebtRepayment, id=pk, is_delete=False)
 
+        serializer = DebtRepaymentAccountingSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @transaction.atomic
     def delete(self, request, pk):
-        instance = get_object_or_404(DebtRepayment, id=pk)
-        instance.is_delete = True
-        instance.save(update_fields=['is_delete'])
-        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+        """
+        Soft delete:
+        - Agar debt_status True bo'lsa rollback (client debtga pulni qaytarib qo'yadi)
+        - keyin is_delete=True
+        """
+        dr = get_object_or_404(
+            DebtRepayment.objects.select_for_update(of=("self",)),
+            id=pk,
+            is_delete=False
+        )
+
+        # rollback if confirmed
+        if dr.debt_status and dr.client_id:
+            client = Client.objects.select_for_update().get(pk=dr.client_id)
+            old_paid = dr.summa_total_dollar or Decimal("0")
+
+            # debt back
+            Client.objects.filter(pk=client.pk).update(total_debt=F("total_debt") + old_paid)
+
+        dr.is_delete = True
+        dr.save(update_fields=["is_delete", "updated_time"])
+
+        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
 
 
 
@@ -114,15 +141,22 @@ class DebtRepaymentDetailKarzinkaView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return DebtRepayment.objects.all()
 
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-
     def get(self, request, pk):
         instance = get_object_or_404(DebtRepayment, id=pk)
         serializer = DebtRepaymentListSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def delete(self, request, pk):
-        instance = get_object_or_404(DebtRepayment, id=pk)
-        instance.delete()
-        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+        dr = get_object_or_404(
+            DebtRepayment.objects.select_for_update(of=("self",)),
+            id=pk
+        )
+
+        if dr.debt_status and dr.client_id:
+            client = Client.objects.select_for_update().get(pk=dr.client_id)
+            old_paid = dr.summa_total_dollar or Decimal("0")
+            Client.objects.filter(pk=client.pk).update(total_debt=F("total_debt") + old_paid)
+
+        dr.delete()
+        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
