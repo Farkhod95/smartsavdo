@@ -135,10 +135,10 @@ class OrderHistoryUpdateSerializer(serializers.ModelSerializer):
             'is_debtor_product', 'status_order_dukon', 'status_order_sklad',
             'driver_info', 'is_karzinka', 'order_filial', 'currency'
         )
-        extra_kwargs = {
-            "order": {"read_only": True},
-            "employee": {"required": False, "allow_null": True},
-        }
+        # extra_kwargs = {
+        #     "order": {"read_only": True},
+        #     "employee": {"required": False, "allow_null": True},
+        # }
 
     def _get_user(self):
         request = self.context.get("request")

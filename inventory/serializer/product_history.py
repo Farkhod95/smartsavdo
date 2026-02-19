@@ -51,7 +51,7 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
             'product',       # response’da ko‘rinsin
             # 'product_data',  # request’da keladi
         )
-        read_only_fields = ('id', 'product')
+        # read_only_fields = ('id', 'product')
 
     def validate(self, attrs):
         """

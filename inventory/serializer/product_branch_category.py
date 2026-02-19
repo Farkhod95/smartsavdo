@@ -10,11 +10,11 @@ class ProductBranchCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductBranchCategory
         fields = ('id', 'product_branch', 'name', 'sorting', 'is_delete')
-        extra_kwargs = {
-            'name': {"required": False, "allow_blank": True, "allow_null": True},
-            'sorting': {"required": False, "allow_null": True},
-            'is_delete': {"required": False},
-        }
+        # extra_kwargs = {
+        #     'name': {"required": False, "allow_blank": True, "allow_null": True},
+        #     'sorting': {"required": False, "allow_null": True},
+        #     'is_delete': {"required": False},
+        # }
 
     def _suggest_next_sorting(self, product_branch_id: int) -> int:
         """

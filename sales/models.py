@@ -78,8 +78,7 @@ class OrderHistory(BaseModel):
                                help_text=_("Filial bilan bog'lanish"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='order_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Buyurtmani qabul qilgan hodim (User)"))
     currency = models.ForeignKey(Currency, related_name='order_histories', on_delete=models.SET_NULL, null=True,
-                                 blank=True,
-                                 help_text=_("Valyuta bilan bog'lanish"))
+                                 blank=True, help_text=_("Valyuta bilan bog'lanish"))
     exchange_rate = models.DecimalField(_('Exchange rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Kurs"))
     date = models.DateField(_('Date'), null=True, blank=True, help_text=_("Sana"))
     note = models.TextField(_('Note'), null=True, blank=True, help_text=_("Izoh"))

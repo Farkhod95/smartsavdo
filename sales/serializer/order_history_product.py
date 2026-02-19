@@ -60,7 +60,7 @@ class OrderHistoryProductCreateSerializer(serializers.ModelSerializer):
             'is_delete', 'cargo_terminal',
             'price_difference', 'status_order', 'is_karzinka'
         )
-        read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
+        # read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
 
     def validate(self, attrs):
         product = attrs.get("product")
@@ -164,7 +164,7 @@ class OrderHistoryProductVozvratCreateSerializer(serializers.ModelSerializer):
             'is_delete', 'cargo_terminal',
             'price_difference', 'status_order', 'is_karzinka'
         )
-        read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
+        # read_only_fields = ('branch', 'model', 'type', 'size', 'real_price', 'is_delete')
 
     def validate(self, attrs):
         product = attrs.get("product")
