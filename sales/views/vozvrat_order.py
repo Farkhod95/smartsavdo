@@ -4,18 +4,19 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIV
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.db import transaction
 from collections import OrderedDict
-from decimal import Decimal
-from django.db.models import QuerySet
+from decimal import Decimal, ROUND_HALF_UP
+from django.db import transaction
+from django.db.models import F
 from rest_framework.generics import ListAPIView
 
+from inventory.models import Product, ProductStock
 from sales.filterset import VozvratOrderFilter
 from sales.models import VozvratOrder, OrderHistoryProduct, Order, Client
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 from sales.serializer.vozvrat_order import VozvratOrderSerializer, VozvratOrderListSerializer, \
-    VozvratOrderUpdateSerializer
+    VozvratOrderUpdateSerializer, VozvratOrderReturnSerializer
 
 
 class VozvratOrderFieldInfoView(APIView):
@@ -173,17 +174,143 @@ class VozvratOrderDetailView(RetrieveUpdateDestroyAPIView):
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
 
 
+class VozvratOrderReturnView(RetrieveUpdateDestroyAPIView):
+    serializer_class = VozvratOrderSerializer
+    http_method_names = ['put']
+
+    def put(self, request, pk):
+        instance = get_object_or_404(VozvratOrder, id=pk, is_delete=False)
+
+        serializer = VozvratOrderReturnSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class VozvratOrderEditView(RetrieveUpdateDestroyAPIView):
+    serializer_class = VozvratOrderSerializer
+    http_method_names = ['put']
+
+    def put(self, request, pk):
+        instance = get_object_or_404(VozvratOrder, id=pk, is_delete=False)
+
+        serializer = VozvratOrderReturnSerializer(
+            instance,
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
 class VozvratOrderHardDeleteView(APIView):
-    """
-    Faqat is_delete=True bo'lgan VozvratOrder ni DB'dan butunlay o'chiradi.
-    O'chirishdan oldin Order va Client balanslarini orqaga qaytaradi.
-    """
     permission_classes = [IsAuthenticated]
+
+    def _d(self, v) -> Decimal:
+        if v is None or v == "":
+            return Decimal("0")
+        if isinstance(v, Decimal):
+            return v
+        return Decimal(str(v))
+
+    def _q2(self, v: Decimal) -> Decimal:
+        return (v or Decimal("0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def _uzs_to_usd(self, uzs: Decimal, rate: Decimal) -> Decimal:
+        rate = self._d(rate)
+        if rate <= 0:
+            raise ValueError("exchange_rate must be > 0")
+        return self._q2(self._d(uzs) / rate)
+
+    def _calc_paid_usd(self, vo: VozvratOrder) -> Decimal:
+        rate = self._d(vo.exchange_rate)
+        paid = (
+            self._d(vo.summa_dollar)
+            + self._uzs_to_usd(self._d(vo.summa_naqt), rate)
+            + self._uzs_to_usd(self._d(vo.summa_kilik), rate)
+            + self._uzs_to_usd(self._d(vo.summa_terminal), rate)
+            + self._uzs_to_usd(self._d(vo.summa_transfer), rate)
+            - self._d(vo.discount_amount)
+        )
+        return self._q2(paid)
+
+    def _calc_products_usd(self, vo: VozvratOrder) -> Decimal:
+        rate = self._d(vo.exchange_rate)
+        qs = OrderHistoryProduct.objects.filter(
+            vozvrat_order_id=vo.id,
+            is_delete=False
+        )
+
+        total = Decimal("0")
+        for p in qs:
+            cnt = self._d(p.count or 0)
+
+            if p.price_dollar and self._d(p.price_dollar) > 0:
+                unit_usd = self._d(p.price_dollar)
+            else:
+                unit_usd = self._uzs_to_usd(self._d(p.price_sum), rate)
+
+            total += cnt * unit_usd
+
+        return self._q2(total)
+
+    def _effect(self, vo: VozvratOrder) -> Decimal:
+        # client debtga net ta’sir
+        return self._q2(self._calc_paid_usd(vo) - self._calc_products_usd(vo))
+
+    def _reverse_stock(self, vo: VozvratOrder):
+        """
+        Confirm paytida stock +count bo'lgan bo'lsa,
+        hard delete paytida teskari qilamiz: stock -= count
+        """
+        items = OrderHistoryProduct.objects.filter(
+            vozvrat_order_id=vo.id,
+            is_delete=False
+        ).select_related("product", "sklad")
+
+        for it in items:
+            if not it.product_id:
+                continue
+            if not it.sklad_id:
+                # sizda sklad majburiy bo'lishi kerak
+                raise ValueError("OrderHistoryProduct.sklad is required for stock reversal")
+
+            qty = int(it.count or 0)
+            if qty <= 0:
+                continue
+
+            prod = Product.objects.select_for_update(of=("self",)).get(pk=it.product_id)
+            stock, _ = ProductStock.objects.select_for_update().get_or_create(
+                product_id=prod.pk,
+                sklad_id=it.sklad_id,
+                defaults={"count": 0}
+            )
+
+            cur = int(stock.count or 0)
+            if cur - qty < 0:
+                raise ValueError(
+                    f"Stock minus bo'lib ketadi. product={prod.pk}, sklad={it.sklad_id}, ombor={cur}, ayirish={qty}"
+                )
+
+            ProductStock.objects.filter(pk=stock.pk).update(count=F("count") - qty)
+
+            if prod.count is not None:
+                curp = int(prod.count or 0)
+                if curp - qty < 0:
+                    raise ValueError(f"Product.count minus bo'lib ketadi. product={prod.pk}, count={curp}, ayirish={qty}")
+                Product.objects.filter(pk=prod.pk).update(count=F("count") - qty)
 
     @transaction.atomic
     def delete(self, request, pk: int):
-        # 1) Faqat soft delete qilinganini o'chiramiz
-        vozvrat = get_object_or_404(VozvratOrder.objects.select_for_update(), pk=pk)
+        vozvrat = get_object_or_404(
+            VozvratOrder.objects.select_for_update(),
+            pk=pk
+        )
 
         if vozvrat.is_delete is False:
             return Response(
@@ -191,43 +318,36 @@ class VozvratOrderHardDeleteView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 2) Hisob-kitoblarni qaytarish faqat is_karzinka=False bo'lsa (ya'ni balansga ta'sir qilgan bo'lsa)
-        # effect = new_total_debt_client - old_total_debt_client
-        # delete paytida: balanslardan effect ni AYIRAMIZ (teskari qilamiz)
-        if vozvrat.is_karzinka is False:
+        # Balansga ta'sir bo'lganmi?
+        affected = (vozvrat.is_karzinka is False) and (vozvrat.is_vazvrat_status is True)
+
+        if affected:
             if vozvrat.client_id is None:
                 return Response({"detail": "VozvratOrder.client null. Balansni qaytarib bo'lmaydi."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            if vozvrat.filial_id is None:
-                return Response({"detail": "VozvratOrder.filial null. Order topib bo'lmaydi."},
-                                status=status.HTTP_400_BAD_REQUEST)
+            # lock client
+            client = get_object_or_404(Client.objects.select_for_update(), pk=vozvrat.client_id)
 
-            client = Client.objects.select_for_update().filter(pk=vozvrat.client_id).first()
-            if not client:
-                return Response({"detail": "Client topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+            # 1) debt reversal
+            try:
+                effect = self._effect(vozvrat)
+            except ValueError as e:
+                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            order = Order.objects.select_for_update().filter(client_id=vozvrat.client_id, filial_id=vozvrat.filial_id).first()
-            if not order:
-                return Response({"detail": "Order topilmadi (client+filial bo'yicha)."}, status=status.HTTP_404_NOT_FOUND)
+            # reverse: Client.total_debt -= effect
+            Client.objects.filter(pk=client.pk).update(total_debt=F("total_debt") - effect)
 
-            old_debt = vozvrat.old_total_debt_client or Decimal("0")
-            new_debt = vozvrat.total_debt_client or Decimal("0")
-            effect = new_debt - old_debt  # balansga qo'shilgan delta
+            # 2) stock reversal (confirmda stock qo‘shilgan bo‘lsa)
+            try:
+                self._reverse_stock(vozvrat)
+            except ValueError as e:
+                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Reversal (teskari)
-            order.total_debt_old_client = order.total_debt_client
-            order.total_debt_client = (order.total_debt_client or Decimal("0")) - effect
-            order.save(update_fields=["total_debt_old_client", "total_debt_client"])
-
-            client.total_debt = (client.total_debt or Decimal("0")) - effect
-            client.save(update_fields=["total_debt"])
-
-        # 3) Shu vozvratga bog'langan mahsulotlarni ham hard delete qilamiz
-        # FK SET_NULL bo'lsa ham, “tozalash” uchun o'chirib yuboramiz
+        # 3) vozvratga bog'langan mahsulotlarni hard delete
         OrderHistoryProduct.objects.filter(vozvrat_order_id=vozvrat.id).delete()
 
-        # 4) VozvratOrder ni butunlay o'chiramiz
+        # 4) vozvrat order hard delete
         vozvrat.delete()
 
         return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)

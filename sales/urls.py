@@ -11,7 +11,7 @@ from sales.views.order_history_product import OrderHistoryProductView, OrderHist
     OrderHistoryProductFieldInfoView, OrderHistoryProductVozvratView
 from sales.views.order_history_product_grouped import OrderHistoryProductByModelView
 from sales.views.vozvrat_order import VozvratOrderView, VozvratOrderDetailView, VozvratOrderFieldInfoView, \
-    VozvratOrderHardDeleteView, VozvratOrderGroupedByDateView
+    VozvratOrderHardDeleteView, VozvratOrderGroupedByDateView, VozvratOrderReturnView, VozvratOrderEditView
 
 urlpatterns = [
     re_path(r'^client$', ClientView.as_view(), name='client_view'),
@@ -41,6 +41,8 @@ urlpatterns = [
     re_path(r'^vozvrat-order$', VozvratOrderView.as_view(), name='vozvrat_order_view'),
     path('vozvrat-order/grouped-by-date', VozvratOrderGroupedByDateView.as_view(), name='vozvrat_order_grouped_by_date'),
     path('vozvrat-order/<int:pk>', VozvratOrderDetailView.as_view(), name='vozvrat_order_detail_view'),
+    path('vozvrat-history/<int:pk>/return', VozvratOrderReturnView.as_view(), name='vozvrat_history_return_view'),
+    path('vozvrat-history/<int:pk>/edit', VozvratOrderEditView.as_view(), name='vozvrat_history_edit_view'),
     path('vozvrat-order/<int:pk>/hard-delete', VozvratOrderHardDeleteView.as_view(), name='vozvrat_order_hard_delete'),
     path('vozvrat-order/fields', VozvratOrderFieldInfoView.as_view(), name='vozvrat_order_fields_info'),
 
