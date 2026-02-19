@@ -3,10 +3,13 @@ from rest_framework import serializers
 from accounts.serializers import FilialListSerializer
 from finance.models import DebtRepayment
 from sales.serializer.client import ClientListSerializer
+from users.serializers import UserViewListSerializer
+
 
 class DebtRepaymentListSerializer(serializers.ModelSerializer):
     filial_detail = FilialListSerializer(source='filial', read_only=True)
     client_detail = ClientListSerializer(source='client', read_only=True)
+    employee_detail = UserViewListSerializer(source='employee', read_only=True)
 
     class Meta:
         model = DebtRepayment

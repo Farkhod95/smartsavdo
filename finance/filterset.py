@@ -26,6 +26,8 @@ class ExpenseFilter(FilterSet):
         fields = {
             'filial': ['exact'],
             'category': ['exact'],
+            'is_salary': ['exact'],
+            'employee': ['exact'],
             # 'summa_total_dollar': ['exact', 'gte', 'lte'],
             # 'summa_dollar': ['exact', 'gte', 'lte'],
             # 'summa_naqt': ['exact', 'gte', 'lte'],
