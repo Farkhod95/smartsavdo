@@ -38,9 +38,9 @@ class TelegramRegisterClientView(APIView):
         client = Client.objects.filter(telegram_id=telegram_id).first()
         # 2) Agar topilmasa, phone bo‘yicha ham tekshirib ko‘ramiz (xohlasangiz olib tashlaysiz)
         if not client:
-            client = client.objects.filter(phone_number=phone).first()
+            client = Client.objects.filter(phone_number=phone).first()
 
-        filial = Filial.objects.filter(region_id=region_id, district_id=district_id).first()
+        filial = Filial.objects.filter(region_id=region_id).first()
         if not filial:
             filial = None
 
