@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from restapp.serializers import TelegramRegisterSerializer, TelegramTokenSerializer
+from sales.models import Client
 
 User = get_user_model()
 
@@ -14,7 +15,64 @@ def _check_secret(request) -> bool:
     secret = request.headers.get("X-TG-SECRET")
     return bool(secret) and secret == "change-me-strong-secret"
 
-class TelegramRegisterView(APIView):
+
+class TelegramRegisterClientView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        if not _check_secret(request):
+            return Response({"detail": "Unauthorized (Error secret key"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        ser = TelegramRegisterSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+
+        telegram_id = data["telegram_id"]
+        phone = data["phone_number"].strip()
+        full_name = data["full_name"].strip()
+        region_id = data["region_id"]
+        district_id = data["district_id"]
+
+        # 1) Avval telegram_id bo‘yicha topamiz
+        client = Client.objects.filter(telegram_id=telegram_id).first()
+
+        # 2) Agar topilmasa, phone bo‘yicha ham tekshirib ko‘ramiz (xohlasangiz olib tashlaysiz)
+        if not client:
+            client = client.objects.filter(phone_number=phone).first()
+
+        created = False
+        if not client:
+            created = True
+            client = User(
+                telegram_id=telegram_id,
+                phone_number=phone,
+                full_name=full_name,
+                region_id=region_id,     # sizda region maydoni "Company"
+                district_id=district_id,
+                is_active=False,
+            )
+            client.save()
+        else:
+            # update
+            client.telegram_id = telegram_id
+            client.phone_number = phone
+            client.full_name = full_name
+            client.region_id = region_id
+            client.district_id = district_id
+            client.is_active = False
+            client.save(update_fields=[
+                "telegram_id", "phone_number", "full_name", "region", "district", "is_active"
+            ])
+
+        return Response({
+            "ok": True,
+            "created": created,
+            "client_id": client.id,
+        })
+
+
+
+class TelegramRegisterUserView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
