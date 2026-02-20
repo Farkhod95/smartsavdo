@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'corsheaders',
-    'inventory',
+    'inventory.apps.InventoryConfig',
     'suppliers',
     'accounts',
     'sales',

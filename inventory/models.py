@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 
 from accounts.models import Filial, Sklad
@@ -204,6 +204,21 @@ class Product(BaseModel):
 
     def __str__(self):
         return f"Product #{self.pk}" if self.pk else "Product"
+
+    def recalc_count_from_stocks(self, save: bool = True):
+        total = (
+            self.product_stocks
+            .filter(product_id=self.pk)
+            .aggregate(s=Sum('count'))
+            .get('s')
+        )
+        total = int(total or 0)
+
+        if self.count != total:
+            self.count = total
+            if save:
+                self.save(update_fields=['count'])
+        return total
 
 
 class ProductHistory(BaseModel):
