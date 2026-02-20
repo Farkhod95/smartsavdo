@@ -3,7 +3,7 @@ from django.urls import re_path, path
 from .views.country import CountryView, CountryDetailView, CountryFieldInfoView
 from .views.currency import CurrencyView, CurrencyDetailView, CurrencyFieldInfoView
 from .views.district import DistrictView, DistrictDetailView, DistrictFieldInfoView, DistrictViewList
-from .views.filial import FilialView, FilialDetailView, FilialFieldInfoView
+from .views.filial import FilialView, FilialDetailView, FilialFieldInfoView, FilialSelfView
 from .views.filial_account import FilialAccountView, FilialAccountDetailView, FilialAccountFieldInfoView
 from .views.import_country import CountryFileImportView
 from .views.region import RegionView, RegionDetailView, RegionFieldInfoView, RegionViewList
@@ -27,6 +27,7 @@ urlpatterns = [
     re_path(r'^district/telegram', DistrictViewList.as_view(), name='district_public_view'),
 
     re_path(r'^filial$', FilialView.as_view(), name='filials_view'),
+    path('filial/self', FilialSelfView.as_view(), name='filials_self_view'),
     path('filial/<int:pk>', FilialDetailView.as_view(), name='filials_detail_view'),
     path('filial/fields', FilialFieldInfoView.as_view(), name='filial_fields_info'),
 

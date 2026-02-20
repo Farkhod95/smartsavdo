@@ -66,7 +66,7 @@ class User(AbstractUser):
     email = models.EmailField(_('email address'), blank=True, null=True, help_text=_("Email manzili"))
     date_joined = models.DateTimeField(_('Date joined'), auto_now_add=True, help_text=_("Ro‘yxatdan o‘tgan sana"))
     password = models.CharField(max_length=255, null=True, blank=True, help_text=_("Parol"))
-    filials = models.ManyToManyField('accounts.Filial', blank=True, related_name='user_company',
+    filials = models.ManyToManyField('accounts.Filial', blank=True, related_name='user_filials',
                                        verbose_name=_('Fillial'))
     order_filial = models.ForeignKey("accounts.Filial", related_name='user_filial', on_delete=models.SET_NULL, null=True,
                                help_text=_("Buyurtma Fillial"))

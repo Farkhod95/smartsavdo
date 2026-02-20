@@ -48,6 +48,25 @@ class FilialViewList(ListCreateAPIView):
         return Filial.objects.filter(is_delete=False)
 
 
+class FilialSelfView(ListCreateAPIView):
+    serializer_class = FilialListSerializer
+    pagination_class = ResultsSetPagination
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = FilialFilter
+    search_fields = ('name', 'phone_number', 'address')
+    ordering = ['pk']
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        user = self.request.user
+        return (
+            Filial.objects
+            .filter(is_delete=False, user_filials=user)  # related_name='user_company'
+            .distinct()
+            .order_by('pk')
+        )
+
+
 class FilialView(ListCreateAPIView):
     serializer_class = FilialListSerializer
     pagination_class = ResultsSetPagination
