@@ -78,6 +78,31 @@ class TelegramRegisterClientView(APIView):
         })
 
 
+class TelegramTokenClientView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        if not _check_secret(request):
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        ser = TelegramTokenSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        telegram_id = ser.validated_data["telegram_id"]
+
+        client = Client.objects.filter(telegram_id=telegram_id).first()
+
+        if not client:
+            return Response({
+                "status": False,
+                "client_id": None,
+            })
+
+        return Response({
+            "status": True,
+            "client_id": client.id,
+        })
+
+
 class TelegramRegisterUserView(APIView):
     permission_classes = [AllowAny]
 

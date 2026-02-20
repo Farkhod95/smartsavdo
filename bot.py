@@ -123,24 +123,24 @@ async def api_post(session: aiohttp.ClientSession, path: str, payload: dict) -> 
 
 async def has_user_by_telegram_id(telegram_id: int) -> bool:
     """
-    Eng ishonchli tekshiruv: token endpoint'iga uramiz.
-    - 200 -> user bor
-    - 404 -> user yo'q
-    - 401 -> secret xato (bu holatni alohida ko'rsatamiz)
+    /auth/telegram/token endpointi:
+    - 200 + {"status": True}  -> user bor
+    - 200 + {"status": False} -> user yo'q
+    - 401 -> secret xato (api_post _error=True qaytaradi)
+    - boshqa 4xx/5xx -> xatolik
     """
     async with aiohttp.ClientSession() as session:
         resp = await api_post(session, "/auth/telegram/token", {"telegram_id": telegram_id})
 
+    # api_post: HTTP xato bo'lsa -> {"_error": True, "status": code, "data": ...}
     if resp.get("_error"):
-        status = resp.get("status")
-        if status == 404:
-            return False
-        if status == 401:
-            # secret noto'g'ri bo'lsa bot doim registerga o'tib ketmasin
+        status_code = resp.get("status")
+        if status_code == 401:
             raise RuntimeError("TG_SECRET noto‘g‘ri yoki backend secret tekshiryapti (401).")
-        # boshqa xatolar: 500 va hokazo
-        raise RuntimeError(f"User check xato: {status} {str(resp.get('data'))[:200]}")
-    return True
+        raise RuntimeError(f"User check xato: {status_code} {str(resp.get('data'))[:200]}")
+
+    # normal (200) javob: {"status": True/False, "client_id": ...}
+    return bool(resp.get("status"))
 
 
 
