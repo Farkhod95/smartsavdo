@@ -223,7 +223,7 @@ class Product(BaseModel):
 
 
 class ProductHistory(BaseModel):
-    date = models.DateField(_('Date'), default=timezone.now(), null=True, blank=True, help_text=_("Kirim sanasi"))
+    date = models.DateField(_('Date'), default=timezone.localdate, null=True, blank=True, help_text=_("Kirim sanasi"))
     reserve_limit = models.IntegerField(_('Reserve limit'), null=True, blank=True, help_text=_("Zaxira limiti (nechta qolganda ogohlantirishi)"))
     product = models.ForeignKey(Product, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product bilan bog'lanish"))
     filial = models.ForeignKey(Filial, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True,

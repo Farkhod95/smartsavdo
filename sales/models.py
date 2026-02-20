@@ -81,7 +81,7 @@ class OrderHistory(BaseModel):
     currency = models.ForeignKey(Currency, related_name='order_histories', on_delete=models.SET_NULL, null=True,
                                  blank=True, help_text=_("Valyuta bilan bog'lanish"))
     exchange_rate = models.DecimalField(_('Exchange rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Kurs"))
-    date = models.DateField(_('Date'), default=timezone.now, null=True, blank=True, help_text=_("Sana"))
+    date = models.DateField(_('Date'), default=timezone.localdate, null=True, blank=True, help_text=_("Sana"))
     note = models.TextField(_('Note'), null=True, blank=True, help_text=_("Izoh"))
     all_profit_dollar = models.DecimalField(_('All profit (USD)'), max_digits=20, decimal_places=2, default=0, help_text=_("Shu buyurtmadagi foyda"))
     total_debt_client = models.DecimalField(_('Total client debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Mijoz qarzi"))
@@ -123,7 +123,7 @@ class VozvratOrder(BaseModel):
     client = models.ForeignKey(Client, related_name='vozvrat_orders', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Client bilan bog'lanish"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='vozvrat_orders', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Jarayonni amalga oshirgan hodim (User)"))
     exchange_rate = models.DecimalField(_('Exchange rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Kurs"))
-    date = models.DateField(_('Date'), default=timezone.now(), null=True, blank=True, help_text=_("Sana"))
+    date = models.DateField(_('Date'), default=timezone.localdate, null=True, blank=True, help_text=_("Sana"))
     note = models.TextField(_('Note'), null=True, blank=True, help_text=_("Izoh"))
     old_total_debt_client = models.DecimalField(_('Old total debt client'), max_digits=20, decimal_places=2, default=0, help_text=_("Mijozning eski qarzi"))
     total_debt_client = models.DecimalField(_('Total debt client'), max_digits=20, decimal_places=2, default=0, help_text=_("Mijoz qarzi"))
