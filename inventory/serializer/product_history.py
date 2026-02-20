@@ -59,6 +59,7 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
         Ikkalasi ham bo'lmasa xato.
         """
         filial = attrs.get('filial')
+        sklad = attrs.get('sklad')
         invoice = attrs.get('purchase_invoice')
 
         if not filial:
@@ -69,10 +70,13 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
                     'filial': "Filial yuborilishi kerak yoki purchase_invoice ichida filial bo‘lishi shart."
                 })
 
-        if not attrs.get('sklad'):
-            raise serializers.ValidationError({
-                'sklad': "Sklad majburiy."
-            })
+        if not sklad:
+            if invoice and getattr(invoice, 'sklad_id', None):
+                attrs['sklad'] = invoice.sklad
+            else:
+                raise serializers.ValidationError({
+                    'sklad': "Sklad yuborilishi kerak yoki purchase_invoice ichida sklad bo‘lishi shart."
+                })
         return attrs
 
     @transaction.atomic
