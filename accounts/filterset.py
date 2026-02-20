@@ -43,6 +43,7 @@ class FilialFilter(FilterSet):
             'phone_number': ['exact', 'icontains'],
             'is_active': ['exact'],
             'is_delete': ['exact'],
+            'is_head_office': ['exact'],
         }
 
 

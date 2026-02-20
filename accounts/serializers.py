@@ -103,7 +103,7 @@ class FilialListSerializer(serializers.ModelSerializer):
             'region', 'region_detail',
             'district', 'district_detail',
             'address', 'phone_number', 'logo',
-            'is_active', 'is_delete'
+            'is_active', 'is_delete', 'is_head_office'
         )
 
 
@@ -113,7 +113,7 @@ class FilialSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'region', 'district',
             'address', 'phone_number', 'logo',
-            'is_active', 'is_delete'
+            'is_active', 'is_delete', 'is_head_office'
         )
 
 

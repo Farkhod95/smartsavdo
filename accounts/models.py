@@ -64,6 +64,7 @@ class Filial(BaseModel):
     logo = models.ImageField(upload_to='filial/logo/%Y/%m/%d', null=True, blank=True, verbose_name=_('Logo'),
                              help_text=_("Filial logotipi (ixtiyoriy)"))
 
+    is_head_office = models.BooleanField(default=True, help_text=_("Is head office?"))
     is_active = models.BooleanField(default=True, help_text=_("Is active?"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
 

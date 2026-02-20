@@ -27,8 +27,8 @@ class DistrictAdmin(admin.ModelAdmin):
 
 @admin.register(Filial)
 class FilialAdmin(admin.ModelAdmin):
-    list_display = ('name', 'region', 'district', 'phone_number', 'is_active', 'is_delete')
-    fields = ('name', 'region', 'district', 'address', 'phone_number', 'logo', 'is_active', 'is_delete')
+    list_display = ('name', 'region', 'district', 'phone_number', 'is_active', 'is_delete', 'is_head_office')
+    fields = ('name', 'region', 'district', 'address', 'phone_number', 'logo', 'is_active', 'is_delete', 'is_head_office')
     search_fields = ('name', 'phone_number')
     list_filter = ('is_active', 'is_delete', 'region', 'district')
 

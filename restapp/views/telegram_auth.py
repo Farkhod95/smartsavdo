@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from accounts.models import Filial
 from restapp.serializers import TelegramRegisterSerializer, TelegramTokenSerializer
 from sales.models import Client
 
@@ -35,20 +36,25 @@ class TelegramRegisterClientView(APIView):
 
         # 1) Avval telegram_id bo‘yicha topamiz
         client = Client.objects.filter(telegram_id=telegram_id).first()
-
         # 2) Agar topilmasa, phone bo‘yicha ham tekshirib ko‘ramiz (xohlasangiz olib tashlaysiz)
         if not client:
             client = client.objects.filter(phone_number=phone).first()
 
+        filial = Filial.objects.filter(region_id=region_id, district_id=district_id).first()
+        if not filial:
+            filial = None
+
+
         created = False
         if not client:
             created = True
-            client = User(
+            client = Client(
                 telegram_id=telegram_id,
                 phone_number=phone,
                 full_name=full_name,
                 region_id=region_id,     # sizda region maydoni "Company"
                 district_id=district_id,
+                filial=filial,
                 is_active=False,
             )
             client.save()
@@ -59,6 +65,7 @@ class TelegramRegisterClientView(APIView):
             client.full_name = full_name
             client.region_id = region_id
             client.district_id = district_id
+            client.filial=filial
             client.is_active = False
             client.save(update_fields=[
                 "telegram_id", "phone_number", "full_name", "region", "district", "is_active"
@@ -69,7 +76,6 @@ class TelegramRegisterClientView(APIView):
             "created": created,
             "client_id": client.id,
         })
-
 
 
 class TelegramRegisterUserView(APIView):
