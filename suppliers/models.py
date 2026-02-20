@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from accounts.models import Filial, Sklad, Region, District
 from restapp.models import BaseModel
@@ -41,7 +42,7 @@ class SupplierAccount(BaseModel):
 class SupplierDebtRepayment(BaseModel):
     supplier = models.ForeignKey(Supplier, related_name='debt_repayments', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Supplier bilan bog'lanish"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supplier_debt_repayments', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Xodim (User)"))
-    date = models.DateField(_('Date'), null=True, blank=True, help_text=_("To'lov sanasi"))
+    date = models.DateField(_('Date'), default=timezone.now(), null=True, blank=True, help_text=_("To'lov sanasi"))
     total_debt_old = models.DecimalField(_('Old debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Eski qarz"))
     total_debt = models.DecimalField(_('Total debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Qolgan qarz"))
     summa_total_dollar = models.DecimalField(_('Total paid (USD)'), max_digits=20, decimal_places=2, default=0, help_text=_("Umumiy to'langan qarz dollarda"))
@@ -65,7 +66,7 @@ class PurchaseInvoice(BaseModel):
     supplier = models.ForeignKey(Supplier, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Supplier bilan bog'lanish"))
     filial = models.ForeignKey(Filial, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))
     sklad = models.ForeignKey(Sklad, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Sklad bilan bog'lanish"))
-    date = models.DateField(_('Date'), null=True, blank=True, help_text=_("Faktura sanasi"))
+    date = models.DateField(_('Date'), default=timezone.now(), null=True, blank=True, help_text=_("Faktura sanasi"))
     total_debt_old = models.DecimalField(_('Old debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Eski qarz"))
     total_debt = models.DecimalField(_('Total debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Qolgan qarz"))
     total_debt_today = models.DecimalField(_('Today debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Bugungi qolgan qarz"))

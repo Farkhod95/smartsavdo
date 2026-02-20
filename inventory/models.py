@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from accounts.models import Filial, Sklad
 from restapp.models import BaseModel
@@ -222,7 +223,7 @@ class Product(BaseModel):
 
 
 class ProductHistory(BaseModel):
-    date = models.DateField(_('Date'), null=True, blank=True, help_text=_("Kirim sanasi"))
+    date = models.DateField(_('Date'), default=timezone.now(), null=True, blank=True, help_text=_("Kirim sanasi"))
     reserve_limit = models.IntegerField(_('Reserve limit'), null=True, blank=True, help_text=_("Zaxira limiti (nechta qolganda ogohlantirishi)"))
     product = models.ForeignKey(Product, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Product bilan bog'lanish"))
     filial = models.ForeignKey(Filial, related_name='product_histories', on_delete=models.SET_NULL, null=True, blank=True,

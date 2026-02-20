@@ -1,3 +1,4 @@
+import django_filters
 from django_filters import FilterSet
 
 from suppliers.models import PurchaseInvoice, Supplier, SupplierAccount, SupplierDebtRepayment
@@ -28,6 +29,9 @@ class SupplierAccountFilter(FilterSet):
 
 
 class SupplierDebtRepaymentFilter(FilterSet):
+    date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+
     class Meta:
         model = SupplierDebtRepayment
         fields = {
@@ -46,6 +50,9 @@ class SupplierDebtRepaymentFilter(FilterSet):
 
 
 class PurchaseInvoiceFilter(FilterSet):
+    date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+
     class Meta:
         model = PurchaseInvoice
         fields = {

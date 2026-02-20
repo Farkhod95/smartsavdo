@@ -1,3 +1,4 @@
+import django_filters
 from django_filters import FilterSet
 from inventory.models import Unit, ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductHistory, \
     ProductImage, ProductBranchCategory, ProductStock
@@ -90,6 +91,9 @@ class ProductFilter(FilterSet):
 
 
 class ProductHistoryFilter(FilterSet):
+    date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+
     class Meta:
         model = ProductHistory
         fields = {

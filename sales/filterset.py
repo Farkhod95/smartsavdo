@@ -1,3 +1,4 @@
+import django_filters
 from django_filters import FilterSet
 from sales.models import Client, ClientKeshbekHistory, Order, OrderHistory, OrderHistoryProduct, VozvratOrder
 
@@ -58,6 +59,9 @@ class OrderFilter(FilterSet):
 
 
 class OrderHistoryFilter(FilterSet):
+    date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+
     class Meta:
         model = OrderHistory
         fields = {
@@ -121,6 +125,9 @@ class OrderHistoryProductFilter(FilterSet):
 
 
 class VozvratOrderFilter(FilterSet):
+    date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+
     class Meta:
         model = VozvratOrder
         fields = {
