@@ -50,19 +50,47 @@ class ExpenseViewList(ListCreateAPIView):
 class ExpenseView(ListCreateAPIView):
     serializer_class = ExpenseListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExpenseFilter
     search_fields = ('filial__name', 'category__name', 'note')
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return Expense.objects.filter(is_delete=False)
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            Expense.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'category', 'employee', 'created_by')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = ExpenseSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        filial = serializer.validated_data.get('filial') or request.user.order_filial
+
+        if filial is None:
+            return Response(
+                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # user shu filialda ishlaydimi?
+        if not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun xarajat kiritish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, filial=filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ExpenseDetailView(RetrieveUpdateDestroyAPIView):

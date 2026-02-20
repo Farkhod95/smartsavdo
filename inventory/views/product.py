@@ -66,17 +66,23 @@ class ProductViewList(ListCreateAPIView):
 class ProductView(ListCreateAPIView):
     serializer_class = ProductListOneImageSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
     search_fields = ('filial__name', 'branch__name', 'model__name', 'type__name', "size__name")
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
         images_qs = ProductImage.objects.only('id', 'product_id', 'file').order_by('id')
 
         qs = (
             Product.objects
-            .filter(is_delete=False)
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
             .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
             .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
         )
@@ -85,7 +91,24 @@ class ProductView(ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = ProductSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=request.user)
+
+        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        filial = serializer.validated_data.get('filial') or request.user.order_filial
+
+        if filial is None:
+            return Response(
+                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # user shu filialda ishlaydimi?
+        if not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun product yaratish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, filial=filial)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 

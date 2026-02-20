@@ -50,19 +50,47 @@ class ExchangeRateViewList(ListCreateAPIView):
 class ExchangeRateView(ListCreateAPIView):
     serializer_class = ExchangeRateListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExchangeRateFilter
     search_fields = ('filial__name',)
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return ExchangeRate.objects.all()
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            ExchangeRate.objects
+            .filter(filial_id__in=user_filial_ids)
+            .select_related('filial')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = ExchangeRateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        filial = serializer.validated_data.get('filial') or request.user.order_filial
+
+        if filial is None:
+            return Response(
+                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # user shu filialda ishlaydimi?
+        if not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun kurs qo‘shish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, filial=filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ExchangeRateDetailView(RetrieveUpdateDestroyAPIView):

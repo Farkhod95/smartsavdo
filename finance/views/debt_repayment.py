@@ -57,13 +57,23 @@ class DebtRepaymentViewList(ListCreateAPIView):
 
 class DebtRepaymentGroupedByDateView(ListAPIView):
     serializer_class = DebtRepaymentListSerializer
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
     ordering = ['-date', '-pk']
 
     def get_queryset(self) -> QuerySet:
-        return DebtRepayment.objects.filter(is_delete=False).order_by('-date', '-pk')
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        return (
+            DebtRepayment.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'client', 'employee', 'created_by')
+            .order_by('-date', '-pk')
+        )
 
     def _d(self, v) -> Decimal:
         # serializer ko‘pincha string qaytaradi, shuni Decimalga o‘tkazamiz
@@ -128,19 +138,46 @@ class DebtRepaymentGroupedByDateView(ListAPIView):
 class DebtRepaymentView(ListCreateAPIView):
     serializer_class = DebtRepaymentListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
     ordering = ['-pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return DebtRepayment.objects.filter(is_delete=False)
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            DebtRepayment.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'client', 'employee', 'created_by')
+            .order_by('-pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = DebtRepaymentAccountingSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # Accounting serializer filialni validated_data ga qo'ygan bo'lishi mumkin
+        filial = serializer.validated_data.get('filial') or request.user.order_filial
+
+        if filial is None:
+            return Response(
+                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun qarz to‘lovi qilish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, filial=filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class DebtRepaymentDetailView(RetrieveUpdateDestroyAPIView):
@@ -197,6 +234,8 @@ class DebtRepaymentDetailView(RetrieveUpdateDestroyAPIView):
 class DebtRepaymentKarzinkaView(ListCreateAPIView):
     serializer_class = DebtRepaymentListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
@@ -204,7 +243,15 @@ class DebtRepaymentKarzinkaView(ListCreateAPIView):
     http_method_names = ['get']
 
     def get_queryset(self):
-        return DebtRepayment.objects.filter(is_delete=True)
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        return (
+            DebtRepayment.objects
+            .filter(is_delete=True, filial_id__in=user_filial_ids)
+            .select_related('filial', 'client', 'employee', 'created_by')
+            .order_by('-pk')
+        )
 
 
 class DebtRepaymentDetailKarzinkaView(RetrieveUpdateDestroyAPIView):

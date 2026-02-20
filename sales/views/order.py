@@ -50,19 +50,50 @@ class OrderViewList(ListCreateAPIView):
 class OrderView(ListCreateAPIView):
     serializer_class = OrderListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = OrderFilter
     search_fields = ('number_of_order', 'client__full_name', 'filial__name')
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return Order.objects.filter(is_delete=False)
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            Order.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('client', 'filial')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = OrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user, filial=self.request.user.filial)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # 1) Agar requestda filial kelgan bo'lsa: userga tegishliligini tekshiramiz
+        filial = serializer.validated_data.get('filial')
+
+        # 2) Agar filial kelmasa: user.order_filial ni default qilib qo'yamiz
+        if filial is None:
+            filial = request.user.order_filial
+
+        if filial is None:
+            return Response(
+                {"filial": "Filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun order yaratish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, filial=filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class OrderDetailView(RetrieveUpdateDestroyAPIView):

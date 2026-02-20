@@ -50,19 +50,39 @@ class ClientViewList(ListCreateAPIView):
 class ClientView(ListCreateAPIView):
     serializer_class = ClientListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ClientFilter
     search_fields = ('full_name', 'phone_number', 'telegram_id')
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return Client.objects.filter(is_delete=False)
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            Client.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'region', 'district')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = ClientSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # user faqat o'zi ishlaydigan filialga client qo'sha olsin
+        filial = serializer.validated_data.get('filial')
+        if filial and not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filialga client qo‘shish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ClientDetailView(RetrieveUpdateDestroyAPIView):

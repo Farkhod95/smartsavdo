@@ -50,19 +50,46 @@ class PurchaseInvoiceViewList(ListCreateAPIView):
 class PurchaseInvoiceView(ListCreateAPIView):
     serializer_class = PurchaseInvoiceListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = PurchaseInvoiceFilter
     search_fields = ('supplier__name', 'filial__name', 'sklad__name', 'employee__username')
     ordering = ['pk']
 
     def get_queryset(self):
-        return PurchaseInvoice.objects.all()
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            PurchaseInvoice.objects
+            .filter(filial_id__in=user_filial_ids)
+            .select_related('supplier', 'filial', 'sklad', 'employee')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = PurchaseInvoiceSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # (tavsiya) user faqat o'z filialiga invoice yaratsin
+        filial = serializer.validated_data.get('filial')
+        if filial and not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun faktura yaratish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # (ixtiyoriy) sklad ham filialga tegishli bo'lsa, tekshiruv:
+        sklad = serializer.validated_data.get('sklad')
+        if sklad and hasattr(sklad, 'filial_id') and filial and sklad.filial_id != filial.id:
+            return Response(
+                {"detail": "Tanlangan sklad bu filialga tegishli emas."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer.save(created_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PurchaseInvoiceDetailView(RetrieveUpdateDestroyAPIView):

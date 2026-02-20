@@ -50,19 +50,40 @@ class ClientKeshbekHistoryViewList(ListCreateAPIView):
 class ClientKeshbekHistoryView(ListCreateAPIView):
     serializer_class = ClientKeshbekHistoryListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ClientKeshbekHistoryFilter
     search_fields = ('client__full_name', 'order_history')
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return ClientKeshbekHistory.objects.all()
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            ClientKeshbekHistory.objects
+            .filter(client__isnull=False, client__filial_id__in=user_filial_ids)
+            .select_related('client', 'client__filial')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = ClientKeshbekHistorySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # (tavsiya) user faqat o'z filialidagi clientga keshbek history qo'sha olsin
+        client = serializer.validated_data.get('client')
+        if client and client.filial_id:
+            if not request.user.filials.filter(id=client.filial_id).exists():
+                return Response(
+                    {"detail": "Sizda bu client (filial) bo‘yicha amal qilish huquqi yo‘q."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        serializer.save(created_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ClientKeshbekHistoryDetailView(RetrieveUpdateDestroyAPIView):

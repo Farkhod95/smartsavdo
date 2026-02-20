@@ -51,19 +51,39 @@ class SupplierDebtRepaymentViewList(ListCreateAPIView):
 class SupplierDebtRepaymentView(ListCreateAPIView):
     serializer_class = SupplierDebtRepaymentListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierDebtRepaymentFilter
     search_fields = ('supplier__name', 'employee__username')
     ordering = ['pk']
 
     def get_queryset(self):
-        return SupplierDebtRepayment.objects.all()
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            SupplierDebtRepayment.objects
+            .filter(supplier__isnull=False, supplier__filial_id__in=user_filial_ids)
+            .select_related('supplier', 'supplier__filial', 'employee')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = SupplierDebtRepaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # (tavsiya) user o'zi ishlaydigan filialdagi supplier uchun to'lov qilyaptimi - tekshiruv
+        supplier = serializer.validated_data.get('supplier')
+        if supplier and supplier.filial_id:
+            if not request.user.filials.filter(id=supplier.filial_id).exists():
+                return Response(
+                    {"detail": "Sizda bu supplier (filial) bo‘yicha to‘lov qilish huquqi yo‘q."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        serializer.save(created_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SupplierDebtRepaymentDetailView(RetrieveUpdateDestroyAPIView):

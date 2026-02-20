@@ -143,16 +143,22 @@ class OrderHistorySelfView(ListCreateAPIView):
 class OrderHistoryView(ListCreateAPIView):
     serializer_class = OrderHistoryListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = OrderHistoryFilter
     search_fields = ('order__id', 'client__full_name', 'employee__username', 'note', 'driver_info')
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
         # tezlik uchun (serializer detail lar N+1 bo'lib ketmasin)
         return (
             OrderHistory.objects
-            .filter(is_delete=False)
+            .filter(is_delete=False, order_filial_id__in=user_filial_ids)
             .select_related('order', 'client', 'order_filial', 'created_by', 'employee')
         )
 
@@ -224,12 +230,28 @@ class OrderHistoryView(ListCreateAPIView):
 
         return self.get_paginated_response(results)
 
-
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = OrderHistorySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user, order_filial=self.request.user.order_filial)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # requestda order_filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        order_filial = serializer.validated_data.get('order_filial') or request.user.order_filial
+
+        if order_filial is None:
+            return Response(
+                {"order_filial": "order_filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # user shu filialda ishlaydimi?
+        if not request.user.filials.filter(id=order_filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun order history yaratish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, order_filial=order_filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class OrderHistorySellView(RetrieveUpdateDestroyAPIView):
@@ -300,9 +322,12 @@ class OrderHistoryDetailView(RetrieveUpdateDestroyAPIView):
 
 # ============================== Karzinka  ===============================
 
+
 class OrderHistoryKarzinkaView(ListCreateAPIView):
     serializer_class = OrderHistoryListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = OrderHistoryFilter
     search_fields = ('order__id', 'client__full_name', 'employee__username', 'note', 'driver_info')
@@ -310,10 +335,13 @@ class OrderHistoryKarzinkaView(ListCreateAPIView):
     http_method_names = ['get']
 
     def get_queryset(self):
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
         # tezlik uchun (serializer detail lar N+1 bo'lib ketmasin)
         return (
             OrderHistory.objects
-            .filter(is_delete=True)
+            .filter(is_delete=True, order_filial_id__in=user_filial_ids)
             .select_related('order', 'client', 'order_filial', 'created_by', 'employee')
         )
 
@@ -372,8 +400,6 @@ class OrderHistoryKarzinkaView(ListCreateAPIView):
         for date_str, rows in grouped.items():
             n = len(rows)
 
-            # rows tartibi: yuqorida yangisi (biz -pk qilganmiz)
-            # shuning uchun birinchi ko'rinadigan item = n, oxiri = 1
             for idx, r in enumerate(rows):
                 r['number'] = n - idx  # N..1 (har date uchun alohida)
 

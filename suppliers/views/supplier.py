@@ -50,19 +50,39 @@ class SupplierViewList(ListCreateAPIView):
 class SupplierView(ListCreateAPIView):
     serializer_class = SupplierListSerializer
     pagination_class = ResultsSetPagination
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierFilter
     search_fields = ('name', 'inn', 'address')
     ordering = ['pk']
 
     def get_queryset(self):
-        return Supplier.objects.filter(is_delete=False)
+        user = self.request.user
 
-    def post(self, request):
+        # userga tegishli filiallar
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        return (
+            Supplier.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'region', 'district')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = SupplierSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # (ixtiyoriy, lekin tavsiya) user o'zi ishlaydigan filialga supplier qo'shayotganini tekshirish
+        filial_id = serializer.validated_data.get('filial').id if serializer.validated_data.get('filial') else None
+        if filial_id and not request.user.filials.filter(id=filial_id).exists():
+            return Response(
+                {"detail": "Sizda bu filialga supplier qo‘shish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SupplierDetailView(RetrieveUpdateDestroyAPIView):

@@ -56,13 +56,23 @@ class VozvratOrderViewList(ListCreateAPIView):
 
 class VozvratOrderGroupedByDateView(ListAPIView):
     serializer_class = VozvratOrderListSerializer
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = VozvratOrderFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
     ordering = ['-created_time', '-pk']  # ichida tartib
 
     def get_queryset(self):
-        return VozvratOrder.objects.filter(is_delete=False).order_by('-created_time', '-pk')
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        return (
+            VozvratOrder.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'client', 'employee', 'created_by')
+            .order_by('-created_time', '-pk')
+        )
 
     def _d(self, v) -> Decimal:
         if v in (None, "", "null"):
@@ -81,7 +91,7 @@ class VozvratOrderGroupedByDateView(ListAPIView):
         for row in ser.data:
             # ✅ group_date: date bo‘lsa o‘sha, bo‘lmasa created_time.date()
             if row.get("date"):
-                group_date = row["date"]  # already YYYY-MM-DD
+                group_date = row["date"]  # YYYY-MM-DD
             else:
                 ct = row.get("created_time")  # ISO datetime
                 group_date = (str(ct)[:10] if ct else "no-date")
@@ -120,25 +130,57 @@ class VozvratOrderGroupedByDateView(ListAPIView):
             for k, v in g["totals"].items():
                 g["totals"][k] = f"{self._d(v):.2f}"
 
-        return Response(list(grouped.values()))
+        # ✅ grouped date larni yangi -> eski qilib chiqarish (ixtiyoriy, odatda kerak)
+        results = list(grouped.values())
+        results.sort(key=lambda x: x["date"], reverse=True)
+
+        return Response(results)
 
 
 class VozvratOrderView(ListCreateAPIView):
     serializer_class = VozvratOrderListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = VozvratOrderFilter
     search_fields = ('client__full_name', 'employee__username', 'note')
     ordering = ['pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return VozvratOrder.objects.filter(is_delete=False)
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
-    def post(self, request):
+        return (
+            VozvratOrder.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'client', 'employee', 'created_by')
+            .order_by('pk')
+        )
+
+    def post(self, request, *args, **kwargs):
         serializer = VozvratOrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(created_by=self.request.user)
-        return Response(serializer.data, status.HTTP_201_CREATED)
+
+        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        filial = serializer.validated_data.get('filial') or request.user.order_filial
+
+        if filial is None:
+            return Response(
+                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # user shu filialda ishlaydimi?
+        if not request.user.filials.filter(id=filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun vozvrat order yaratish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer.save(created_by=request.user, filial=filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class VozvratOrderDetailView(RetrieveUpdateDestroyAPIView):
