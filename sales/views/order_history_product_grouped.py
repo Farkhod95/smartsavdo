@@ -20,8 +20,8 @@ class OrderHistoryProductByModelView(APIView):
             OrderHistory.objects.select_related(
                 "order", "client", "employee", "order_filial", "currency", "created_by"
             ),
-            pk=pk,
-            is_delete=False
+            pk=pk
+            # is_delete=False
         )
         order_history_data = OrderHistoryListSerializer(order_history, context={"request": request}).data
 
