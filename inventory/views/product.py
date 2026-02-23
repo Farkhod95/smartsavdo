@@ -12,7 +12,7 @@ from inventory.filterset import ProductFilter
 from inventory.models import Product, ProductImage
 from inventory.serializer.product import ProductListSerializer, ProductSerializer, ProductListOneImageSerializer, \
     ProductImagePublicSerializer
-from restapp.pagination import ResultsSetPagination, ResultsSetGroupPagination
+from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
 
@@ -115,7 +115,7 @@ class ProductView(ListCreateAPIView):
 
 class ProductGroupByModelList(ListCreateAPIView):
     serializer_class = ProductListOneImageSerializer
-    pagination_class = ResultsSetGroupPagination
+    pagination_class = ResultsSetPagination
     permission_classes = [IsAuthenticated]
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
@@ -153,7 +153,7 @@ class ProductGroupByModelList(ListCreateAPIView):
         grouped = self._group_by_model(serializer.data)
 
         # paginator count/next/prev saqlanadi, faqat results = grouped bo'ladi
-        return self.paginator.get_grouped_response(grouped)
+        return self.get_paginated_response(grouped)
 
     def _group_by_model(self, items):
         """
