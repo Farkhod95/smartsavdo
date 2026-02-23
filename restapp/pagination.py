@@ -31,3 +31,18 @@ class ResultsSetPagination(PageNumberPagination):
 
 class LargeResultsSetPagination(ResultsSetPagination):
     page_size = 1000
+
+
+class ResultsSetGroupPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 200
+
+    def get_grouped_response(self, grouped_results):
+        return Response({
+            "count": self.page.paginator.count,  # product count (original)
+            "next": self.get_next_link(),
+            "previous": self.get_previous_link(),
+            "group_count": len(grouped_results),  # page ichidagi group count
+            "results": grouped_results,
+        })
