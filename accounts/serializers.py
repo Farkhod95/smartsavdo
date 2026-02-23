@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from users.serializers import UserViewListSerializer
+from users.serializer.user import UserForSerializer
 from .models import Region, District, Country, Filial, FilialAccount, Sklad, Currency, Note
 
 
@@ -205,7 +205,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class NoteListSerializer(serializers.ModelSerializer):
-    created_by_detail = UserViewListSerializer(source='created_by', read_only=True)
+    created_by_detail = UserForSerializer(source='created_by', read_only=True)
 
     class Meta:
         model = Note
