@@ -7,7 +7,7 @@ from django.db.models import F
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -410,6 +410,29 @@ class OrderHistoryKarzinkaView(ListCreateAPIView):
             })
 
         return self.get_paginated_response(results)
+
+
+class OrderHistoryRestoreKarzinkaView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = OrderHistoryListSerializer
+    http_method_names = ['put']  # faqat PUT
+
+    @transaction.atomic
+    def put(self, request, pk: int):
+        user = request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        oh = get_object_or_404(
+            OrderHistory.objects.select_for_update(),
+            pk=pk,
+            is_delete=True,
+            order_filial_id__in=user_filial_ids
+        )
+
+        oh.is_delete = False
+        oh.save(update_fields=['is_delete'])
+
+        return Response(self.get_serializer(oh).data, status=status.HTTP_200_OK)
 
 
 class OrderHistoryDetailKarzinkaView(RetrieveUpdateDestroyAPIView):

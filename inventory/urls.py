@@ -1,7 +1,7 @@
 from django.urls import re_path, path
 
 from inventory.views.product import ProductView, ProductDetailView, ProductFieldInfoView, ProductViewList, \
-    ProductAttachmentsViewList
+    ProductAttachmentsViewList, ProductGroupByModelList
 from inventory.views.product_branch import ProductBranchView, ProductBranchDetailView, ProductBranchFieldInfoView, \
     ProductBranchViewList, ProductBranchSuggestSortingView
 from inventory.views.product_branch_category import ProductBranchCategoryView, ProductBranchCategoryDetailView, \
@@ -57,6 +57,7 @@ urlpatterns = [
     path('product-type-size/fields', ProductTypeSizeFieldInfoView.as_view(), name='product_type_size_fields_info'),
 
     re_path(r'^product$', ProductView.as_view(), name='product_view'),
+    path('product/group-by-model', ProductGroupByModelList.as_view(), name='product_group_by_model'),
     path('product/<int:pk>', ProductDetailView.as_view(), name='product_detail_view'),
     path('product/fields', ProductFieldInfoView.as_view(), name='product_fields_info'),
     path('product/public', ProductViewList.as_view(), name='product_public_info'),

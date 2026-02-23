@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -252,6 +252,37 @@ class DebtRepaymentKarzinkaView(ListCreateAPIView):
             .select_related('filial', 'client', 'employee', 'created_by')
             .order_by('-pk')
         )
+
+
+class DebtRepaymentRestoreKarzinkaView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = DebtRepaymentSerializer  # sizda qaysi serializer bo'lsa shuni qo'ying
+    http_method_names = ['put']
+
+    @transaction.atomic
+    def put(self, request, pk: int):
+        user = request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        dr = get_object_or_404(
+            DebtRepayment.objects.select_for_update().select_related('client', 'filial'),
+            pk=pk,
+            is_delete=True,
+            filial_id__in=user_filial_ids
+        )
+
+        # ixtiyoriy: tasdiqlangan (posted) bo'lsa restore qilishni taqiqlash
+        # agar sizda mantiq shunaqa bo'lsa yoqing, bo'lmasa olib tashlang
+        # if dr.debt_status:
+        #     return Response(
+        #         {"detail": "Tasdiqlangan (debt_status=True) to'lovni karzinkadan restore qilib bo'lmaydi."},
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
+
+        dr.is_delete = False
+        dr.save(update_fields=['is_delete'])
+
+        return Response(self.get_serializer(dr).data, status=status.HTTP_200_OK)
 
 
 class DebtRepaymentDetailKarzinkaView(RetrieveUpdateDestroyAPIView):

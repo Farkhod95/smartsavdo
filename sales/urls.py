@@ -6,7 +6,7 @@ from sales.views.client_keshbek_history import ClientKeshbekHistoryView, ClientK
 from sales.views.order import OrderView, OrderDetailView, OrderFieldInfoView
 from sales.views.order_history import OrderHistoryView, OrderHistoryFieldInfoView, OrderHistoryDetailView, \
     OrderHistorySelfView, OrderHistoryKarzinkaView, OrderHistoryDetailKarzinkaView, OrderHistorySellView, \
-    OrderHistoryEditView
+    OrderHistoryEditView, OrderHistoryRestoreKarzinkaView
 from sales.views.order_history_product import OrderHistoryProductView, OrderHistoryProductDetailView, \
     OrderHistoryProductFieldInfoView, OrderHistoryProductVozvratView
 from sales.views.order_history_product_grouped import OrderHistoryProductByModelView
@@ -36,6 +36,8 @@ urlpatterns = [
     path('order-history/<int:pk>/product-by-model', OrderHistoryProductByModelView.as_view(), name='order_history_product_by_view'),
     path('order-history/fields', OrderHistoryFieldInfoView.as_view(), name='order_history_fields_info'),
     path('order-history/karzinka', OrderHistoryKarzinkaView.as_view(), name='order_history_karzinka_view'),
+    path('order-history/karzinka/<int:pk>/restore', OrderHistoryRestoreKarzinkaView.as_view(),
+         name='order_history_karzinka_restore'),
     path('order-history/karzinka/<int:pk>', OrderHistoryDetailKarzinkaView.as_view(), name='order_history_karzinka_detail_view'),
 
     re_path(r'^vozvrat-order$', VozvratOrderView.as_view(), name='vozvrat_order_view'),
