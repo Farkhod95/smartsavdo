@@ -1,5 +1,6 @@
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from urllib.parse import urlparse, urlunparse
 
 
 class ResultsSetPagination(PageNumberPagination):
@@ -38,11 +39,26 @@ class ResultsSetGroupPagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 200
 
+    def _force_https(self, url: str | None) -> str | None:
+        if not url:
+            return url
+
+        # agar allaqachon https bo'lsa o'zgartirmaymiz
+        parsed = urlparse(url)
+        if parsed.scheme == "https":
+            return url
+
+        # faqat scheme'ni https ga almashtiramiz
+        return urlunparse(parsed._replace(scheme="https"))
+
     def get_grouped_response(self, grouped_results):
+        next_link = self._force_https(self.get_next_link())
+        prev_link = self._force_https(self.get_previous_link())
+
         return Response({
             "count": self.page.paginator.count,  # product count (original)
-            "next": self.get_next_link(),
-            "previous": self.get_previous_link(),
+            "next": next_link,
+            "previous": prev_link,
             "group_count": len(grouped_results),  # page ichidagi group count
             "results": grouped_results,
         })
