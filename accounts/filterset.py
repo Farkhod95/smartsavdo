@@ -1,6 +1,7 @@
+import django_filters
 from django_filters.rest_framework import FilterSet
 
-from accounts.models import District, Region, Country, Filial, FilialAccount, Sklad, Currency
+from accounts.models import District, Region, Country, Filial, FilialAccount, Sklad, Currency, Note
 
 
 class DistrictFilter(FilterSet):
@@ -84,3 +85,16 @@ class CurrencyFilter(FilterSet):
             'name': ['exact', 'icontains'],
             'code': ['exact'],
         }
+
+
+class NoteFilter(FilterSet):
+    title = django_filters.CharFilter(field_name='title', lookup_expr='icontains')
+    text = django_filters.CharFilter(field_name='text', lookup_expr='icontains')
+    date_from = django_filters.DateTimeFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateTimeFilter(field_name='date', lookup_expr='lte')
+    sorting_from = django_filters.NumberFilter(field_name='sorting', lookup_expr='gte')
+    sorting_to = django_filters.NumberFilter(field_name='sorting', lookup_expr='lte')
+
+    class Meta:
+        model = Note
+        fields = ('sorting', 'date', 'status', 'is_delete', 'title', 'text')

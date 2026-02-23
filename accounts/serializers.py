@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Region, District, Country, Filial, FilialAccount, Sklad, Currency
+from .models import Region, District, Country, Filial, FilialAccount, Sklad, Currency, Note
 
 
 # Tarjima asosiy serializeri
@@ -187,3 +187,25 @@ class CurrencyListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Currency
         fields = ('id', 'code', 'name')
+
+
+class NoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Note
+        fields = ('id', 'sorting', 'date', 'title', 'text', 'status', 'is_delete')
+        extra_kwargs = {
+            'sorting': {"required": True},
+            'date': {"required": False, "allow_null": True},
+            'title': {"required": False, "allow_blank": True, "allow_null": True},
+            'text': {"required": False, "allow_blank": True, "allow_null": True},
+            'status': {"required": False, "allow_blank": True, "allow_null": True},
+            'is_delete': {"required": False},
+        }
+
+
+class NoteListSerializer(serializers.ModelSerializer):
+    status_label = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Note
+        fields = ('id', 'sorting', 'date', 'title', 'text', 'status', 'status_label', 'is_delete')

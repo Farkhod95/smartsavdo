@@ -1,6 +1,6 @@
 from django.contrib import admin
 from accounts.models import (
-    District, Region, Country, Filial, FilialAccount, Sklad, Currency
+    District, Region, Country, Filial, FilialAccount, Sklad, Currency, Note
 )
 
 
@@ -54,3 +54,11 @@ class CurrencyAdmin(admin.ModelAdmin):
     list_display = ('code', 'name')
     search_fields = ('code', 'name')
     fields = ('code', 'name')
+
+
+@admin.register(Note)
+class NoteAdmin(admin.ModelAdmin):
+    list_display = ('sorting', 'title', 'status', 'date', 'is_delete')
+    list_filter = ('status', 'is_delete', 'date')
+    search_fields = ('title', 'text')
+    fields = ('sorting', 'date', 'title', 'text', 'status', 'is_delete')

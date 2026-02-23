@@ -134,3 +134,28 @@ class Currency(BaseModel):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class Note(BaseModel):
+    class STATUS(models.TextChoices):
+        NEW = 'new', _('New')
+        DONE = 'done', _('Done')
+        EXPIRED = 'expired', _('Expired')
+
+    sorting = models.IntegerField(_('Sorting'), help_text=_("Sorting"))
+    date = models.DateTimeField(_('Date'), null=True, blank=True, help_text=_("Sana"))
+    title = models.CharField(_('Title'), max_length=255, null=True, blank=True, help_text=_("Sarlavha"))
+    text = models.TextField(_('Address'), null=True, blank=True)
+    status = models.CharField(choices=STATUS.choices, default=STATUS.NEW, max_length=30, null=True, blank=True, help_text=_("Holati"))
+    is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+
+    # reminder flaglar
+    notified_1day = models.BooleanField(default=False, help_text=_("1 kunlik eslatma yuborilganmi"))
+    notified_1hour = models.BooleanField(default=False, help_text=_("1 soatlik eslatma yuborilganmi"))
+
+    class Meta:
+        verbose_name = _('Note')
+        verbose_name_plural = _('Notes')
+
+    def __str__(self):
+        return self.title or f"Note #{self.pk}"

@@ -4,6 +4,8 @@ from django.conf.urls import include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_swagger.views import get_swagger_view
+
+from accounts.view import index
 from restapp.urls import urlpatterns as rest_urlpatterns
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -25,6 +27,7 @@ urlpatterns = [
     path('api/v1/docs/', schema_view),
     path('api/v1/', include('restapp.urls')),
 
+    path('api/v1/deadlines', index),
     # path('webhook/api/v1/', include('inspektor.urls_client')), # lekin swagger ko‘rmaydi
 ]
 
