@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from users.serializers import UserViewListSerializer
 from .models import Region, District, Country, Filial, FilialAccount, Sklad, Currency, Note
 
 
@@ -192,7 +193,7 @@ class CurrencyListSerializer(serializers.ModelSerializer):
 class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Note
-        fields = ('id', 'sorting', 'date', 'title', 'text', 'status', 'is_delete')
+        fields = ('id', 'sorting', 'date', 'title', 'text', 'status', 'is_delete', 'is_read')
         extra_kwargs = {
             'sorting': {"required": True},
             'date': {"required": False, "allow_null": True},
@@ -204,8 +205,8 @@ class NoteSerializer(serializers.ModelSerializer):
 
 
 class NoteListSerializer(serializers.ModelSerializer):
-    status_label = serializers.CharField(source='get_status_display', read_only=True)
+    created_by_detail = UserViewListSerializer(source='created_by', read_only=True)
 
     class Meta:
         model = Note
-        fields = ('id', 'sorting', 'date', 'title', 'text', 'status', 'status_label', 'is_delete')
+        fields = ('id', 'sorting', 'date', 'title', 'text', 'status', 'is_delete', 'created_by', 'created_by_detail', 'is_read')

@@ -148,6 +148,7 @@ class Note(BaseModel):
     text = models.TextField(_('Address'), null=True, blank=True)
     status = models.CharField(choices=STATUS.choices, default=STATUS.NEW, max_length=30, null=True, blank=True, help_text=_("Holati"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
+    is_read = models.BooleanField(default=False, help_text=_("Is read?"))
 
     # reminder flaglar
     notified_1day = models.BooleanField(default=False, help_text=_("1 kunlik eslatma yuborilganmi"))
