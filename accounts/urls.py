@@ -6,6 +6,7 @@ from .views.district import DistrictView, DistrictDetailView, DistrictFieldInfoV
 from .views.filial import FilialView, FilialDetailView, FilialFieldInfoView, FilialSelfView
 from .views.filial_account import FilialAccountView, FilialAccountDetailView, FilialAccountFieldInfoView
 from .views.import_country import CountryFileImportView
+from .views.note import NoteView, NoteDetailView, NoteFieldInfoView
 from .views.region import RegionView, RegionDetailView, RegionFieldInfoView, RegionViewList
 from .views.sklad import SkladView, SkladDetailView, SkladFieldInfoView
 
@@ -42,5 +43,9 @@ urlpatterns = [
     re_path(r'^currency/$', CurrencyView.as_view(), name='currency_view'),
     path('currency/<int:pk>', CurrencyDetailView.as_view(), name='currency_detail_view'),
     path('currency/fields/', CurrencyFieldInfoView.as_view(), name='currency_fields_info'),
+
+    re_path(r'^note/$', NoteView.as_view(), name='note_view'),
+    path('note/<int:pk>', NoteDetailView.as_view(), name='note_detail_view'),
+    path('note/fields/', NoteFieldInfoView.as_view(), name='note_fields_info'),
 
 ]
