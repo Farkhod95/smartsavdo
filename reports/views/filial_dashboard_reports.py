@@ -18,7 +18,17 @@ from users.models import User  # sizda User modeli qayerda bo'lsa shuni yozing
 
 class FilialDashboardReportView(APIView):
     """
-    GET /api/reports/filial-dashboard/?filial_id=1&months=12
+    GET reports/filial-dashboard/?filial_id=1
+    card_count:
+        clients_count — shu filialga tegishli Clientlar soni
+        debtors_count — qarzdor mijozlar soni (oxirgi holatda total_debt_client > 0)
+        karzinka_orders_count — OrderHistory.is_karzinka = true bo‘lgan orderlar soni
+        users_count — shu filialga ulangan userlar soni (order_filial yoki filials M2M)
+    monthly[]:
+        month — oy boshi (YYYY-MM-01) formatida
+        order_sum_usd — OrderHistory.summa_total_dollar oy bo‘yicha yig‘indisi
+        debt_sum_usd — DebtRepayment.summa_total_dollar oy bo‘yicha yig‘indisi
+        total_sum_usd — order_sum_usd + debt_sum_usd
 
     Response:
     {
@@ -44,26 +54,6 @@ class FilialDashboardReportView(APIView):
         }
       ]
     }
-
-    card_count:
-
-        clients_count — shu filialga tegishli Clientlar soni
-
-        debtors_count — qarzdor mijozlar soni (oxirgi holatda total_debt_client > 0)
-
-        karzinka_orders_count — OrderHistory.is_karzinka = true bo‘lgan orderlar soni
-
-        users_count — shu filialga ulangan userlar soni (order_filial yoki filials M2M)
-
-    monthly[]:
-
-        month — oy boshi (YYYY-MM-01) formatida
-
-        order_sum_usd — OrderHistory.summa_total_dollar oy bo‘yicha yig‘indisi
-
-        debt_sum_usd — DebtRepayment.summa_total_dollar oy bo‘yicha yig‘indisi
-
-        total_sum_usd — order_sum_usd + debt_sum_usd
     """
     permission_classes = [IsAuthenticated]
 

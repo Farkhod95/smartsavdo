@@ -109,28 +109,28 @@ WSGI_APPLICATION = 'main.wsgi.application'
 TELEGRAM_BOT_API_SECRET = os.getenv("TELEGRAM_BOT_API_SECRET", "change-me-strong-secret")
 
 #
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'smartsavdo_db',
-        'USER': 'postgres',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-
-#
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
 #         'NAME': 'smartsavdo_db',
-#         'USER': 'smartsavdo_user',
-#         'PASSWORD': 'smartsavdo_password',
+#         'USER': 'postgres',
+#         'PASSWORD': 'root',
 #         'HOST': 'localhost',
 #         'PORT': '5432',
 #     }
 # }
+
+#
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'smartsavdo_db',
+        'USER': 'smartsavdo_user',
+        'PASSWORD': 'smartsavdo_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 
 
