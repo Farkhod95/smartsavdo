@@ -1,5 +1,6 @@
 from django.db.models import Exists, OuterRef, Prefetch
 from django.db.models import Q
+from collections import OrderedDict
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, ListAPIView
@@ -84,24 +85,77 @@ class ProductView(ListCreateAPIView):
             Product.objects
             .filter(is_delete=False, filial_id__in=user_filial_ids)
             .select_related('filial', 'branch', 'branch_category', 'model', 'type', 'size')
-            .prefetch_related(Prefetch('images', queryset=images_qs))  # hammasi keladi, lekin serializer 1 tasini chiqaradi
+            .prefetch_related(Prefetch('images', queryset=images_qs))
         )
         return qs
+
+    # ✅ GET ni gruppalab chiqarish (queryset logikasi o'zgarmaydi)
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is None:
+            # pagination yo'q bo'lsa ham ishlaydi
+            serializer = self.get_serializer(queryset, many=True)
+            grouped = self._group_by_model(serializer.data)
+            return Response(grouped)
+
+        serializer = self.get_serializer(page, many=True)
+        grouped = self._group_by_model(serializer.data)
+
+        # paginator count/next/prev saqlanadi, faqat results = grouped bo'ladi
+        return self.get_paginated_response(grouped)
+
+    def _group_by_model(self, items):
+        """
+        items: ProductListOneImageSerializer.data (list)
+        return: [
+          {
+            "model": <id or None>,
+            "model_detail": {...} or None,
+            "total_count": <sum count>,
+            "items": [ ...products... ]
+          },
+          ...
+        ]
+        """
+        buckets = OrderedDict()
+
+        for p in items:
+            model_id = p.get('model')  # FK id
+            key = model_id if model_id is not None else 'no-model'
+
+            if key not in buckets:
+                buckets[key] = {
+                    "model": model_id,
+                    "model_detail": p.get('model_detail'),
+                    "total_count": 0,
+                    "items": []
+                }
+
+            # count null bo'lishi mumkin
+            c = p.get('count')
+            try:
+                c_int = int(c) if c is not None else 0
+            except (TypeError, ValueError):
+                c_int = 0
+
+            buckets[key]["total_count"] += c_int
+            buckets[key]["items"].append(p)
+
+        return list(buckets.values())
 
     def create(self, request, *args, **kwargs):
         serializer = ProductSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
         filial = serializer.validated_data.get('filial') or request.user.order_filial
-
         if filial is None:
             return Response(
                 {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # user shu filialda ishlaydimi?
         if not request.user.filials.filter(id=filial.id).exists():
             return Response(
                 {"detail": "Sizda bu filial uchun product yaratish huquqi yo‘q."},
