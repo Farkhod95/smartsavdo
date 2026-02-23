@@ -178,7 +178,7 @@ class ProductGroupByModelList(ListCreateAPIView):
                 buckets[key] = {
                     "model": model_id,
                     "model_detail": p.get('model_detail'),
-                    "total_count": 0,
+                    "total_product_count": 0,
                     "items": []
                 }
 
@@ -189,7 +189,7 @@ class ProductGroupByModelList(ListCreateAPIView):
             except (TypeError, ValueError):
                 c_int = 0
 
-            buckets[key]["total_count"] += c_int
+            buckets[key]["total_product_count"] += c_int
             buckets[key]["items"].append(p)
 
         return list(buckets.values())
