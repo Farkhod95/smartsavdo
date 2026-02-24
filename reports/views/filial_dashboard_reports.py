@@ -57,7 +57,7 @@ class FilialDashboardReportView(APIView):
         karzinka_orders_count = OrderHistory.objects.filter(
             order_filial_id=filial.id,
             is_delete=False,
-            is_karzinka=True
+            is_karzinka=False
         ).count()
 
         users_count = User.objects.filter(
@@ -80,18 +80,11 @@ class FilialDashboardReportView(APIView):
             .values("total_debt_client")[:1]
         )
 
-        debtors_count = (
-            Client.objects
-            .filter(filial_id=filial.id, is_delete=False)
-            .annotate(
-                latest_total_debt=Coalesce(
-                    Subquery(latest_total_debt_subq, output_field=DecimalField(max_digits=20, decimal_places=2)),
-                    Value(Decimal("0.00"))
-                )
-            )
-            .filter(latest_total_debt__gt=0)
-            .count()
-        )
+        debtors_count = Client.objects.filter(
+            is_delete=False,
+            filial_id=filial.id,
+            total_debt__gt=1,
+        ).count()
 
         card_count = {
             "clients_count": clients_count,

@@ -97,4 +97,4 @@ class NoteFilter(FilterSet):
 
     class Meta:
         model = Note
-        fields = ('sorting', 'date', 'status', 'is_delete', 'title', 'text')
+        fields = ('sorting', 'date', 'status', 'is_delete', 'title', 'text', 'is_read')
