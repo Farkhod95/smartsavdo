@@ -1,6 +1,7 @@
+from collections import OrderedDict
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -47,6 +48,84 @@ class ExpenseViewList(ListCreateAPIView):
         return Expense.objects.filter(is_delete=False)
 
 
+class ExpenseGroupByDateView(ListAPIView):
+    """
+    GET /expense/group-by-date/?page=1&page_size=10&date_after=2026-02-01&date_before=2026-02-24&filial=1 ...
+    Natija: date bo'yicha guruhlangan.
+    """
+    serializer_class = ExpenseListSerializer
+    pagination_class = ResultsSetPagination
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = ExpenseFilter
+    search_fields = ('filial__name', 'category__name', 'note')
+    ordering = ['-date', '-pk']   # eng oxirgi kunlar tepada
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+
+        return (
+            Expense.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'category', 'employee', 'created_by')
+        )
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+
+        # 1) avval pagination qilamiz (xuddi sizdagi kabi)
+        page = self.paginate_queryset(qs)
+        serializer = self.get_serializer(page, many=True)
+
+        # 2) pagedan kelgan itemlarni date bo'yicha guruhlaymiz
+        grouped = OrderedDict()
+
+        for row in serializer.data:
+            # row["date"] format: "YYYY-MM-DD" (serializerdan keladi)
+            d = row.get("date") or "No date"
+            if d not in grouped:
+                grouped[d] = {
+                    "date": d,
+                    "totals": {
+                        "summa_total_dollar": "0.00",
+                        "summa_dollar": "0.00",
+                        "summa_naqt": "0.00",
+                        "summa_kilik": "0.00",
+                        "summa_terminal": "0.00",
+                        "summa_transfer": "0.00",
+                    },
+                    "items": []
+                }
+
+            grouped[d]["items"].append(row)
+
+            # totals (serializerda string bo'lishi mumkin, shuning uchun Decimal emas, float ham ishlatmaymiz)
+            # eng sodda: string -> Decimal o'rniga, front uchun string yig'amiz
+            # Agar xohlasangiz Decimal bilan ham yig'ib keyin formatlab beraman.
+            def add_money(key: str):
+                cur = grouped[d]["totals"][key]
+                a = row.get(key) or "0.00"
+                # string yig'ish uchun: Decimal ishlatamiz
+                from decimal import Decimal
+                grouped[d]["totals"][key] = str(Decimal(cur) + Decimal(a))
+
+            add_money("summa_total_dollar")
+            add_money("summa_dollar")
+            add_money("summa_naqt")
+            add_money("summa_kilik")
+            add_money("summa_terminal")
+            add_money("summa_transfer")
+
+        data = list(grouped.values())
+
+        # 3) paginated response ichiga "grouped" datani joylaymiz
+        paginated = self.get_paginated_response(data)
+        return paginated
+
+
 class ExpenseView(ListCreateAPIView):
     serializer_class = ExpenseListSerializer
     pagination_class = ResultsSetPagination
@@ -55,7 +134,7 @@ class ExpenseView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExpenseFilter
     search_fields = ('filial__name', 'category__name', 'note')
-    ordering = ['pk']
+    ordering = ['-date', '-pk']
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
