@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.db.models import Q, F
 
 from accounts.models import Region, District, Filial, Sklad, Currency
 from inventory.models import ProductBranch, ProductModel, ProductType, ProductTypeSize, Product, ProductBranchCategory
@@ -180,3 +181,33 @@ class OrderHistoryProduct(BaseModel):
 
     def __str__(self):
         return f"OrderHistoryProduct #{self.pk}" if self.pk else "OrderHistoryProduct"
+
+
+    def _sync_order_history_debtor_flag(self):
+        """
+        Agar shu order_history ichida is_delete=False bo'lgan productlardan
+        birortasida given_count != count bo'lsa -> is_debtor_product=True, aks holda False.
+        """
+        if not self.order_history_id:
+            return
+
+        oh = self.order_history
+
+        # given_count yoki count NULL bo'lsa, ularni farqli deb hisoblaymiz (qarzdorlik bor)
+        has_mismatch = OrderHistoryProduct.objects.filter(
+            order_history_id=self.order_history_id,
+            is_delete=False,
+        ).filter(
+            Q(count__isnull=True) |
+            Q(given_count__isnull=True) |
+            ~Q(given_count=F('count'))
+        ).exists()
+
+        new_value = bool(has_mismatch)
+        if oh.is_debtor_product != new_value:
+            oh.is_debtor_product = new_value
+            oh.save(update_fields=['is_debtor_product'])
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self._sync_order_history_debtor_flag()
