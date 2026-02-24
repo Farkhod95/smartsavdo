@@ -44,6 +44,9 @@ class ExpenseFilter(FilterSet):
 
 
 class DebtRepaymentFilter(FilterSet):
+    date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+
     class Meta:
         model = DebtRepayment
         fields = {
