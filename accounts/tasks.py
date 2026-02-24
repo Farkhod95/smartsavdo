@@ -100,7 +100,14 @@ def _send_note_notification(channel_layer, note: Note, event_type: str, title: s
         print("[note_notification] channel_layer yo'q")
         return
 
-    metric_data = {
+    user_id = getattr(note, "created_by_id", None)
+    if not user_id:
+        print(f"[note_notification] Note #{note.id} created_by yo'q -> skip")
+        return
+
+    group_name = f"notes_user_{user_id}"
+
+    payload = {
         "event": event_type,
         "note_id": note.id,
         "title": title,
@@ -111,13 +118,42 @@ def _send_note_notification(channel_layer, note: Note, event_type: str, title: s
     }
 
     try:
-        print(f"[note_notification] SEND -> {metric_data}")
+        print(f"[note_notification] SEND -> group={group_name} payload={payload}")
         async_to_sync(channel_layer.group_send)(
-            "metrics_group",
+            group_name,
             {
-                "type": "metric",
-                "metric": metric_data,
+                "type": "note_event",   # Consumer ichidagi method nomi
+                "payload": payload,
             }
         )
     except Exception as e:
         print(f"[note_notification] Note ID={getattr(note, 'id', None)} websocket error: {e}")
+#
+# def _send_note_notification(channel_layer, note: Note, event_type: str, title: str, message: str) -> None:
+#     if not channel_layer:
+#         print("[note_notification] channel_layer yo'q")
+#         return
+#
+#     metric_data = {
+#         "event": event_type,
+#         "note_id": note.id,
+#         "title": title,
+#         "message": message,
+#         "note_title": note.title or "",
+#         "deadline": note.date.isoformat() if note.date else None,
+#         "status": note.status,
+#     }
+#
+#     try:
+#         print(f"[note_notification] SEND -> {metric_data}")
+#         async_to_sync(channel_layer.group_send)(
+#             "metrics_group",
+#             {
+#                 "type": "metric",
+#                 "metric": metric_data,
+#             }
+#         )
+#     except Exception as e:
+#         print(f"[note_notification] Note ID={getattr(note, 'id', None)} websocket error: {e}")
+#
+#

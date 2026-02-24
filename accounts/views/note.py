@@ -38,7 +38,12 @@ class NoteView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Note.objects.all().order_by('date', '-pk')
+        # Faqat hozirgi user yaratgan note'lar
+        return (
+            Note.objects
+            .filter(is_delete=False, created_by=self.request.user)
+            .order_by('date', '-pk')
+        )
 
     def post(self, request, **kwargs):
         serializer = NoteSerializer(data=request.data)
