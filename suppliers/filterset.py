@@ -58,6 +58,7 @@ class PurchaseInvoiceFilter(FilterSet):
         model = PurchaseInvoice
         fields = {
             'type': ['exact'],
+            'is_karzinka': ['exact'],
             'employee': ['exact'],
             'supplier': ['exact'],
             'filial': ['exact'],

@@ -87,6 +87,7 @@ class PurchaseInvoice(BaseModel):
     given_summa_kilik = models.DecimalField(_('Given click/debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Berilgan summa kilikda"))
     given_summa_terminal = models.DecimalField(_('Given terminal'), max_digits=20, decimal_places=2, default=0, help_text=_("Berilgan summa terminalda"))
     given_summa_transfer = models.DecimalField(_('Given transfer'), max_digits=20, decimal_places=2, default=0, help_text=_("Berilgan summa transferda"))
+    is_karzinka = models.BooleanField(default=True, help_text=_("Karzinkaga qoshilganmi?"))
 
     class Meta:
         verbose_name = _('purchase invoice')
