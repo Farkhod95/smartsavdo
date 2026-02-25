@@ -12,10 +12,10 @@ class SupplierListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Supplier
-        fields = ('id', 'name', 'filial', 'filial_detail', 'region', 'region_detail', 'district', 'district_detail', 'address', 'inn', 'note', 'is_active', 'is_delete')
+        fields = ('id', 'type', 'name', 'filial', 'filial_detail', 'region', 'region_detail', 'district', 'district_detail', 'address', 'inn', 'note', 'is_active', 'is_delete')
 
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ('id', 'name', 'filial', 'region', 'district', 'address', 'inn', 'note', 'is_active', 'is_delete')
+        fields = ('id', 'type', 'name', 'filial', 'region', 'district', 'address', 'inn', 'note', 'is_active', 'is_delete')

@@ -9,6 +9,7 @@ class SupplierFilter(FilterSet):
         model = Supplier
         fields = {
             'name': ['exact', 'icontains'],
+            'type': ['exact'],
             'filial': ['exact'],
             'region': ['exact'],
             'district': ['exact'],

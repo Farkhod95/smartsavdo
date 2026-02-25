@@ -8,6 +8,11 @@ from django.conf import settings
 
 
 class Supplier(BaseModel):
+    class TYPE(models.TextChoices):
+        EXTERNAL = 'external', _('Tashqi')
+        INTERNAL = 'internal', _('Ichki')
+
+    type = models.CharField(choices=TYPE.choices, max_length=50, null=True, blank=True, help_text=_("Tip"))
     name = models.CharField(_('Name'), max_length=255, null=True, blank=True, help_text=_("Ta'minotchi nomi"))
     filial = models.ForeignKey(Filial, related_name='suppliers', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))
     region = models.ForeignKey(Region, related_name='suppliers', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Viloyat jadvali bilan bog'lanish"))
@@ -61,7 +66,11 @@ class SupplierDebtRepayment(BaseModel):
 
 
 class PurchaseInvoice(BaseModel):
-    type = models.IntegerField(_('Type'), null=True, blank=True, help_text=_("Tovar kirimi / Vozvrad qilish"))
+    class TYPE(models.TextChoices):
+        EXTERNAL = 'external', _('Tashqi kirim')
+        INTERNAL = 'internal', _('Ichki kirim')
+
+    type = models.CharField(choices=TYPE.choices, max_length=50, null=True, blank=True, help_text=_("Tip"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Xodim (User)"))
     supplier = models.ForeignKey(Supplier, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Supplier bilan bog'lanish"))
     filial = models.ForeignKey(Filial, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))

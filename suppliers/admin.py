@@ -5,8 +5,8 @@ from suppliers.models import PurchaseInvoice, Supplier, SupplierAccount, Supplie
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'filial', 'region', 'district', 'inn', 'is_active', 'is_delete')
-    fields = ('name', 'filial', 'region', 'district', 'address', 'inn', 'note', 'is_active', 'is_delete')
+    list_display = ('name', 'filial', 'region', 'district', 'inn', 'is_active', 'is_delete', 'type')
+    fields = ('name', 'filial', 'region', 'district', 'address', 'inn', 'note', 'is_active', 'is_delete', 'type')
     search_fields = ('name', 'inn', 'address')
     list_filter = ('is_active', 'is_delete', 'filial', 'region', 'district')
 
