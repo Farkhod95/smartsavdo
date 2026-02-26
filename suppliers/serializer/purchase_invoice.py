@@ -1,16 +1,16 @@
 from rest_framework import serializers
 from decimal import Decimal
 
-from accounts.serializers import FilialListSerializer, SkladListSerializer
+from accounts.serializers import FilialSerializer, SkladForSerializer
 from suppliers.models import PurchaseInvoice, SupplierAccount
-from suppliers.serializer.supplier import SupplierListSerializer
+from suppliers.serializer.supplier import SupplierSerializer
 
 
 class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
-    filial_detail = FilialListSerializer(source='filial', read_only=True)
-    supplier_detail = SupplierListSerializer(source='supplier', read_only=True)
-    sklad_detail = SkladListSerializer(source='sklad', read_only=True)
-    supplier_debt = serializers.SerializerMethodField(read_only=True)
+    filial_detail = FilialSerializer(source='filial', read_only=True)
+    supplier_detail = SupplierSerializer(source='supplier', read_only=True)
+    sklad_detail = SkladForSerializer(source='sklad', read_only=True)
+    supplier_debt = SkladForSerializer.SerializerMethodField(read_only=True)
 
     class Meta:
         model = PurchaseInvoice
