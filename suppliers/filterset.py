@@ -61,6 +61,7 @@ class PurchaseInvoiceFilter(FilterSet):
             'is_karzinka': ['exact'],
             'employee': ['exact'],
             'supplier': ['exact'],
+            'sklad_outgoing': ['exact'],
             'filial': ['exact'],
             'sklad': ['exact'],
             'date': ['exact', 'gte', 'lte'],

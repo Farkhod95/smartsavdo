@@ -8,14 +8,16 @@ from suppliers.serializer.supplier import SupplierSerializer
 
 class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
     filial_detail = FilialSerializer(source='filial', read_only=True)
+    sklad_outgoing_detail = SkladForSerializer(source='sklad_outgoing', read_only=True)
     supplier_detail = SupplierSerializer(source='supplier', read_only=True)
     sklad_detail = SkladForSerializer(source='sklad', read_only=True)
     supplier_debt = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = PurchaseInvoice
-        fields = ('id', 'type', 'employee', 'supplier', 'supplier_detail', 'filial', 'filial_detail', 'sklad',
-                  'sklad_detail', 'date', 'total_debt_old', 'total_debt', 'total_debt_today', 'product_count',
+        fields = ('id', 'type', 'employee', 'supplier', 'supplier_detail', 'sklad_outgoing', 'sklad_outgoing_detail',
+                  'filial', 'filial_detail', 'sklad', 'sklad_detail', 'date', 'total_debt_old', 'total_debt',
+                  'total_debt_today', 'product_count',
                   'all_product_summa', 'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
                   'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_karzinka', 'supplier_debt')
 
@@ -42,7 +44,7 @@ class PurchaseInvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseInvoice
         fields = (
-            'id', 'type', 'employee', 'supplier', 'filial', 'sklad', 'date',
+            'id', 'type', 'employee', 'supplier', 'sklad_outgoing', 'filial', 'sklad', 'date',
             'total_debt_old', 'total_debt', 'total_debt_today',
             'product_count', 'all_product_summa',
             'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
