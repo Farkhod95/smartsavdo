@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.serializers import FilialListSerializer, SkladListSerializer
-from suppliers.models import PurchaseInvoice
+from suppliers.models import PurchaseInvoice, SupplierAccount
 from suppliers.serializer.supplier import SupplierListSerializer
 
 
@@ -17,11 +17,25 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
                   'all_product_summa', 'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
                   'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_karzinka')
 
-
 class PurchaseInvoiceSerializer(serializers.ModelSerializer):
+    supplier_debt = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = PurchaseInvoice
-        fields = ('id', 'type', 'employee', 'supplier', 'filial', 'sklad', 'date', 'total_debt_old', 'total_debt',
-                  'total_debt_today', 'product_count', 'all_product_summa', 'given_summa_total_dollar',
-                  'given_summa_dollar', 'given_summa_naqt', 'given_summa_kilik', 'given_summa_terminal',
-                  'given_summa_transfer', 'is_karzinka')
+        fields = (
+            'id', 'type', 'employee', 'supplier', 'filial', 'sklad', 'date',
+            'total_debt_old', 'total_debt', 'total_debt_today',
+            'product_count', 'all_product_summa',
+            'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
+            'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer',
+            'is_karzinka',
+            'supplier_debt',   # ✅ qo‘shildi
+        )
+
+    def get_supplier_debt(self, obj):
+        if not obj.supplier_id:
+            return 0
+
+        # agar SupplierAccount yo‘q bo‘lsa 0 qaytaradi
+        account = SupplierAccount.objects.filter(supplier_id=obj.supplier_id).only('filial_debt').first()
+        return str(account.filial_debt) if account else "0"
