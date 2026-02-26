@@ -10,7 +10,7 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
     filial_detail = FilialSerializer(source='filial', read_only=True)
     supplier_detail = SupplierSerializer(source='supplier', read_only=True)
     sklad_detail = SkladForSerializer(source='sklad', read_only=True)
-    supplier_debt = SkladForSerializer.SerializerMethodField(read_only=True)
+    supplier_debt = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = PurchaseInvoice

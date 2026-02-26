@@ -115,37 +115,6 @@ CELERY_CACHE_BACKEND = 'default'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('127.0.0.1', 6379)],
-#         },
-#     },
-# }
-#
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'
-#
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-#         'LOCATION': 'redis://localhost:6379/1',
-#     }
-# }
-#
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'smartsavdo_db',
-#         'USER': 'postgres',
-#         'PASSWORD': 'root',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
-
-#
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -155,12 +124,12 @@ CHANNEL_LAYERS = {
     },
 }
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/2'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/3',
+        'LOCATION': 'redis://localhost:6379/1',
     }
 }
 
@@ -168,12 +137,43 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'smartsavdo_db',
-        'USER': 'smartsavdo_user',
-        'PASSWORD': 'smartsavdo_password',
+        'USER': 'postgres',
+        'PASSWORD': 'root',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+
+#
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [('127.0.0.1', 6379)],
+#         },
+#     },
+# }
+#
+# CELERY_BROKER_URL = 'redis://127.0.0.1:6379/2'
+#
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/3',
+#     }
+# }
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'smartsavdo_db',
+#         'USER': 'smartsavdo_user',
+#         'PASSWORD': 'smartsavdo_password',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 
 
