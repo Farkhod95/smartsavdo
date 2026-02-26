@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from decimal import Decimal
 
 from accounts.serializers import FilialListSerializer, SkladListSerializer
 from suppliers.models import PurchaseInvoice, SupplierAccount
@@ -29,13 +30,21 @@ class PurchaseInvoiceSerializer(serializers.ModelSerializer):
             'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
             'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer',
             'is_karzinka',
-            'supplier_debt',   # ✅ qo‘shildi
+            'supplier_debt',  # ✅ doim ko‘rinadi
         )
 
     def get_supplier_debt(self, obj):
         if not obj.supplier_id:
-            return 0
+            return Decimal('0.00')
 
-        # agar SupplierAccount yo‘q bo‘lsa 0 qaytaradi
-        account = SupplierAccount.objects.filter(supplier_id=obj.supplier_id).only('filial_debt').first()
-        return str(account.filial_debt) if account else "0"
+        account = (
+            SupplierAccount.objects
+            .filter(supplier_id=obj.supplier_id)
+            .only('filial_debt')
+            .first()
+        )
+
+        if not account or account.filial_debt is None:
+            return Decimal('0.00')
+
+        return account.filial_debt
