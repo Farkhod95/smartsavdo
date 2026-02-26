@@ -73,7 +73,7 @@ class PurchaseInvoice(BaseModel):
     type = models.CharField(choices=TYPE.choices, max_length=50, null=True, blank=True, help_text=_("Tip"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Xodim (User)"))
     supplier = models.ForeignKey(Supplier, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Supplier bilan bog'lanish"))
-    sklad_outgoing = models.ForeignKey(Sklad, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Yuk Chiquvchi Sklad bilan bog'lanish"))
+    sklad_outgoing = models.ForeignKey(Sklad, related_name='purchase_sklad_outgoing', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Yuk Chiquvchi Sklad bilan bog'lanish"))
     filial = models.ForeignKey(Filial, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))
     sklad = models.ForeignKey(Sklad, related_name='purchase_invoices', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Yuk kiruvchi Sklad bilan bog'lanish"))
     date = models.DateField(_('Date'), default=timezone.localdate, null=True, blank=True, help_text=_("Faktura sanasi"))
