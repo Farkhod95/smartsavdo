@@ -17,7 +17,7 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'employee', 'supplier', 'supplier_detail', 'filial', 'filial_detail', 'sklad',
                   'sklad_detail', 'date', 'total_debt_old', 'total_debt', 'total_debt_today', 'product_count',
                   'all_product_summa', 'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
-                  'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_karzinka')
+                  'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_karzinka', 'supplier_debt')
 
     def get_supplier_debt(self, obj):
         if not obj.supplier_id:
