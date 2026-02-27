@@ -246,6 +246,69 @@ class OrderHistoryDebtorProductView(ListCreateAPIView):
         return self.get_paginated_response(results)
 
 
+class OrderHistoryCreateUpdate(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['post']
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        """
+        POST body:
+        {
+          "client": <client_id>,
+          "exchange_rate": "...",
+          "order_filial": <filial_id> (optional),
+          "currency": <currency_id> (optional),
+          ... (optional fields)
+        }
+        """
+
+        serializer = OrderHistorySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        client = serializer.validated_data.get('client')
+        exchange_rate = serializer.validated_data.get('exchange_rate')
+
+        if client is None:
+            return Response({"client": "client majburiy."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # requestda order_filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        order_filial = serializer.validated_data.get('order_filial') or getattr(request.user, 'order_filial', None)
+        if order_filial is None:
+            return Response(
+                {"order_filial": "order_filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # user shu filialda ishlaydimi?
+        if not request.user.filials.filter(id=order_filial.id).exists():
+            return Response(
+                {"detail": "Sizda bu filial uchun order history yaratish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 1) Agar shu client uchun is_karzinka=True bo'lgan OrderHistory bo'lsa - birinchisini qaytaramiz
+        # "birinchi" deganda odatda eng oxirgisi kerak bo'ladi => -pk
+        existing = (
+            OrderHistory.objects
+            .filter(client=client, is_karzinka=True, is_delete=False, created_by=request.user)
+            .order_by('-pk')
+            .first()
+        )
+
+        if existing:
+            return Response(OrderHistorySerializer(existing).data, status=status.HTTP_200_OK)
+
+        # 2) Aks holda yangi yaratamiz (is_karzinka=True)
+        # validated_data ichidan kerakli fieldlarni olib save qilamiz
+        obj = serializer.save(
+            created_by=request.user,
+            order_filial=order_filial,
+            is_karzinka=True,
+        )
+
+        return Response(OrderHistorySerializer(obj).data, status=status.HTTP_201_CREATED)
+
 
 class OrderHistoryView(ListCreateAPIView):
     serializer_class = OrderHistoryListSerializer
