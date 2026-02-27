@@ -7,7 +7,7 @@ from django.db.models import F
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, GenericAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, GenericAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -246,7 +246,8 @@ class OrderHistoryDebtorProductView(ListCreateAPIView):
         return self.get_paginated_response(results)
 
 
-class OrderHistoryCreateUpdate(ListCreateAPIView):
+class OrderHistoryCreateUpdate(CreateAPIView):
+    serializer_class = OrderHistorySerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['post']
 
