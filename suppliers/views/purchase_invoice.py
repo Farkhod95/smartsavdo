@@ -88,7 +88,7 @@ class PurchaseInvoiceView(ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer.save(created_by=request.user)
+        serializer.save(created_by=request.user, employee=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
