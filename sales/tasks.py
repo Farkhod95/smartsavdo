@@ -1,6 +1,6 @@
 # sales/tasks.py
 
-from datetime import timedelta
+from datetime import datetime, time
 
 from celery import shared_task
 from django.db import transaction
@@ -10,36 +10,41 @@ from sales.models import OrderHistory, OrderHistoryProduct
 
 
 @shared_task
-def close_expired_karzinka_order_histories():
+def delete_expired_karzinka_order_histories():
     """
     Har kuni 02:00 da ishga tushadi.
-    1 kundan oshib ketgan is_karzinka=True OrderHistory larni yopadi (is_karzinka=False).
+    BUGUNGI karzinkalarga tegmaydi.
+    Faqat bugun 00:00 dan OLDIN yaratilgan (kechagi va undan oldingi) is_karzinka=True larni o'chiradi.
     """
-    now = timezone.now()
-    cutoff = now - timedelta(days=1)
 
-    # BaseModel'dagi created_time sizda bor (indexda ishlatyapsiz)
+    # Bugun sanasi (Asia/Tashkent timezone bo'yicha)
+    today = timezone.localdate()
+
+    # Bugun 00:00 (timezone-aware)
+    today_start = timezone.make_aware(datetime.combine(today, time.min))
+
     qs = OrderHistory.objects.filter(
         is_delete=False,
         is_karzinka=True,
-        created_time__lte=cutoff,
+        created_time__lt=today_start,   # <-- MUHIM: bugungi kundagiga tegmaydi
     )
 
     with transaction.atomic():
-        # Avval OH larni toplab, pk larini olib olamiz
         expired_ids = list(qs.values_list('id', flat=True))
 
         if not expired_ids:
-            return {"closed_count": 0, "closed_ids": []}
+            return {"deleted_count": 0, "deleted_ids": []}
 
-        # OrderHistoryProduct ichida is_karzinka=True bo'lsa ham yopib qo'yamiz (ixtiyoriy, foydali)
-        OrderHistoryProduct.objects.filter(
-            order_history_id__in=expired_ids,
-            is_delete=False,
-            is_karzinka=True,
-        ).update(is_karzinka=False)
+        # Avval productlarni o'chiramiz (orphan bo'lib qolmasin)
+        products_deleted, _ = OrderHistoryProduct.objects.filter(
+            order_history_id__in=expired_ids
+        ).delete()
 
-        # OrderHistory yopiladi
-        OrderHistory.objects.filter(id__in=expired_ids).update(is_karzinka=False)
+        # Keyin order_history larni o'chiramiz
+        histories_deleted, _ = OrderHistory.objects.filter(id__in=expired_ids).delete()
 
-    return {"closed_count": len(expired_ids), "closed_ids": expired_ids}
+    return {
+        "deleted_order_histories": histories_deleted,
+        "deleted_order_history_products": products_deleted,
+        "deleted_ids": expired_ids
+    }
