@@ -1,3 +1,6 @@
+from django.db.models import OuterRef, Subquery, DecimalField, Value
+from django.db.models.functions import Coalesce
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
@@ -6,14 +9,37 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from suppliers.filterset import SupplierFilter
-from suppliers.models import Supplier
+from suppliers.models import Supplier, SupplierAccount
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+
 from suppliers.serializer.supplier import SupplierSerializer, SupplierListSerializer
 
 
+# ---------------------------
+# ✅ Helper: debt annotate
+# ---------------------------
+def annotate_supplier_debt(qs):
+    """
+    SupplierAccount.filial_debt ni Supplier querysetga bir marta qo'shib beradi.
+    N+1 muammosini 100% yo'q qiladi.
+    """
+    debt_subq = (
+        SupplierAccount.objects
+        .filter(supplier_id=OuterRef('pk'))
+        .values('filial_debt')[:1]
+    )
+
+    return qs.annotate(
+        filial_debt_db=Coalesce(
+            Subquery(debt_subq, output_field=DecimalField(max_digits=20, decimal_places=2)),
+            Value(0)
+        )
+    )
+
+
 class SupplierFieldInfoView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         field_info = []
@@ -31,11 +57,12 @@ class SupplierFieldInfoView(APIView):
 
 class SupplierViewList(ListCreateAPIView):
     """
-    Public list (faqat GET), DistrictViewList kabi.
+    Public list (faqat GET)
     """
     permission_classes = (AllowAny,)
     authentication_classes = []
     serializer_class = SupplierSerializer
+
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierFilter
     search_fields = ('name', 'inn', 'address')
@@ -44,12 +71,18 @@ class SupplierViewList(ListCreateAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return Supplier.objects.filter(is_delete=False, is_active=True)
+        qs = Supplier.objects.filter(is_delete=False, is_active=True)
+        qs = annotate_supplier_debt(qs)
+        return qs.order_by('pk')
 
 
 class SupplierView(ListCreateAPIView):
+    """
+    Private list/create (login shart)
+    """
     serializer_class = SupplierListSerializer
     pagination_class = ResultsSetPagination
+    permission_classes = (IsAuthenticated,)
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierFilter
@@ -58,56 +91,96 @@ class SupplierView(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-
-        # userga tegishli filiallar
         user_filial_ids = user.filials.values_list('id', flat=True)
 
-        return (
+        qs = (
             Supplier.objects
             .filter(is_delete=False, filial_id__in=user_filial_ids)
             .select_related('filial', 'region', 'district')
-            .order_by('pk')
         )
+        qs = annotate_supplier_debt(qs)
+        return qs.order_by('pk')
 
     def post(self, request, *args, **kwargs):
+        # create uchun oddiy SupplierSerializer ishlatyapmiz (detail serializer)
         serializer = SupplierSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # (ixtiyoriy, lekin tavsiya) user o'zi ishlaydigan filialga supplier qo'shayotganini tekshirish
-        filial_id = serializer.validated_data.get('filial').id if serializer.validated_data.get('filial') else None
+        filial = serializer.validated_data.get('filial')
+        filial_id = filial.id if filial else None
+
+        # ✅ user faqat o'z filialiga supplier qo'shsin
         if filial_id and not request.user.filials.filter(id=filial_id).exists():
             return Response(
                 {"detail": "Sizda bu filialga supplier qo‘shish huquqi yo‘q."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer.save(created_by=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        obj = serializer.save(created_by=request.user)
+
+        # response ni list serializer bilan qaytaramiz (detail+debt ko‘rinsin)
+        # annotate kerak (filial_debt_db bo‘lishi uchun)
+        obj_qs = annotate_supplier_debt(
+            Supplier.objects.filter(pk=obj.pk).select_related('filial', 'region', 'district')
+        )
+        obj2 = obj_qs.first()
+
+        out = SupplierListSerializer(obj2).data
+        return Response(out, status=status.HTTP_201_CREATED)
 
 
 class SupplierDetailView(RetrieveUpdateDestroyAPIView):
+    """
+    Private detail (login shart) + filial bo‘yicha access control 100% ishlaydi.
+    """
     serializer_class = SupplierSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Supplier.objects.all()
+        user_filial_ids = self.request.user.filials.values_list('id', flat=True)
 
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        qs = (
+            Supplier.objects
+            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .select_related('filial', 'region', 'district')
+        )
+        qs = annotate_supplier_debt(qs)
+        return qs
 
     def get(self, request, pk):
-        instance = get_object_or_404(Supplier, id=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = SupplierListSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        instance = get_object_or_404(Supplier, id=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
+
         serializer = self.serializer_class(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(updated_by=self.request.user)
-        return Response(serializer.data, status.HTTP_202_ACCEPTED)
+
+        # ✅ filialni o‘zgartirishsa ham userga tegishli filial bo‘lishi shart
+        filial = serializer.validated_data.get('filial')
+        filial_id = filial.id if filial else None
+        if filial_id and not request.user.filials.filter(id=filial_id).exists():
+            return Response(
+                {"detail": "Sizda bu filialga supplierni o‘tkazish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        obj = serializer.save(updated_by=request.user)
+
+        # annotate bilan qaytaramiz
+        obj_qs = annotate_supplier_debt(
+            Supplier.objects.filter(pk=obj.pk).select_related('filial', 'region', 'district')
+        )
+        obj2 = obj_qs.first()
+        out = SupplierListSerializer(obj2).data
+        return Response(out, status=status.HTTP_202_ACCEPTED)
 
     def delete(self, request, pk):
-        instance = get_object_or_404(Supplier, id=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
+
+        # Siz hozir soft delete qilyapsiz (is_delete=True) — shuni qoldirdim
         instance.is_delete = True
         instance.save(update_fields=['is_delete'])
-        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
