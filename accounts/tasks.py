@@ -13,10 +13,10 @@ from .models import Note
 @shared_task(bind=True)
 def check_note_deadlines(self):
     """
-    TALAB:
-    - hozirgi vaqtdan 1 soat ichida deadline bo'ladigan Note'lar uchun notification yuborish
-      (faqat 1 marta shart emas -> har run'da yuboradi)
-    - muddati o'tsa -> status EXPIRED + xabar (har run'da qayta yubormaydi, chunki status EXPIRED bo'lib qoladi)
+    TALAB (YANGI):
+    - 1 soat ichida deadline bo'ladiganlarni HAR RUN'da ogohlantirib yuboradi
+    - muddati o'tganlarni ham HAR RUN'da yuboradi (status EXPIRED bo'lsa ham)
+    - muddati o'tgan bo'lsa statusni EXPIRED qilib qo'yadi (lekin yuborishni to'xtatmaydi)
     - Celery logda None bo'lmasin -> result return qiladi
     """
 
@@ -33,35 +33,40 @@ def check_note_deadlines(self):
     checked = 0
     skipped_no_date = 0
     sent_1hour = 0
+    sent_expired = 0
     expired_set = 0
     errors = 0
 
     print(f"\n[check_note_deadlines] now={now.isoformat()} notes_count={qs.count()}")
 
-    # 1) date yo'q bo'lganlar
     skipped_no_date = qs.filter(date__isnull=True).count()
 
-    # 2) muddati o'tganlar -> EXPIRED (EXPIRED bo'lsa qayta yubormaydi)
-    expired_qs = qs.filter(date__isnull=False, date__lte=now).exclude(status=Note.STATUS.EXPIRED)
+    # 1) Muddati o'tganlar: HAR RUN'da yuboradi.
+    # Status EXPIRED bo'lmasa -> EXPIRED qilib qo'yadi, lekin baribir yuboradi.
+    expired_qs = qs.filter(date__isnull=False, date__lte=now)
+
     for note in expired_qs.iterator():
         checked += 1
         try:
-            note.status = Note.STATUS.EXPIRED
-            note.save(update_fields=["status"])
-            expired_set += 1
+            # statusni EXPIRED qilish (faqat bir marta update)
+            if note.status != Note.STATUS.EXPIRED:
+                note.status = Note.STATUS.EXPIRED
+                note.save(update_fields=["status"])
+                expired_set += 1
 
             _send_note_notification(
                 channel_layer=channel_layer,
                 note=note,
                 event_type="expired",
                 title="Muddat tugadi",
-                message="Note muddati tugadi",
+                message="Note muddati tugagan. Iltimos, ko‘rib chiqing.",
             )
+            sent_expired += 1
         except Exception as e:
             errors += 1
             print(f"[check_note_deadlines] EXPIRED Note ID={getattr(note, 'id', None)} error: {e}")
 
-    # 3) hozirgi vaqtdan 1 soat ichida bo'ladiganlar -> har run'da yuboradi
+    # 2) 1 soat ichida bo'ladiganlar: HAR RUN'da yuboradi
     soon_1h_qs = qs.filter(
         date__isnull=False,
         date__gt=now,
@@ -76,7 +81,7 @@ def check_note_deadlines(self):
                 note=note,
                 event_type="deadline_1hour",
                 title="Ogohlantirish",
-                message="Eslatma muddati tugashiga 1 soatdan kam qoldi",
+                message="Eslatma muddati tugashiga 1 soatdan kam qoldi.",
             )
             sent_1hour += 1
         except Exception as e:
@@ -89,6 +94,7 @@ def check_note_deadlines(self):
         "checked": checked,
         "skipped_no_date": skipped_no_date,
         "sent_1hour": sent_1hour,
+        "sent_expired": sent_expired,
         "expired_set": expired_set,
         "errors": errors,
         "window_1hour_to": one_hour_from_now.isoformat(),
@@ -122,7 +128,7 @@ def _send_note_notification(channel_layer, note: Note, event_type: str, title: s
         async_to_sync(channel_layer.group_send)(
             group_name,
             {
-                "type": "note_event",   # Consumer ichidagi method nomi
+                "type": "note_event",
                 "payload": payload,
             }
         )
