@@ -7,7 +7,6 @@ from inventory.models import ProductHistory, Product, ProductStock
 from suppliers.models import (
     PurchaseInvoice,
     SupplierAccount,
-    SupplierDebtRepayment,
 )
 
 
@@ -171,23 +170,6 @@ def finalize_purchase_invoice(*, invoice: PurchaseInvoice, updated_by) -> Purcha
         account.filial_debt = total_debt_new
         account.save(update_fields=["total_turnover", "filial_debt"])
 
-        # repayment yozuvi (to‘lov bo‘lsa)
-        if paid_total > 0:
-            SupplierDebtRepayment.objects.create(
-                supplier_id=invoice.supplier_id,
-                employee=invoice.employee,
-                date=invoice.date or timezone.localdate(),
-
-                total_debt_old=total_debt_old,
-                total_debt=total_debt_new,
-
-                summa_total_dollar=paid_total,
-                summa_dollar=_d(invoice.given_summa_dollar),
-                summa_naqt=_d(invoice.given_summa_naqt),
-                summa_kilik=_d(invoice.given_summa_kilik),
-                summa_terminal=_d(invoice.given_summa_terminal),
-                summa_transfer=_d(invoice.given_summa_transfer),
-            )
 
     # 5) invoice’ni final qiymatlar bilan saqlash
     invoice.total_debt_old = total_debt_old

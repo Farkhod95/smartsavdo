@@ -11,7 +11,8 @@ from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 from suppliers.serializer.purchase_invoice import PurchaseInvoiceSerializer, PurchaseInvoiceListSerializer, \
     PurchaseInvoiceDoneSerializer
-from suppliers.utils.purchase_invoice import finalize_purchase_invoice
+from suppliers.services.purchase_invoice_delete import delete_purchase_invoice_rollback
+from suppliers.services.purchase_invoice_edit import finalize_purchase_invoice
 
 
 class PurchaseInvoiceFieldInfoView(APIView):
@@ -96,29 +97,39 @@ class PurchaseInvoiceView(ListCreateAPIView):
 
 class PurchaseInvoiceDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = PurchaseInvoiceSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return PurchaseInvoice.objects.all()
+        # xavfsizlik (xohlasangiz): user faqat o'z filiallaridagini ko'rsin
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+        return PurchaseInvoice.objects.filter(filial_id__in=user_filial_ids)
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
 
     def get(self, request, pk):
-        instance = get_object_or_404(PurchaseInvoice, id=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = PurchaseInvoiceListSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        instance = get_object_or_404(PurchaseInvoice, id=pk)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
         serializer = self.serializer_class(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=self.request.user)
-        return Response(serializer.data, status.HTTP_202_ACCEPTED)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     def delete(self, request, pk):
-        instance = get_object_or_404(PurchaseInvoice, id=pk)
-        instance.delete()
-        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+        instance = get_object_or_404(self.get_queryset(), id=pk)
+
+        # ✅ 100% rollback + hard delete
+        result = delete_purchase_invoice_rollback(invoice_id=instance.id, user=request.user)
+
+        # xohlasangiz delete javobida result ham qaytarib yuboring:
+        # return Response(result, status=status.HTTP_200_OK)
+
+        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
 
 
 class PurchaseInvoiceDoneView(RetrieveUpdateAPIView):
