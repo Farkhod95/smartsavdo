@@ -1,5 +1,6 @@
 from django.db.models import OuterRef, Subquery, DecimalField, Value
 from django.db.models.functions import Coalesce
+from decimal import Decimal
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
@@ -20,20 +21,19 @@ from suppliers.serializer.supplier import SupplierSerializer, SupplierListSerial
 # ✅ Helper: debt annotate
 # ---------------------------
 def annotate_supplier_debt(qs):
-    """
-    SupplierAccount.filial_debt ni Supplier querysetga bir marta qo'shib beradi.
-    N+1 muammosini 100% yo'q qiladi.
-    """
     debt_subq = (
         SupplierAccount.objects
         .filter(supplier_id=OuterRef('pk'))
         .values('filial_debt')[:1]
     )
 
+    debt_field = DecimalField(max_digits=20, decimal_places=2)
+
     return qs.annotate(
         filial_debt_db=Coalesce(
-            Subquery(debt_subq, output_field=DecimalField(max_digits=20, decimal_places=2)),
-            Value(0)
+            Subquery(debt_subq, output_field=debt_field),
+            Value(Decimal('0.00'), output_field=debt_field),  # ✅ MUHIM: output_field!
+            output_field=debt_field,  # ✅ MUHIM: Coalesce ham bir xil type qaytarsin
         )
     )
 
