@@ -26,7 +26,7 @@ def delete_expired_karzinka_order_histories():
     qs = OrderHistory.objects.filter(
         is_delete=False,
         is_karzinka=True,
-        created_time__lt=today_start,   # <-- MUHIM: bugungi kundagiga tegmaydi
+        date__lt=today_start,   # <-- MUHIM: bugungi kundagiga tegmaydi
     )
 
     with transaction.atomic():
