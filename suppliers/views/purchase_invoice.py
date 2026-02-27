@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,7 +9,9 @@ from suppliers.filterset import PurchaseInvoiceFilter
 from suppliers.models import PurchaseInvoice
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
-from suppliers.serializer.purchase_invoice import PurchaseInvoiceSerializer, PurchaseInvoiceListSerializer
+from suppliers.serializer.purchase_invoice import PurchaseInvoiceSerializer, PurchaseInvoiceListSerializer, \
+    PurchaseInvoiceDoneSerializer
+from suppliers.utils.purchase_invoice import finalize_purchase_invoice
 
 
 class PurchaseInvoiceFieldInfoView(APIView):
@@ -55,7 +57,7 @@ class PurchaseInvoiceView(ListCreateAPIView):
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = PurchaseInvoiceFilter
     search_fields = ('supplier__name', 'filial__name', 'sklad__name', 'employee__username')
-    ordering = ['pk']
+    ordering = ['-date', '-pk']
 
     def get_queryset(self):
         user = self.request.user
@@ -117,3 +119,27 @@ class PurchaseInvoiceDetailView(RetrieveUpdateDestroyAPIView):
         instance = get_object_or_404(PurchaseInvoice, id=pk)
         instance.delete()
         return Response(nonContent(), status.HTTP_204_NO_CONTENT)
+
+
+class PurchaseInvoiceDoneView(RetrieveUpdateAPIView):
+    serializer_class = PurchaseInvoiceDoneSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'put']
+
+    def get_queryset(self):
+        # xavfsizlik: user faqat o‘z filiallaridagi invoice’ni ko‘rsin
+        user = self.request.user
+        user_filial_ids = user.filials.values_list('id', flat=True)
+        return PurchaseInvoice.objects.filter(filial_id__in=user_filial_ids)
+
+    def put(self, request, pk, *args, **kwargs):
+        invoice = get_object_or_404(self.get_queryset(), pk=pk)
+
+        # serializer faqat validate uchun (data talab qilmaydi ham bo'ladi)
+        serializer = self.get_serializer(invoice, data=request.data or {}, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        invoice = finalize_purchase_invoice(invoice=invoice, updated_by=request.user)
+
+        out = self.get_serializer(invoice).data
+        return Response(out, status=status.HTTP_202_ACCEPTED)

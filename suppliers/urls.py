@@ -1,7 +1,7 @@
 from django.urls import re_path, path
 
 from suppliers.views.purchase_invoice import PurchaseInvoiceView, PurchaseInvoiceDetailView, \
-    PurchaseInvoiceFieldInfoView
+    PurchaseInvoiceFieldInfoView, PurchaseInvoiceDoneView
 from suppliers.views.supplier import SupplierView, SupplierDetailView, SupplierFieldInfoView
 from suppliers.views.supplier_account import SupplierAccountView, SupplierAccountDetailView, \
     SupplierAccountFieldInfoView
@@ -25,5 +25,6 @@ urlpatterns = [
 
     re_path(r'^purchase-invoice$', PurchaseInvoiceView.as_view(), name='purchase_invoice_view'),
     path('purchase-invoice/<int:pk>', PurchaseInvoiceDetailView.as_view(), name='purchase_invoice_detail_view'),
+    path('purchase-invoice/<int:pk>/done', PurchaseInvoiceDoneView.as_view(), name='purchase_invoice_done_view'),
     path('purchase-invoice/fields', PurchaseInvoiceFieldInfoView.as_view(), name='purchase_invoice_fields_info'),
 ]
