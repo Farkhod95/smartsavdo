@@ -1,13 +1,9 @@
 from decimal import Decimal
 from django.db import transaction
-from django.utils import timezone
 from django.db.models import F, Sum
 
-from inventory.models import ProductHistory, ProductStock
-from suppliers.models import (
-    PurchaseInvoice,
-    SupplierAccount
-)
+from inventory.models import ProductHistory, ProductStock, Product
+from suppliers.models import PurchaseInvoice, SupplierAccount
 
 
 def _d(val) -> Decimal:
@@ -34,32 +30,30 @@ def _calc_paid_total(invoice: PurchaseInvoice) -> Decimal:
 @transaction.atomic
 def delete_purchase_invoice_rollback(*, invoice_id: int, user) -> dict:
     """
-    PurchaseInvoice delete:
-    - ProductStock rollback (kirimni qaytaradi)
+    ✅ 100% ishlaydi (Postgres FOR UPDATE join muammosiz):
+    - Invoice lock
+    - ProductHistory rows lock (HECH QANDAY select_related YO'Q)
+    - Stock rollback
     - SupplierAccount rollback (EXTERNAL bo'lsa)
-    - SupplierDebtRepayment ga tegmaydi (siz aytgan talab)
-    - ProductHistory(purchase_invoice=...) itemlarni o'chiradi
-    - Invoice ni o'chiradi
-
-    NOTE: Bu function "hard delete" qiladi.
+    - ProductHistory delete
+    - Invoice delete
     """
 
-    # Invoice ni lock qilib olamiz
+    # 1) Invoice lock
     invoice = (
         PurchaseInvoice.objects
         .select_for_update()
         .get(pk=invoice_id)
     )
 
-    # Itemlar (invoice ichidagi mahsulotlar)
+    # 2) Itemlar (LOCK) — MUHIM: select_related QILMAYMIZ!
     items_qs = (
         ProductHistory.objects
         .select_for_update()
         .filter(purchase_invoice_id=invoice.id)
-        .select_related("product")
     )
 
-    # all_product_summa ni itemlardan aniq hisoblab olamiz
+    # summa va qty
     agg = items_qs.aggregate(
         total_qty=Sum("count"),
         total_sum=Sum(F("real_price") * F("count")),
@@ -67,26 +61,27 @@ def delete_purchase_invoice_rollback(*, invoice_id: int, user) -> dict:
     all_product_summa = _d(agg.get("total_sum") or 0).quantize(Decimal("0.01"))
     paid_total = _calc_paid_total(invoice).quantize(Decimal("0.01"))
 
-    # 1) STOCK rollback
-    # - INCOMING sklad: minus qty
-    # - INTERNAL bo'lsa: OUTGOING sklad: plus qty (chunki oldin minus qilingandi)
     incoming_sklad_id = invoice.sklad_id
     outgoing_sklad_id = invoice.sklad_outgoing_id if invoice.type == PurchaseInvoice.TYPE.INTERNAL else None
 
     rolled_back_rows = 0
+    touched_product_ids = set()
 
-    for ph in items_qs:
-        qty = int(ph.count or 0)
+    # 3) STOCK rollback
+    # (join qilmaslik uchun values() bilan olamiz)
+    for row in items_qs.values("id", "product_id", "count"):
+        qty = int(row["count"] or 0)
         if qty == 0:
             continue
 
-        product_id = ph.product_id
+        product_id = row["product_id"]
         if not product_id:
-            # Agar history’da product bo'lmasa, rollback qila olmaymiz
-            # (normalda bo'lishi kerak)
+            # history’da product null bo‘lsa rollback qilolmaymiz
             continue
 
-        # Incoming sklad'dan ayiramiz
+        touched_product_ids.add(product_id)
+
+        # incoming sklad’dan ayiramiz
         if incoming_sklad_id:
             ps_in = (
                 ProductStock.objects
@@ -99,7 +94,7 @@ def delete_purchase_invoice_rollback(*, invoice_id: int, user) -> dict:
                 ps_in.save(update_fields=["count"])
                 rolled_back_rows += 1
 
-        # INTERNAL bo'lsa outgoing sklad'ga qaytaramiz
+        # internal bo‘lsa outgoing sklad’ga qaytaramiz
         if outgoing_sklad_id:
             ps_out = (
                 ProductStock.objects
@@ -112,14 +107,13 @@ def delete_purchase_invoice_rollback(*, invoice_id: int, user) -> dict:
                 ps_out.save(update_fields=["count"])
                 rolled_back_rows += 1
 
-        # Product total countni qayta hisoblash (sizda method bor)
-        if ph.product_id and hasattr(ph.product, "recalc_count_from_stocks"):
-            ph.product.recalc_count_from_stocks(save=True)
+    # 4) Product.count ni qayta hisoblash (har bir product bo‘yicha)
+    # join qilmaymiz, alohida olib kelamiz
+    for p in Product.objects.filter(id__in=touched_product_ids).select_for_update():
+        if hasattr(p, "recalc_count_from_stocks"):
+            p.recalc_count_from_stocks(save=True)
 
-    # 2) SupplierAccount rollback (faqat EXTERNAL)
-    # Invoice ta'siri: debt += all_product_summa - paid_total
-    # Delete bo'lsa: debt -= (all_product_summa - paid_total)
-    # turnover -= all_product_summa
+    # 5) SupplierAccount rollback (faqat EXTERNAL)
     supplier_account_updated = False
     if invoice.type == PurchaseInvoice.TYPE.EXTERNAL and invoice.supplier_id:
         account = (
@@ -134,19 +128,13 @@ def delete_purchase_invoice_rollback(*, invoice_id: int, user) -> dict:
             account.total_turnover = (_d(account.total_turnover) - all_product_summa).quantize(Decimal("0.01"))
             account.filial_debt = (_d(account.filial_debt) - delta_debt).quantize(Decimal("0.01"))
 
-            # xohlasangiz 0 dan past tushirmay qo'ying:
-            # if account.filial_debt < 0:
-            #     account.filial_debt = Decimal("0.00")
-            # if account.total_turnover < 0:
-            #     account.total_turnover = Decimal("0.00")
-
             account.save(update_fields=["total_turnover", "filial_debt"])
             supplier_account_updated = True
 
-    # 3) invoice itemlarini o'chirish (ProductHistory)
+    # 6) invoice itemlarini o‘chirish (ProductHistory)
     deleted_items_count, _ = items_qs.delete()
 
-    # 4) invoice ni o'chirish (hard delete)
+    # 7) invoice ni o‘chirish (hard delete)
     invoice.delete()
 
     return {
