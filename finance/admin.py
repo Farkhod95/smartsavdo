@@ -5,8 +5,8 @@ from finance.models import ExchangeRate, ExpenseCategory, Expense, DebtRepayment
 
 @admin.register(ExchangeRate)
 class ExchangeRateAdmin(admin.ModelAdmin):
-    list_display = ('id', 'filial', 'dollar')
-    fields = ('filial', 'dollar')
+    list_display = ('id', 'filial', 'dollar', 'is_active')
+    fields = ('filial', 'dollar', 'is_active')
     search_fields = ('filial__name',)
     list_filter = ('filial',)
 

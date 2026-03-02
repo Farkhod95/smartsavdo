@@ -9,6 +9,7 @@ class ExchangeRateFilter(FilterSet):
         model = ExchangeRate
         fields = {
             'filial': ['exact'],
+            'is_active': ['exact'],
             'dollar': ['exact', 'gte', 'lte'],
         }
 

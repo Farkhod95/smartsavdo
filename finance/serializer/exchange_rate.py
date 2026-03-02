@@ -11,10 +11,10 @@ class ExchangeRateListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExchangeRate
-        fields = ('id', 'dollar', 'filial', 'filial_detail', 'updated_time', 'updated_by', 'updated_by_detail')
+        fields = ('id', 'dollar', 'filial', 'filial_detail', 'updated_time', 'updated_by', 'updated_by_detail', 'is_active')
 
 
 class ExchangeRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExchangeRate
-        fields = ('id', 'dollar', 'filial')
+        fields = ('id', 'dollar', 'filial', 'is_active')
