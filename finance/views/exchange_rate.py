@@ -141,7 +141,7 @@ class ExchangeRateDetailView(RetrieveUpdateDestroyAPIView):
         serializer = self.serializer_class(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        updated_rate: ExchangeRate = serializer.save(updated_by=request.user)
+        updated_rate: ExchangeRate = serializer.save(updated_by=request.user, is_active=True)
 
         # Agar qiymat o'zgargan bo'lsa history yozamiz
         if old_dollar != updated_rate.dollar:
