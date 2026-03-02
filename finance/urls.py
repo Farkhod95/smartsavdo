@@ -4,6 +4,8 @@ from finance.views.debt_repayment import DebtRepaymentView, DebtRepaymentDetailV
     DebtRepaymentKarzinkaView, DebtRepaymentDetailKarzinkaView, DebtRepaymentGroupedByDateView, \
     DebtRepaymentRestoreKarzinkaView
 from finance.views.exchange_rate import ExchangeRateView, ExchangeRateDetailView, ExchangeRateFieldInfoView
+from finance.views.exchange_rate_history import ExchangeRateHistoryView, ExchangeRateHistoryDetailView, \
+    ExchangeRateHistoryFieldInfoView
 from finance.views.expense import ExpenseView, ExpenseDetailView, ExpenseFieldInfoView, ExpenseGroupByDateView
 from finance.views.expense_category import ExpenseCategoryView, ExpenseCategoryDetailView, ExpenseCategoryFieldInfoView
 
@@ -11,6 +13,10 @@ urlpatterns = [
     re_path(r'^exchange-rate$', ExchangeRateView.as_view(), name='exchange_rate_view'),
     path('exchange-rate/<int:pk>', ExchangeRateDetailView.as_view(), name='exchange_rate_detail_view'),
     path('exchange-rate/fields', ExchangeRateFieldInfoView.as_view(), name='exchange_rate_fields_info'),
+
+    re_path(r'^exchange-rate-history/$', ExchangeRateHistoryView.as_view(), name='exchange_rate_history_view'),
+    path('exchange-rate-history/<int:pk>', ExchangeRateHistoryDetailView.as_view(), name='exchange_rate_history_detail_view'),
+    path('exchange-rate-history/fields/', ExchangeRateHistoryFieldInfoView.as_view(), name='exchange_rate_history_fields_info'),
 
     re_path(r'^expense-category$', ExpenseCategoryView.as_view(), name='expense_category_view'),
     path('expense-category/<int:pk>', ExpenseCategoryDetailView.as_view(), name='expense_category_detail_view'),
