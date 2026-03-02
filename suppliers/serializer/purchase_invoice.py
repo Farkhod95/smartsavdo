@@ -4,10 +4,12 @@ from decimal import Decimal
 from accounts.serializers import FilialSerializer, SkladForSerializer
 from suppliers.models import PurchaseInvoice, SupplierAccount
 from suppliers.serializer.supplier import SupplierSerializer
+from users.serializers import UserViewListSerializer
 
 
 class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
     filial_detail = FilialSerializer(source='filial', read_only=True)
+    employee_detail = UserViewListSerializer(source='employee', read_only=True)
     sklad_outgoing_detail = SkladForSerializer(source='sklad_outgoing', read_only=True)
     supplier_detail = SupplierSerializer(source='supplier', read_only=True)
     sklad_detail = SkladForSerializer(source='sklad', read_only=True)
@@ -15,7 +17,7 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseInvoice
-        fields = ('id', 'type', 'employee', 'supplier', 'supplier_detail', 'sklad_outgoing', 'sklad_outgoing_detail',
+        fields = ('id', 'type', 'employee', 'employee_detail', 'supplier', 'supplier_detail', 'sklad_outgoing', 'sklad_outgoing_detail',
                   'filial', 'filial_detail', 'sklad', 'sklad_detail', 'date', 'total_debt_old', 'total_debt',
                   'total_debt_today', 'product_count',
                   'all_product_summa', 'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
