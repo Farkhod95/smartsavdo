@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from finance.models import ExchangeRate, ExpenseCategory, Expense, DebtRepayment
+from finance.models import ExchangeRate, ExpenseCategory, Expense, DebtRepayment, ExchangeRateHistory
 
 
 @admin.register(ExchangeRate)
@@ -9,6 +9,15 @@ class ExchangeRateAdmin(admin.ModelAdmin):
     fields = ('filial', 'dollar')
     search_fields = ('filial__name',)
     list_filter = ('filial',)
+
+
+@admin.register(ExchangeRateHistory)
+class ExchangeRateHistoryAdmin(admin.ModelAdmin):
+    list_display = ('filial', 'exchange_rate', 'old_dollar', 'new_dollar')
+    list_select_related = ('filial', 'exchange_rate')
+    list_filter = ('filial',)
+    search_fields = ('filial__name',)
+    fields = ('exchange_rate', 'old_dollar', 'new_dollar', 'filial')
 
 
 @admin.register(ExpenseCategory)

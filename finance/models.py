@@ -11,6 +11,7 @@ from sales.models import Client
 class ExchangeRate(BaseModel):
     dollar = models.DecimalField(_('Dollar rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Dollar kursi"))
     filial = models.ForeignKey(Filial, related_name='exchange_rates', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))
+    is_active = models.BooleanField(default=True, help_text=_("Is active?"))
 
     class Meta:
         verbose_name = _('exchange rate')
@@ -18,6 +19,20 @@ class ExchangeRate(BaseModel):
 
     def __str__(self):
         return f"{self.filial} | {self.dollar}" if self.filial else f"ExchangeRate #{self.pk}"
+
+
+class ExchangeRateHistory(BaseModel):
+    exchange_rate = models.ForeignKey(ExchangeRate, related_name='exchange_rate_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Dollar kursi bilan bog'lanish"))
+    old_dollar = models.DecimalField(_('Dollar rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Eski Dollar kursi"))
+    new_dollar = models.DecimalField(_('Dollar rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Yangi Dollar kursi"))
+    filial = models.ForeignKey(Filial, related_name='exchange_rate_histories', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))
+
+    class Meta:
+        verbose_name = _('Exchange rate history')
+        verbose_name_plural = _('Exchange rate histories')
+
+    def __str__(self):
+        return f"{self.filial} | {self.new_dollar}" if self.filial else f"ExchangeRateHistory #{self.pk}"
 
 
 class ExpenseCategory(BaseModel):

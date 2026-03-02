@@ -1,7 +1,7 @@
 import django_filters
 from django_filters import FilterSet
 
-from finance.models import ExchangeRate, ExpenseCategory, Expense, DebtRepayment
+from finance.models import ExchangeRate, ExpenseCategory, Expense, DebtRepayment, ExchangeRateHistory
 
 
 class ExchangeRateFilter(FilterSet):
@@ -69,3 +69,14 @@ class DebtRepaymentFilter(FilterSet):
             'is_delete': ['exact'],
             'debt_status': ['exact'],
         }
+
+
+class ExchangeRateHistoryFilter(FilterSet):
+    old_dollar_from = django_filters.NumberFilter(field_name='old_dollar', lookup_expr='gte')
+    old_dollar_to = django_filters.NumberFilter(field_name='old_dollar', lookup_expr='lte')
+    new_dollar_from = django_filters.NumberFilter(field_name='new_dollar', lookup_expr='gte')
+    new_dollar_to = django_filters.NumberFilter(field_name='new_dollar', lookup_expr='lte')
+
+    class Meta:
+        model = ExchangeRateHistory
+        fields = ('exchange_rate', 'filial', 'old_dollar', 'new_dollar')
