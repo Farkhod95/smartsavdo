@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from finance.filterset import ExpenseFilter
 from finance.models import Expense
-from finance.serializer.expense import ExpenseSerializer, ExpenseListSerializer, ExpenseWriteSerializer
+from finance.serializer.expense import ExpenseSerializer, ExpenseListSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
@@ -133,60 +133,68 @@ class ExpenseView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExpenseFilter
-    search_fields = ("filial__name", "category__name", "note")
-    ordering = ["-date", "-pk"]
-    http_method_names = ["get", "post"]
+    search_fields = ('filial__name', 'category__name', 'note')
+    ordering = ['-date', '-pk']
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
         user = self.request.user
-        user_filial_ids = user.filials.values_list("id", flat=True)
+        user_filial_ids = user.filials.values_list('id', flat=True)
 
         return (
             Expense.objects
             .filter(is_delete=False, filial_id__in=user_filial_ids)
-            .select_related("filial", "category", "employee", "created_by")
+            .select_related('filial', 'category', 'employee', 'created_by')
+            .order_by('pk')
         )
 
     def post(self, request, *args, **kwargs):
-        write = ExpenseWriteSerializer(data=request.data, context={"request": request})
-        write.is_valid(raise_exception=True)
+        serializer = ExpenseSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        filial = write.validated_data.get("filial") or request.user.order_filial
+        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
+        filial = serializer.validated_data.get('filial') or request.user.order_filial
+
         if filial is None:
-            return Response({"filial": "filial yuborilmadi va userda order_filial ham yo‘q."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # user shu filialda ishlaydimi?
         if not request.user.filials.filter(id=filial.id).exists():
-            return Response({"detail": "Sizda bu filial uchun xarajat kiritish huquqi yo‘q."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Sizda bu filial uchun xarajat kiritish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        obj = write.save(created_by=request.user, filial=filial)
-
-        # response list serializer (detail ko'rinsin)
-        return Response(ExpenseListSerializer(obj).data, status=status.HTTP_201_CREATED)
+        serializer.save(created_by=request.user, filial=filial)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ExpenseDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    http_method_names = ["get", "put", "delete"]
+    serializer_class = ExpenseSerializer
 
     def get_queryset(self):
-        # xohlasangiz shu yerda ham user filial cheklovini qo'shamiz
         return Expense.objects.all()
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
 
     def get(self, request, pk):
         instance = get_object_or_404(Expense, id=pk)
-        return Response(ExpenseListSerializer(instance).data, status=status.HTTP_200_OK)
+        serializer = ExpenseListSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         instance = get_object_or_404(Expense, id=pk)
-
-        write = ExpenseWriteSerializer(instance, data=request.data, context={"request": request})
-        write.is_valid(raise_exception=True)
-        obj = write.save(updated_by=request.user)
-
-        return Response(ExpenseListSerializer(obj).data, status=status.HTTP_202_ACCEPTED)
+        serializer = self.serializer_class(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(updated_by=self.request.user)
+        return Response(serializer.data, status.HTTP_202_ACCEPTED)
 
     def delete(self, request, pk):
         instance = get_object_or_404(Expense, id=pk)
         instance.is_delete = True
-        instance.save(update_fields=["is_delete"])
-        return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
+        instance.save(update_fields=['is_delete'])
+        return Response(nonContent(), status.HTTP_204_NO_CONTENT)
