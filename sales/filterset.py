@@ -62,6 +62,7 @@ class OrderHistoryFilter(FilterSet):
     date_from = django_filters.DateFilter(field_name='date', lookup_expr='gte')
     date_to = django_filters.DateFilter(field_name='date', lookup_expr='lte')
 
+    filial = django_filters.NumberFilter(field_name='order_filial_id', lookup_expr='exact')
     class Meta:
         model = OrderHistory
         fields = {
