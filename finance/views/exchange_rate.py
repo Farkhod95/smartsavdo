@@ -1,7 +1,7 @@
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,8 +13,24 @@ from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
 
 
+def _bad(msg):
+    return Response({"detail": msg}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def _forbidden(msg):
+    return Response({"detail": msg}, status=status.HTTP_403_FORBIDDEN)
+
+
+def _not_found(msg):
+    return Response({"detail": msg}, status=status.HTTP_404_NOT_FOUND)
+
+
+def _user_filial_ids(user):
+    return list(user.filials.values_list("id", flat=True))
+
+
 class ExchangeRateFieldInfoView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         field_info = []
@@ -24,10 +40,10 @@ class ExchangeRateFieldInfoView(APIView):
                 "verbose_name": str(field.verbose_name),
                 "help_text": str(field.help_text) if field.help_text else "",
                 "type": field.get_internal_type(),
-                "max_length": getattr(field, 'max_length', None),
+                "max_length": getattr(field, "max_length", None),
                 "choices": dict(field.choices) if field.choices else None
             })
-        return Response(field_info)
+        return Response(field_info, status=status.HTTP_200_OK)
 
 
 class ExchangeRateViewList(ListCreateAPIView):
@@ -39,9 +55,9 @@ class ExchangeRateViewList(ListCreateAPIView):
     serializer_class = ExchangeRateSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExchangeRateFilter
-    search_fields = ('filial__name',)
-    ordering = ['pk']
-    http_method_names = ['get']
+    search_fields = ("filial__name",)
+    ordering = ["pk"]
+    http_method_names = ["get"]
     pagination_class = None
 
     def get_queryset(self):
@@ -55,19 +71,17 @@ class ExchangeRateView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExchangeRateFilter
-    search_fields = ('filial__name',)
-    ordering = ['pk']
-    http_method_names = ['get', 'post']
+    search_fields = ("filial__name",)
+    ordering = ["pk"]
+    http_method_names = ["get", "post"]
 
     def get_queryset(self):
-        user = self.request.user
-        user_filial_ids = user.filials.values_list('id', flat=True)
-
+        user_filial_ids = _user_filial_ids(self.request.user)
         return (
             ExchangeRate.objects
             .filter(filial_id__in=user_filial_ids)
-            .select_related('filial')
-            .order_by('pk')
+            .select_related("filial")
+            .order_by("pk")
         )
 
     @transaction.atomic
@@ -75,26 +89,19 @@ class ExchangeRateView(ListCreateAPIView):
         serializer = ExchangeRateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # requestda filial kelgan bo'lsa olamiz, bo'lmasa user.order_filial
-        filial = serializer.validated_data.get('filial') or getattr(request.user, 'order_filial', None)
-
+        filial = serializer.validated_data.get("filial") or getattr(request.user, "order_filial", None)
         if filial is None:
-            return Response(
-                {"filial": "filial yuborilmadi va userda order_filial ham yo‘q."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return _bad("filial yuborilmadi va userda order_filial ham yo‘q.")
 
-        # user shu filialda ishlaydimi?
         if not request.user.filials.filter(id=filial.id).exists():
-            return Response(
-                {"detail": "Sizda bu filial uchun kurs qo‘shish huquqi yo‘q."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return _forbidden("Sizda bu filial uchun kurs qo‘shish huquqi yo‘q.")
 
-        # Yangi ExchangeRate
-        rate: ExchangeRate = serializer.save(created_by=request.user, updated_by=request.user, filial=filial)
+        rate: ExchangeRate = serializer.save(
+            created_by=request.user,
+            updated_by=request.user,
+            filial=filial
+        )
 
-        # History yozamiz (create bo'lgani uchun old=0)
         ExchangeRateHistory.objects.create(
             exchange_rate=rate,
             filial=filial,
@@ -104,9 +111,7 @@ class ExchangeRateView(ListCreateAPIView):
             updated_by=request.user,
         )
 
-        # response list serializerda chiroyli chiqsin
-        out = ExchangeRateListSerializer(rate).data
-        return Response(out, status=status.HTTP_201_CREATED)
+        return Response(ExchangeRateListSerializer(rate).data, status=status.HTTP_201_CREATED)
 
 
 class ExchangeRateDetailView(RetrieveUpdateDestroyAPIView):
@@ -114,36 +119,44 @@ class ExchangeRateDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return ExchangeRate.objects.all()
+        # ✅ ENDI DETAIL HAM FILIAL BO‘YICHA
+        user_filial_ids = _user_filial_ids(self.request.user)
+        return ExchangeRate.objects.filter(filial_id__in=user_filial_ids).select_related("filial")
+
+    def _get_obj(self, request, pk, *, lock=False):
+        try:
+            pk_int = int(pk)
+        except Exception:
+            return None, _bad("id noto‘g‘ri (int bo‘lishi kerak).")
+
+        qs = self.get_queryset()
+        if lock:
+            qs = qs.select_for_update(of=("self",))
+
+        obj = qs.filter(id=pk_int).first()
+        if not obj:
+            return None, _not_found("ExchangeRate topilmadi yoki sizda dostup yo‘q.")
+        return obj, None
 
     def get(self, request, pk):
-        instance = get_object_or_404(ExchangeRate, id=pk)
-        serializer = ExchangeRateListSerializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        obj, err = self._get_obj(request, pk, lock=False)
+        if err:
+            return err
+        return Response(ExchangeRateListSerializer(obj).data, status=status.HTTP_200_OK)
 
     @transaction.atomic
     def put(self, request, pk):
-        # select_for_update -> parallel update'larda history aralashib ketmasin
-        instance: ExchangeRate = get_object_or_404(
-            ExchangeRate.objects.select_for_update(),
-            id=pk
-        )
+        obj, err = self._get_obj(request, pk, lock=True)
+        if err:
+            return err
 
-        # (ixtiyoriy) filial huquqini tekshirish:
-        if instance.filial_id and not request.user.filials.filter(id=instance.filial_id).exists():
-            return Response(
-                {"detail": "Sizda bu filial kursini o‘zgartirish huquqi yo‘q."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        old_dollar = obj.dollar
 
-        old_dollar = instance.dollar
-
-        serializer = self.serializer_class(instance, data=request.data)
+        serializer = self.serializer_class(obj, data=request.data)
         serializer.is_valid(raise_exception=True)
 
         updated_rate: ExchangeRate = serializer.save(updated_by=request.user, is_active=True)
 
-        # Agar qiymat o'zgargan bo'lsa history yozamiz
         if old_dollar != updated_rate.dollar:
             ExchangeRateHistory.objects.create(
                 exchange_rate=updated_rate,
@@ -154,18 +167,14 @@ class ExchangeRateDetailView(RetrieveUpdateDestroyAPIView):
                 updated_by=request.user,
             )
 
+        # response: sizdagi kabi serializer.data (logika o‘zgarmadi)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     @transaction.atomic
     def delete(self, request, pk):
-        instance = get_object_or_404(ExchangeRate, id=pk)
+        obj, err = self._get_obj(request, pk, lock=True)
+        if err:
+            return err
 
-        # (ixtiyoriy) filial huquqini tekshirish:
-        if instance.filial_id and not request.user.filials.filter(id=instance.filial_id).exists():
-            return Response(
-                {"detail": "Sizda bu filial kursini o‘chirish huquqi yo‘q."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        instance.delete()
+        obj.delete()
         return Response(nonContent(), status=status.HTTP_204_NO_CONTENT)
