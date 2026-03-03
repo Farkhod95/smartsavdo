@@ -81,7 +81,8 @@ class SkladView(ListCreateAPIView):
 
         return (
             Sklad.objects
-            .filter(is_delete=False, filial_id__in=user_filial_ids)
+            # .filter(is_delete=False, filial_id__in=user_filial_ids)
+            .filter(is_delete=False)
             .select_related("filial", "region", "district")
             .order_by("sorting", "-id")
         )
