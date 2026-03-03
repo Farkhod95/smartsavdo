@@ -28,6 +28,13 @@ class Client(BaseModel):
     class Meta:
         verbose_name = _('client')
         verbose_name_plural = _('clients')
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "total_debt"]),
+            models.Index(fields=["filial", "is_delete", "is_active"]),
+            models.Index(fields=["phone_number"]),
+            models.Index(fields=["telegram_id"]),
+            models.Index(fields=["region", "district"]),
+        ]
 
     def __str__(self):
         return self.full_name or f"Client #{self.pk}"
@@ -42,6 +49,10 @@ class ClientKeshbekHistory(BaseModel):
     class Meta:
         verbose_name = _('client cashback history')
         verbose_name_plural = _('client cashback histories')
+        indexes = [
+            models.Index(fields=["client", "created_time"]),
+            models.Index(fields=["order_history"]),
+        ]
 
     def __str__(self):
         return f"ClientKeshbekHistory #{self.pk}" if self.pk else "ClientKeshbekHistory"
@@ -68,6 +79,11 @@ class Order(BaseModel):
     class Meta:
         verbose_name = _('order')
         verbose_name_plural = _('orders')
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "date_last_order"]),
+            models.Index(fields=["client", "is_delete", "date_last_order"]),
+            models.Index(fields=["number_of_order"]),
+        ]
 
     def __str__(self):
         return f"Order #{self.pk}" if self.pk else "Order"
@@ -111,8 +127,12 @@ class OrderHistory(BaseModel):
         verbose_name_plural = _('order histories')
 
         indexes = [
-            models.Index(fields=['created_by', 'is_delete', 'date']),
-            models.Index(fields=['created_by', 'is_delete', 'created_time']),
+            models.Index(fields=["created_by", "is_delete", "date"]),
+            models.Index(fields=["created_by", "is_delete", "created_time"]),
+
+            models.Index(fields=["order_filial", "is_delete", "date"]),
+            models.Index(fields=["client", "is_delete", "date"]),
+            models.Index(fields=["employee", "is_delete", "date"]),
         ]
 
     def __str__(self):
@@ -142,6 +162,12 @@ class VozvratOrder(BaseModel):
     class Meta:
         verbose_name = _('vozvrat order')
         verbose_name_plural = _('vozvrat orders')
+
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "date"]),
+            models.Index(fields=["client", "is_delete", "date"]),
+            models.Index(fields=["employee", "is_delete", "date"]),
+        ]
 
     def __str__(self):
         return f"VozvratOrder #{self.pk}" if self.pk else "VozvratOrder"
@@ -178,6 +204,25 @@ class OrderHistoryProduct(BaseModel):
     class Meta:
         verbose_name = _('order history product')
         verbose_name_plural = _('order history products')
+        indexes = [
+            # eng muhim: order_history ichidagi mahsulotlarni tez topish (exists/filter)
+            models.Index(fields=["order_history", "is_delete"]),
+
+            # vozvrat bo'yicha mahsulotlar
+            models.Index(fields=["vozvrat_order", "is_delete"]),
+
+            # ombor/report: qaysi sklad + sana kesimida
+            models.Index(fields=["sklad", "is_delete", "date"]),
+
+            # mahsulot kesimida sotuv/chiqim statistikasi bo'lsa
+            models.Index(fields=["product", "is_delete", "date"]),
+
+            # katalog bo'yicha reportlar bo'lsa (minimal)
+            models.Index(fields=["branch", "is_delete", "date"]),
+            models.Index(fields=["model", "is_delete", "date"]),
+            models.Index(fields=["type", "is_delete", "date"]),
+            models.Index(fields=["size", "is_delete", "date"]),
+        ]
 
     def __str__(self):
         return f"OrderHistoryProduct #{self.pk}" if self.pk else "OrderHistoryProduct"
