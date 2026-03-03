@@ -88,7 +88,7 @@ class OrderView(ListCreateAPIView):
 
         if not request.user.filials.filter(id=filial.id).exists():
             return Response(
-                {"detail": "Sizda bu filial uchun order yaratish huquqi yo‘q."},
+                {"detail": "Sizda bu filial uchun order yaratish huquqi yo‘q. "},
                 status=status.HTTP_403_FORBIDDEN
             )
 
