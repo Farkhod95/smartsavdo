@@ -4,6 +4,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils import timezone
 
 from restapp.pagination import ResultsSetPagination
 from accounts.filterset import NoteFilter
@@ -73,3 +74,30 @@ class NoteDetailView(RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=self.request.user)
         return Response(serializer.data, status.HTTP_202_ACCEPTED)
+
+
+class NoteAllReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+
+        qs = Note.objects.filter(
+            created_by=user,
+            is_delete=False,
+            is_read=False,  # faqat o'qilmaganlarini yangilaymiz
+        )
+
+        updated_count = qs.update(
+            is_read=True,
+            updated_time=timezone.now(),  # auto_now bor, lekin bulk update auto_now ni chaqirmaydi
+            updated_by=user,              # bulk update save() chaqirmaydi, shuning uchun qo'lda beramiz
+        )
+
+        return Response(
+            {
+                "ok": True,
+                "updated_count": updated_count,
+            },
+            status=200,
+        )
