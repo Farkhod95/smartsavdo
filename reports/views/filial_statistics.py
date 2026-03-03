@@ -11,8 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-# sizda qayerda bo'lsa shularni moslab import qiling:
-from accounts.models import Filial  # yoki finance/accounts
+from accounts.models import Filial
 from sales.models import OrderHistory, VozvratOrder
 from finance.models import DebtRepayment, Expense
 
@@ -28,14 +27,23 @@ def _get_period(year: int, month: int | None) -> tuple[date, date]:
     return date(year, 1, 1), date(year, 12, 31)
 
 
-def _sum(qs, field: str):
-    return Coalesce(Sum(field), Value(0), output_field=DecimalField(max_digits=20, decimal_places=2))
+def _sum(_qs, field: str):
+    # ✅ logika o‘zgarmaydi: Sum(field) -> NULL bo‘lsa 0
+    return Coalesce(
+        Sum(field),
+        Value(0),
+        output_field=DecimalField(max_digits=20, decimal_places=2),
+    )
 
 
 class FilialSatisticsReportView(APIView):
     """
     GET /reports/filial-statistics?filial_id=1&year=2026&month=2
     GET /reports/filial-statistics?filial_id=1&year=2026   (month yo'q => butun yil)
+
+    ✅ Qo‘shilganlar (logikaga ta’sir qilmaydi):
+    - user filial dostup tekshiruvi (403)
+    - Http404 chiqmaydi, tushunarli JSON qaytadi
     """
     permission_classes = [IsAuthenticated]
 
@@ -63,14 +71,20 @@ class FilialSatisticsReportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # ---- filial exists?
+        # ✅ DOSTUP: userda filial bo‘lmasa 403 (hisob-kitob logikasi o‘zgarmaydi)
+        if not request.user.filials.filter(id=filial_id_int).exists():
+            return Response(
+                {"detail": "Sizda ushbu filial bo‘yicha hisobotni ko‘rish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # ---- filial exists? (Http404 emas)
         if not Filial.objects.filter(pk=filial_id_int).exists():
             return Response({"detail": "Bunday filial topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
         start_date, end_date = _get_period(year_int, month_int)
 
-        # ---- base querysets (is_delete=False, is_karzinka=False bo'lsa odatda "yakuniy" deb olinadi)
-        # Sizning logikangizga qarab: kerak bo'lsa bu filterlarni o'zgartirasiz.
+        # ---- base querysets (logika o‘sha-o‘sha)
         orders_qs = OrderHistory.objects.filter(
             is_delete=False,
             order_filial_id=filial_id_int,
@@ -99,7 +113,7 @@ class FilialSatisticsReportView(APIView):
             date__lte=end_date,
         )
 
-        # ---- aggregates
+        # ---- aggregates (logika o‘sha-o‘sha)
         orders_agg = orders_qs.aggregate(
             count=Coalesce(Count("id"), Value(0)),
             all_product_summa=_sum(orders_qs, "all_product_summa"),
@@ -158,12 +172,14 @@ class FilialSatisticsReportView(APIView):
             change_uzs=_sum(repay_qs, "zdacha_som"),
         )
 
-        # ---- “net” ko‘rsatkichlar (oddiy biznes mantiq)
-        # net_revenue = Order total paid - Vozvrat total refunded
+        # ---- “net” ko‘rsatkichlar (logika o‘sha-o‘sha)
         net_revenue_usd = (orders_agg["total_paid_usd"] or 0) - (vozvrat_agg["total_refunded_usd"] or 0)
-
-        # net_cashflow = (orders paid + debt repayments) - (expenses + refunds)
-        net_cashflow_usd = (orders_agg["total_paid_usd"] or 0) + (repay_agg["total_paid_usd"] or 0) - (expense_agg["total_usd"] or 0) - (vozvrat_agg["total_refunded_usd"] or 0)
+        net_cashflow_usd = (
+            (orders_agg["total_paid_usd"] or 0)
+            + (repay_agg["total_paid_usd"] or 0)
+            - (expense_agg["total_usd"] or 0)
+            - (vozvrat_agg["total_refunded_usd"] or 0)
+        )
 
         data = {
             "filters": {

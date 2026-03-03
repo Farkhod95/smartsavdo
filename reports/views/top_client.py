@@ -30,7 +30,10 @@ class FilialTopClientReportView(APIView):
     """
     GET /reports/top-client?filial_id=1&date_from=2026-02-01&date_to=2026-02-24
 
-    Natija: top clientlar order_count bo'yicha desc.
+    ✅ Logika o‘zgarmaydi (group/aggregate/order_by o‘sha-o‘sha),
+    faqat:
+      - filial bo‘yicha DOSTUP qo‘shildi (user.filials ichida bo‘lmasa 403)
+      - Http404 yo‘q, tushunarli JSON qaytadi
     """
     permission_classes = [IsAuthenticated]
 
@@ -48,7 +51,17 @@ class FilialTopClientReportView(APIView):
         try:
             filial_id = int(filial_id)
         except ValueError:
-            return Response({"detail": "filial_id noto'g'ri (int bo'lishi kerak)."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "filial_id noto'g'ri (int bo'lishi kerak)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ DOSTUP: user shu filialga bog‘lanmagan bo‘lsa — 403
+        if not request.user.filials.filter(id=filial_id).exists():
+            return Response(
+                {"detail": "Sizda ushbu filial bo‘yicha hisobotni ko‘rish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         date_from = parse_date_yyyy_mm_dd(date_from_raw)
         date_to = parse_date_yyyy_mm_dd(date_to_raw)
@@ -60,9 +73,12 @@ class FilialTopClientReportView(APIView):
             )
 
         if date_from > date_to:
-            return Response({"detail": "date_from date_to dan katta bo'lmasligi kerak."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "date_from date_to dan katta bo'lmasligi kerak."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # OrderHistory -> client bo'yicha group
+        # OrderHistory -> client bo'yicha group (LOGIKA O'ZGARMADI)
         qs = (
             OrderHistory.objects
             .filter(

@@ -9,9 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from sales.models import OrderHistory, Client  # to'g'rilang
+from sales.models import OrderHistory  # to'g'rilang
 from finance.models import DebtRepayment, Expense  # to'g'rilang
-# ExpenseCategory kerak bo'lsa modeldan o'zi join bo'ladi
 
 from reports.serializers import (
     OrderHistoryItemSerializer,
@@ -39,6 +38,10 @@ def d0():
 class FiliaOrderDebtHistoryReportView(APIView):
     """
     GET /reports/order-debt-history?filial_id=1&date_from=2026-02-01&date_to=2026-02-24
+
+    ✅ Logika o‘zgarmaydi, faqat:
+    - filial bo‘yicha DOSTUP qo‘shildi (user.filials ichida bo‘lmasa 403)
+    - Http404 ishlatilmaydi, tushunarli JSON qaytadi
     """
     permission_classes = [IsAuthenticated]
 
@@ -56,7 +59,17 @@ class FiliaOrderDebtHistoryReportView(APIView):
         try:
             filial_id = int(filial_id)
         except ValueError:
-            return Response({"detail": "filial_id noto'g'ri (int bo'lishi kerak)."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "filial_id noto'g'ri (int bo'lishi kerak)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ DOSTUP: user shu filialga bog‘lanmagan bo‘lsa — 403
+        if not request.user.filials.filter(id=filial_id).exists():
+            return Response(
+                {"detail": "Sizda ushbu filial bo‘yicha hisobotni ko‘rish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         date_from = parse_date_yyyy_mm_dd(date_from_raw)
         date_to = parse_date_yyyy_mm_dd(date_to_raw)
@@ -68,7 +81,10 @@ class FiliaOrderDebtHistoryReportView(APIView):
             )
 
         if date_from > date_to:
-            return Response({"detail": "date_from date_to dan katta bo'lmasligi kerak."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "date_from date_to dan katta bo'lmasligi kerak."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # =============== 1) OrderHistory ===============
         orders_qs = (
@@ -105,8 +121,6 @@ class FiliaOrderDebtHistoryReportView(APIView):
             }
             for o in orders_qs
         ]
-
-        # serializer optional (data structure tekshirish uchun)
         orders_items_ser = OrderHistoryItemSerializer(orders_items, many=True).data
 
         # =============== 2) DebtRepayment ===============
@@ -189,7 +203,6 @@ class FiliaOrderDebtHistoryReportView(APIView):
                     "date_from": str(date_from),
                     "date_to": str(date_to),
                 },
-
                 "orders": {
                     "total": {
                         "all_product_summa": str(orders_totals["all_product_summa"]),
@@ -206,7 +219,6 @@ class FiliaOrderDebtHistoryReportView(APIView):
                     "count": len(orders_items_ser),
                     "items": orders_items_ser,
                 },
-
                 "repayments": {
                     "total": {
                         "summa_total_dollar": str(repayments_totals["summa_total_dollar"]),
@@ -222,7 +234,6 @@ class FiliaOrderDebtHistoryReportView(APIView):
                     "count": len(repayments_items_ser),
                     "items": repayments_items_ser,
                 },
-
                 "expenses": {
                     "total": {
                         "summa_total_dollar": str(expenses_totals["summa_total_dollar"]),
