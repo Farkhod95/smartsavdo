@@ -1,8 +1,10 @@
 # reports/views.py
+from __future__ import annotations
+
 from datetime import date
 from decimal import Decimal
 
-from django.db.models import Sum, Q, OuterRef, Subquery, DecimalField, Value
+from django.db.models import Sum, Q, OuterRef, DecimalField, Value
 from django.db.models.functions import Coalesce, TruncMonth
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -17,6 +19,24 @@ from users.models import User
 
 
 class FilialDashboardReportView(APIView):
+    """
+    GET /reports/filial-dashboard?filial_id=1&months=12
+
+    ✅ LOGIKA O'ZGARMAYDI:
+    - filial_id majburiy
+    - filial mavjud bo'lishi shart
+    - card_count:
+        clients_count = Client(filial, is_delete=False).count()
+        karzinka_orders_count = OrderHistory(order_filial, is_delete=False, is_karzinka=False).count()
+        users_count = User(order_filial==filial OR filials contains filial).distinct().count()
+        debtors_count = Client(filial, is_delete=False, total_debt>1).count()
+    - monthly:
+        OrderHistory.summa_total_dollar bo‘yicha oy kesimida SUM
+        DebtRepayment.summa_total_dollar bo‘yicha oy kesimida SUM
+        monthly = months bo‘yicha ketma-ket oylar (start_month..)
+    - Dostup (xavfsizlik): user faqat o‘z filialida ko‘radi (403)
+    - Http404 qaytmaydi, doim tushunarli JSON xabar qaytadi.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -24,9 +44,22 @@ class FilialDashboardReportView(APIView):
         if not filial_id:
             return Response({"detail": "filial_id majburiy"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # filial_id int bo‘lishi shart
         try:
-            filial = Filial.objects.get(pk=filial_id)
-        except Filial.DoesNotExist:
+            filial_id_int = int(filial_id)
+        except (TypeError, ValueError):
+            return Response({"detail": "filial_id noto'g'ri (int bo'lishi kerak)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ DOSTUP: userda filial bo‘lmasa 403
+        if not request.user.filials.filter(id=filial_id_int).exists():
+            return Response(
+                {"detail": "Sizda ushbu filial bo‘yicha hisobotni ko‘rish huquqi yo‘q."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # filial mavjudligini tekshiramiz (Http404 emas)
+        filial = Filial.objects.filter(pk=filial_id_int).first()
+        if not filial:
             return Response({"detail": "Bunday filial topilmadi"}, status=status.HTTP_404_NOT_FOUND)
 
         # Necha oy kesimida (default 12)
@@ -46,26 +79,27 @@ class FilialDashboardReportView(APIView):
             start_month = (start_month - timezone.timedelta(days=1)).replace(day=1)
 
         # -------------------------
-        # CARD COUNT
+        # CARD COUNT (logika o‘sha-o‘sha)
         # -------------------------
         clients_count = Client.objects.filter(
             filial_id=filial.id,
             is_delete=False
         ).count()
 
-        # Siz komentda is_karzinka=True degansiz -> shuni True qildim
         karzinka_orders_count = OrderHistory.objects.filter(
             order_filial_id=filial.id,
             is_delete=False,
             is_karzinka=False
         ).count()
 
-        users_count = User.objects.filter(
-            Q(order_filial_id=filial.id) | Q(filials__id=filial.id)
-        ).distinct().count()
+        users_count = (
+            User.objects
+            .filter(Q(order_filial_id=filial.id) | Q(filials__id=filial.id))
+            .distinct()
+            .count()
+        )
 
-        # Debtors: Client bo‘yicha filialga tegishli DebtRepayment'ning eng oxirgi total_debt_client qiymati > 0
-        # "eng oxirgi" ni date DESC, date null bo‘lsa pastga tushadi; created_time DESC bilan yakunlaymiz
+        # Sizda latest_total_debt_subq bor edi, lekin foydalanilmagan — logikaga ta’sir qilmaslik uchun qoldirdim.
         latest_total_debt_subq = (
             DebtRepayment.objects
             .filter(
@@ -94,7 +128,7 @@ class FilialDashboardReportView(APIView):
         }
 
         # -------------------------
-        # MONTHLY SUMS
+        # MONTHLY SUMS (logika o‘sha-o‘sha)
         # -------------------------
         order_qs = (
             OrderHistory.objects
@@ -107,12 +141,14 @@ class FilialDashboardReportView(APIView):
             .annotate(month=TruncMonth("date"))
             .values("month")
             .annotate(
-                order_sum_usd=Coalesce(Sum("summa_total_dollar"), Value(Decimal("0.00")))
+                order_sum_usd=Coalesce(
+                    Sum("summa_total_dollar"),
+                    Value(Decimal("0.00"), output_field=DecimalField(max_digits=20, decimal_places=2)),
+                )
             )
             .order_by("month")
         )
 
-        # MUHIM FIX: row["month"] sizda date bo‘lib kelyapti -> .date() YO‘Q
         order_map = {
             row["month"].isoformat(): row["order_sum_usd"]
             for row in order_qs
@@ -130,7 +166,10 @@ class FilialDashboardReportView(APIView):
             .annotate(month=TruncMonth("date"))
             .values("month")
             .annotate(
-                debt_sum_usd=Coalesce(Sum("summa_total_dollar"), Value(Decimal("0.00")))
+                debt_sum_usd=Coalesce(
+                    Sum("summa_total_dollar"),
+                    Value(Decimal("0.00"), output_field=DecimalField(max_digits=20, decimal_places=2)),
+                )
             )
             .order_by("month")
         )
@@ -158,8 +197,11 @@ class FilialDashboardReportView(APIView):
             # keyingi oy (dateutil siz)
             cur = (cur.replace(day=28) + timezone.timedelta(days=4)).replace(day=1)
 
-        return Response({
-            "filial_id": filial.id,
-            "card_count": card_count,
-            "monthly": monthly
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "filial_id": filial.id,
+                "card_count": card_count,
+                "monthly": monthly,
+            },
+            status=status.HTTP_200_OK,
+        )

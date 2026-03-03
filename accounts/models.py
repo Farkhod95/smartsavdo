@@ -72,6 +72,13 @@ class Filial(BaseModel):
         verbose_name = _('filial')
         verbose_name_plural = _('filials')
 
+        indexes = [
+            models.Index(fields=["is_delete", "is_active"]),
+            models.Index(fields=["region", "district", "is_delete"]),
+            models.Index(fields=["phone_number"]),
+            models.Index(fields=["is_head_office", "is_delete"]),
+        ]
+
     def __str__(self):
         return self.name or f"Filial #{self.pk}"
 
@@ -89,6 +96,10 @@ class FilialAccount(BaseModel):
     class Meta:
         verbose_name = _('filial account')
         verbose_name_plural = _('filial accounts')
+
+        indexes = [
+            models.Index(fields=["filial"]),
+        ]
 
     def __str__(self):
         return f"{self.filial} | Account #{self.pk}" if self.filial else f"FilialAccount #{self.pk}"
@@ -118,6 +129,12 @@ class Sklad(BaseModel):
                 condition=Q(is_delete=False),
                 name='uniq_sklad_sorting_per_filial_not_deleted'
             ),
+        ]
+
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "is_active"]),
+            models.Index(fields=["region", "district", "is_delete"]),
+            models.Index(fields=["filial", "sorting", "is_delete"]),
         ]
 
     def __str__(self):
@@ -158,5 +175,12 @@ class Note(BaseModel):
         verbose_name = _('Note')
         verbose_name_plural = _('Notes')
 
+        indexes = [
+            models.Index(fields=["is_delete", "status"]),
+            models.Index(fields=["is_delete", "is_read", "status"]),
+            models.Index(fields=["is_delete", "date"]),
+            models.Index(fields=["is_delete", "notified_1day", "date"]),
+            models.Index(fields=["is_delete", "notified_1hour", "date"]),
+        ]
     def __str__(self):
         return self.title or f"Note #{self.pk}"

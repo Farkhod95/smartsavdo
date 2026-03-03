@@ -17,6 +17,11 @@ class Unit(BaseModel):
         verbose_name = _('unit')
         verbose_name_plural = _('units')
 
+        indexes = [
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["name"]),
+        ]
+
     def __str__(self):
         return f"{self.code} - {self.name}" if self.code and self.name else self.code or self.name or f"Unit #{self.pk}"
 
@@ -30,6 +35,11 @@ class ProductBranch(BaseModel):
     class Meta:
         verbose_name = _('product branch')
         verbose_name_plural = _('product branches')
+
+        indexes = [
+            models.Index(fields=["is_delete", "sorting"]),
+            models.Index(fields=["name"]),
+        ]
 
     def __str__(self):
         return self.name or f"ProductBranch #{self.pk}"
@@ -60,6 +70,11 @@ class ProductBranchCategory(BaseModel):
         #         name='uq_branchcategory_branch_sorting_notnull'
         #     )
         # ]
+
+        indexes = [
+            models.Index(fields=["product_branch", "is_delete", "sorting"]),
+            models.Index(fields=["product_branch", "name"]),
+        ]
 
     def __str__(self):
         return self.name or f"ProductBranchCategory #{self.pk}"
@@ -101,6 +116,12 @@ class ProductModel(BaseModel):
         #         name='uq_productmodel_branchcategory_sorting_notnull'
         #     )
         # ]
+        indexes = [
+            models.Index(fields=["branch_category", "is_delete", "sorting"]),
+            models.Index(fields=["branch", "is_delete", "sorting"]),
+            models.Index(fields=["elegant_id"]),
+            models.Index(fields=["name"]),
+        ]
 
     def __str__(self):
         return self.name or f"ProductModel #{self.pk}"
@@ -149,6 +170,13 @@ class ProductType(BaseModel):
         #         name='uq_producttype_model_sorting_notnull'
         #     )
         # ]
+        indexes = [
+            models.Index(fields=["madel", "is_delete", "sorting"]),
+            models.Index(fields=["branch_category", "is_delete", "sorting"]),
+            models.Index(fields=["branch", "is_delete", "sorting"]),
+            models.Index(fields=["elegant_id"]),
+            models.Index(fields=["name"]),
+        ]
 
     def __str__(self):
         return self.name or f"ProductType #{self.pk}"
@@ -165,6 +193,12 @@ class ProductTypeSize(BaseModel):
     class Meta:
         verbose_name = _('product type size')
         verbose_name_plural = _('product type sizes')
+        indexes = [
+            models.Index(fields=["product_type", "is_delete", "sorting"]),
+            models.Index(fields=["product_type", "size"]),
+            models.Index(fields=["unit"]),
+            models.Index(fields=["elegant_id"]),
+        ]
 
     def __str__(self):
         return f"{self.product_type} | {self.size} {self.unit}" if self.product_type else f"ProductTypeSize #{self.pk}"
@@ -192,15 +226,18 @@ class Product(BaseModel):
         verbose_name = _('product')
         verbose_name_plural = _('products')
         indexes = [
-            models.Index(fields=['is_delete']),
-            models.Index(fields=['is_active']),
-            models.Index(fields=['date']),
-            models.Index(fields=['filial']),
-            models.Index(fields=['branch']),
-            models.Index(fields=['branch_category']),
-            models.Index(fields=['model']),
-            models.Index(fields=['type']),
-            models.Index(fields=['size']),
+            # asosiy list: filial bo'yicha active va delete bo'yicha
+            models.Index(fields=["filial", "is_delete", "is_active"]),
+
+            # filial ichida filterlar (ko'p ishlatiladigan kombinatsiyalar)
+            models.Index(fields=["filial", "branch", "is_delete", "is_active"]),
+            models.Index(fields=["filial", "branch_category", "is_delete", "is_active"]),
+            models.Index(fields=["filial", "model", "is_delete", "is_active"]),
+            models.Index(fields=["filial", "type", "is_delete", "is_active"]),
+            models.Index(fields=["filial", "size", "is_delete", "is_active"]),
+
+            # kirim sanasi bo'yicha
+            models.Index(fields=["filial", "date", "is_delete"]),
         ]
 
     def __str__(self):
@@ -247,6 +284,13 @@ class ProductHistory(BaseModel):
         verbose_name = _('product history')
         verbose_name_plural = _('product histories')
 
+        indexes = [
+            models.Index(fields=["filial", "date"]),
+            models.Index(fields=["sklad", "date"]),
+            models.Index(fields=["product", "date"]),
+            models.Index(fields=["purchase_invoice", "date"]),
+        ]
+
     def __str__(self):
         return f"ProductHistory #{self.pk}" if self.pk else "ProductHistory"
 
@@ -261,8 +305,8 @@ class ProductStock(BaseModel):
         verbose_name = _('Product Stock')
         verbose_name_plural = _('Product Stocks')
         indexes = [
-            models.Index(fields=['product']),
-            models.Index(fields=['sklad']),
+            models.Index(fields=["product", "sklad"]),
+            models.Index(fields=["sklad", "product"]),
         ]
 
     def __str__(self):
@@ -276,6 +320,10 @@ class ProductImage(BaseModel):
     class Meta:
         verbose_name = _('product image')
         verbose_name_plural = _('product images')
+
+        indexes = [
+            models.Index(fields=["product", "id"]),
+        ]
 
     def __str__(self):
         return f"ProductImage #{self.pk}" if self.pk else "ProductImage"

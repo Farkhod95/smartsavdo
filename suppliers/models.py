@@ -27,6 +27,14 @@ class Supplier(BaseModel):
         verbose_name = _('supplier')
         verbose_name_plural = _('suppliers')
 
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "is_active"]),
+            models.Index(fields=["type", "is_delete", "is_active"]),
+            models.Index(fields=["inn"]),
+            models.Index(fields=["region", "district"]),
+            models.Index(fields=["name"]),
+        ]
+
     def __str__(self):
         return self.name or f"Supplier #{self.pk}"
 
@@ -39,6 +47,10 @@ class SupplierAccount(BaseModel):
     class Meta:
         verbose_name = _('supplier account')
         verbose_name_plural = _('supplier accounts')
+
+        indexes = [
+            models.Index(fields=["supplier"]),
+        ]
 
     def __str__(self):
         return f"{self.supplier} | Account #{self.pk}" if self.supplier else f"SupplierAccount #{self.pk}"
@@ -60,6 +72,11 @@ class SupplierDebtRepayment(BaseModel):
     class Meta:
         verbose_name = _('supplier debt repayment')
         verbose_name_plural = _('supplier debt repayments')
+
+        indexes = [
+            models.Index(fields=["supplier", "date"]),
+            models.Index(fields=["employee", "date"]),
+        ]
 
     def __str__(self):
         return f"SupplierDebtRepayment #{self.pk}" if self.pk else "SupplierDebtRepayment"
@@ -93,6 +110,15 @@ class PurchaseInvoice(BaseModel):
     class Meta:
         verbose_name = _('purchase invoice')
         verbose_name_plural = _('purchase invoices')
+
+        indexes = [
+            models.Index(fields=["filial", "date"]),
+            models.Index(fields=["supplier", "date"]),
+            models.Index(fields=["sklad", "date"]),
+            models.Index(fields=["sklad_outgoing", "date"]),
+            models.Index(fields=["employee", "date"]),
+            models.Index(fields=["type", "date"]),
+        ]
 
     def __str__(self):
         return f"PurchaseInvoice #{self.pk}" if self.pk else "PurchaseInvoice"

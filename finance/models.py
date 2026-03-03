@@ -17,6 +17,11 @@ class ExchangeRate(BaseModel):
         verbose_name = _('exchange rate')
         verbose_name_plural = _('exchange rates')
 
+        indexes = [
+            models.Index(fields=["filial", "is_active"]),
+            models.Index(fields=["is_active"]),
+        ]
+
     def __str__(self):
         return f"{self.filial} | {self.dollar}" if self.filial else f"ExchangeRate #{self.pk}"
 
@@ -30,6 +35,10 @@ class ExchangeRateHistory(BaseModel):
     class Meta:
         verbose_name = _('Exchange rate history')
         verbose_name_plural = _('Exchange rate histories')
+        indexes = [
+            models.Index(fields=["filial", "created_time"]),
+            models.Index(fields=["exchange_rate", "created_time"]),
+        ]
 
     def __str__(self):
         return f"{self.filial} | {self.new_dollar}" if self.filial else f"ExchangeRateHistory #{self.pk}"
@@ -41,6 +50,9 @@ class ExpenseCategory(BaseModel):
     class Meta:
         verbose_name = _('expense category')
         verbose_name_plural = _('expense categories')
+        indexes = [
+            models.Index(fields=["name"]),
+        ]
 
     def __str__(self):
         return self.name or f"ExpenseCategory #{self.pk}"
@@ -65,6 +77,12 @@ class Expense(BaseModel):
     class Meta:
         verbose_name = _('expense')
         verbose_name_plural = _('expenses')
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "date"]),
+            models.Index(fields=["category", "is_delete", "date"]),
+            models.Index(fields=["employee", "is_delete", "date"]),
+            models.Index(fields=["filial", "is_salary", "is_delete", "date"]),
+        ]
 
     def __str__(self):
         return f"Expense #{self.pk}" if self.pk else "Expense"
@@ -94,6 +112,13 @@ class DebtRepayment(BaseModel):
     class Meta:
         verbose_name = _('debt repayment')
         verbose_name_plural = _('debt repayments')
+
+        indexes = [
+            models.Index(fields=["filial", "is_delete", "date"]),
+            models.Index(fields=["client", "is_delete", "date"]),
+            models.Index(fields=["employee", "is_delete", "date"]),
+            models.Index(fields=["filial", "debt_status", "is_delete", "date"]),
+        ]
 
     def __str__(self):
         return f"DebtRepayment #{self.pk}" if self.pk else "DebtRepayment"

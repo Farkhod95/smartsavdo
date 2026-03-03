@@ -19,6 +19,10 @@ class Role(models.Model):
     class Meta:
         verbose_name = _('role')
         verbose_name_plural = _('roles')
+        indexes = [
+            models.Index(fields=["key"]),
+            models.Index(fields=["name"]),
+        ]
 
     def __str__(self):
         return self.name
@@ -87,6 +91,15 @@ class User(AbstractUser):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
+
+        indexes = [
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["order_filial", "is_active"]),
+            models.Index(fields=["region", "district", "is_active"]),
+            models.Index(fields=["phone_number"]),
+            models.Index(fields=["email"]),
+            models.Index(fields=["date_joined"]),
+        ]
 
     def __str__(self):
         if self.full_name:
