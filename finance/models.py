@@ -48,6 +48,7 @@ class ExpenseCategory(BaseModel):
 
 class Expense(BaseModel):
     filial = models.ForeignKey(Filial, related_name='expenses', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Filial bilan bog'lanish"))
+    exchange_rate = models.DecimalField(_('Exchange rate'), max_digits=20, decimal_places=6, default=0, help_text=_("Kurs"))
     category = models.ForeignKey(ExpenseCategory, related_name='expenses', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ExpenseCategory bilan bog'lanish"))
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='expenses', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Jarayonni amalga oshirgan hodim (User)"))
     is_salary = models.BooleanField(default=False, help_text=_("is salary?"))

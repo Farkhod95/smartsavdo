@@ -30,9 +30,9 @@ class ExpenseCategoryAdmin(admin.ModelAdmin):
 @admin.register(Expense)
 class ExpenseAdmin(admin.ModelAdmin):
     list_display = ('id', 'filial', 'category', 'is_salary', 'employee', 'date', 'summa_total_dollar', 'summa_dollar',
-                    'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'is_delete')
+                    'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'is_delete', 'exchange_rate')
     fields = ('filial', 'category', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik', 'summa_terminal',
-              'summa_transfer', 'date', 'note', 'is_delete')
+              'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate')
     search_fields = ('filial__name', 'category__name', 'note')
     list_filter = ('is_delete', 'date', 'filial', 'category')
 

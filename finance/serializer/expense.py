@@ -14,35 +14,40 @@ class ExpenseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ('id', 'filial', 'filial_detail', 'category', 'category_detail', 'is_salary', 'employee', 'employee_detail', 'summa_total_dollar', 'summa_dollar',
-                  'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete')
+                  'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate')
 
-
-Q = Decimal("0.01")
-
-MONEY_PART_FIELDS = (
-    "summa_dollar",
-    "summa_naqt",
-    "summa_kilik",
-    "summa_terminal",
-    "summa_transfer",
-)
-
-def fast_decimal(val, field_name: str) -> Decimal:
-    """
-    Juda tez parse:
-    - None / "" => 0.00
-    - "1200" / 1200 / "1200.50" => ok
-    Noto'g'ri format => ValidationError
-    """
-    if val is None or val == "":
-        return Decimal("0.00")
-    try:
-        d = Decimal(str(val))
-    except (InvalidOperation, ValueError, TypeError):
-        raise serializers.ValidationError({field_name: "Summa formati noto‘g‘ri."})
-    return d.quantize(Q, rounding=ROUND_HALF_UP)
 
 class ExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
+        fields = ('id', 'filial', 'category', 'is_salary', 'employee', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik',
+                  'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate')
+
+
+Q2 = Decimal("0.01")
+Q6 = Decimal("0.000001")
+
+MONEY_FIELDS = ("summa_dollar", "summa_naqt", "summa_kilik", "summa_terminal", "summa_transfer")
+
+
+def d(v) -> Decimal:
+    if v is None or v == "":
+        return Decimal("0")
+    try:
+        return Decimal(str(v))
+    except (InvalidOperation, ValueError, TypeError):
+        return Decimal("0")
+
+
+def q2(v: Decimal) -> Decimal:
+    return v.quantize(Q2, rounding=ROUND_HALF_UP)
+
+
+def q6(v: Decimal) -> Decimal:
+    return v.quantize(Q6, rounding=ROUND_HALF_UP)
+
+
+class ExpenseWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = (
@@ -51,7 +56,8 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "category",
             "is_salary",
             "employee",
-            "summa_total_dollar",
+            "exchange_rate",
+            "summa_total_dollar",  # front yuborsa ham qayta hisoblanadi
             "summa_dollar",
             "summa_naqt",
             "summa_kilik",
@@ -61,34 +67,36 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "note",
             "is_delete",
         )
+        extra_kwargs = {"summa_total_dollar": {"required": False}}
 
-    def _calc_total(self, data: dict, instance=None) -> dict:
-        # 1) faqat part fieldlar parse qilinadi (tez)
-        parts = {}
-        for f in MONEY_PART_FIELDS:
-            if f in data:
-                parts[f] = fast_decimal(data.get(f), f)
-                if parts[f] < 0:
-                    raise serializers.ValidationError({f: "Manfiy summa bo‘lishi mumkin emas."})
-            elif instance is not None:
-                parts[f] = instance.__dict__.get(f) or Decimal("0.00")
-            else:
-                parts[f] = Decimal("0.00")
+    def validate(self, attrs):
+        inst = getattr(self, "instance", None)
 
-        # 2) totalni backendda aniq hisoblaymiz
-        total = sum(parts.values(), Decimal("0.00")).quantize(Q, rounding=ROUND_HALF_UP)
+        # Kurs 6 xonada (model shunaqa), lekin natijalar 2 xonada bo'ladi
+        rate = q6(d(attrs.get("exchange_rate", inst.exchange_rate if inst else 0)))
+        if rate < 0:
+            raise serializers.ValidationError({"exchange_rate": "Kurs manfiy bo‘lishi mumkin emas."})
 
-        # 3) data ga yozib qo'yamiz
-        for f, v in parts.items():
-            if f in data:   # faqat kelgan fieldlarni update qilamiz
-                data[f] = v
-        data["summa_total_dollar"] = total
-        return data
+        vals = {}
+        for f in MONEY_FIELDS:
+            vals[f] = q2(d(attrs.get(f, getattr(inst, f) if inst else 0)))
+            if vals[f] < 0:
+                raise serializers.ValidationError({f: "Qiymat manfiy bo‘lishi mumkin emas."})
 
-    def create(self, validated_data):
-        validated_data = self._calc_total(validated_data)
-        return super().create(validated_data)
+        uzs_total = vals["summa_naqt"] + vals["summa_kilik"] + vals["summa_terminal"] + vals["summa_transfer"]
 
-    def update(self, instance, validated_data):
-        validated_data = self._calc_total(validated_data, instance=instance)
-        return super().update(instance, validated_data)
+        # UZS -> USD (kurs > 0 bo'lsa)
+        uzs_usd = Decimal("0.00")
+        if rate > 0:
+            uzs_usd = q2(uzs_total / rate)  # 2 xonaga darhol
+
+        # Yakuniy total ham 2 xonada
+        total_usd = q2(vals["summa_dollar"] + uzs_usd)
+
+        # Saqlanadigan qiymatlar
+        attrs["exchange_rate"] = rate
+        for f in MONEY_FIELDS:
+            attrs[f] = vals[f]
+        attrs["summa_total_dollar"] = total_usd
+
+        return attrs
