@@ -14,7 +14,7 @@ class ClientListSerializer(serializers.ModelSerializer):
         model = Client
         fields = ('id', 'telegram_id', 'full_name', 'is_active', 'date_of_birthday', 'gender', 'phone_number', 'region',
                   'region_detail', 'district', 'district_detail', 'filial', 'filial_detail', 'total_debt', 'keshbek',
-                  'is_profit_loss', 'type', 'is_delete', 'created_by')
+                  'is_profit_loss', 'type', 'is_delete', 'created_by', 'created_by_detail')
 
 
 class ClientSerializer(serializers.ModelSerializer):
