@@ -1,6 +1,6 @@
 # reports/views.py
 from __future__ import annotations
-
+from django.db.models import DecimalField
 from django.db.models import Max, Q, Sum
 from django.db.models.functions import Coalesce
 from rest_framework.views import APIView
@@ -69,8 +69,12 @@ class FilialDebtorsReportView(APIView):
 
         # Umumiy qarz summasi (shu filtrdagi barcha clientlar bo‘yicha)
         total_debt_summ = base_qs.aggregate(
-            s=Coalesce(Sum("total_debt"), 0)
-        )["s"] or 0
+            s=Coalesce(
+                Sum("total_debt"),
+                0,
+                output_field=DecimalField(max_digits=20, decimal_places=2),
+            )
+        )["s"]
 
         # Oxirgi buyurtma sanasi (OrderHistory.date dan MAX)
         qs = (
