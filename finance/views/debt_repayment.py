@@ -94,7 +94,7 @@ class DebtRepaymentViewList(ListCreateAPIView):
     serializer_class = DebtRepaymentSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
-    search_fields = ("client__full_name", "employee__username", "note")
+    ssearch_fields = ("client__full_name", "employee__full_name", "note", 'total_debt_client', 'summa_total_dollar')
     ordering = ["-pk"]
     http_method_names = ["get"]
     pagination_class = None
@@ -112,7 +112,7 @@ class DebtRepaymentGroupedByDateView(ListAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
-    search_fields = ("client__full_name", "employee__username", "note")
+    search_fields = ("client__full_name", "employee__full_name", "note", 'total_debt_client', 'summa_total_dollar')
     ordering = ["-date", "-pk"]
 
     def get_queryset(self) -> QuerySet:
@@ -193,7 +193,7 @@ class DebtRepaymentView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
-    search_fields = ("client__full_name", "employee__username", "note")
+    search_fields = ("client__full_name", "employee__full_name", "note", 'total_debt_client', 'summa_total_dollar')
     ordering = ["-pk"]
     http_method_names = ["get", "post"]
 
@@ -308,7 +308,7 @@ class DebtRepaymentKarzinkaView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = DebtRepaymentFilter
-    search_fields = ("client__full_name", "employee__username", "note")
+    search_fields = ("client__full_name", "employee__full_name", "note", 'total_debt_client', 'summa_total_dollar')
     ordering = ["-pk"]
     http_method_names = ["get"]
 

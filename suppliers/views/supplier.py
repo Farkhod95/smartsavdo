@@ -86,7 +86,7 @@ class SupplierView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierFilter
-    search_fields = ('name', 'inn', 'address')
+    search_fields = ('name', 'inn', 'address', 'filial__name')
     ordering = ['pk']
 
     def get_queryset(self):

@@ -67,7 +67,7 @@ class SupplierDebtRepaymentView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierDebtRepaymentFilter
-    search_fields = ('supplier__name', 'employee__username')
+    search_fields = ('supplier__name', 'employee__full_name')
     ordering = ['-date', '-pk']  # ✅ tavsiya: eng yangi to'lovlar tepada
 
     def get_queryset(self):

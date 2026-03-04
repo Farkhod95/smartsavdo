@@ -41,7 +41,7 @@ class PurchaseInvoiceViewList(ListCreateAPIView):
     serializer_class = PurchaseInvoiceSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = PurchaseInvoiceFilter
-    search_fields = ('supplier__name', 'filial__name', 'sklad__name', 'employee__username')
+    search_fields = ('supplier__name', 'filial__name', 'sklad__name', 'employee__full_name', 'sklad_outgoing__name', 'total_debt', 'product_count')
     ordering = ['pk']
     http_method_names = ['get']
     pagination_class = None
@@ -57,7 +57,7 @@ class PurchaseInvoiceView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = PurchaseInvoiceFilter
-    search_fields = ('supplier__name', 'filial__name', 'sklad__name', 'employee__username')
+    search_fields = ('supplier__name', 'filial__name', 'sklad__name', 'employee__full_name', 'sklad_outgoing__name', 'total_debt', 'product_count')
     ordering = ['-date', '-pk']
 
     def get_queryset(self):

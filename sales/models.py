@@ -10,6 +10,12 @@ from django.conf import settings
 
 
 class Client(BaseModel):
+    class TYPE(models.TextChoices):
+        DONA = 'dona', _('Dona')
+        OPTOM = 'optom', _('Optom')
+        DOKON = 'dokon', _('Dokon')
+        HAMKOR = 'hamkor', _('Hamkor')
+
     telegram_id = models.BigIntegerField(_('Telegram ID'), null=True, blank=True, help_text=_("Telegram ID"))
     full_name = models.CharField(_('Full name'), max_length=255, null=True, blank=True, help_text=_("F.I.Sh"))
     is_active = models.BooleanField(default=True, help_text=_("Is active?"))
@@ -22,7 +28,7 @@ class Client(BaseModel):
     total_debt = models.DecimalField(_('Total debt'), max_digits=20, decimal_places=2, default=0, help_text=_("Umumiy qarz"))
     keshbek = models.DecimalField(_('Cashback percent'), max_digits=10, decimal_places=2, default=0, help_text=_("Keshbek foizda (0.2, 0.5 ...)"))
     is_profit_loss = models.BooleanField(default=False, help_text=_("Foyda/zararni hisoblamaslik uchun"))
-    type = models.IntegerField(_('Type'), null=True, blank=True, help_text=_("Dona, Optom, Dokon, Hamkor"))
+    type = models.CharField(choices=TYPE.choices, max_length=50, null=True, blank=True, help_text=_("Dona, Optom, Dokon, Hamkor"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
 
     class Meta:

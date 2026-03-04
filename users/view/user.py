@@ -25,7 +25,7 @@ class UserView(ListCreateAPIView):
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = UserFilter
-    search_fields = ('first_name', 'last_name')
+    search_fields = ('full_name', 'username', 'phone_number', 'order_filial__name')
     ordering = ['-pk']
 
     def get_queryset(self):

@@ -52,7 +52,7 @@ class SupplierAccountView(ListCreateAPIView):
     pagination_class = ResultsSetPagination
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = SupplierAccountFilter
-    search_fields = ('supplier__name',)
+    search_fields = ('supplier__name', 'total_turnover', 'filial_debt')
     ordering = ['pk']
 
     def get_queryset(self):
