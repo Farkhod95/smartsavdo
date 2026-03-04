@@ -55,7 +55,7 @@ class ExchangeRateViewList(ListCreateAPIView):
     serializer_class = ExchangeRateSerializer
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExchangeRateFilter
-    search_fields = ("filial__name",)
+    search_fields = ("filial__name", 'dollar')
     ordering = ["pk"]
     http_method_names = ["get"]
     pagination_class = None
@@ -71,7 +71,7 @@ class ExchangeRateView(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExchangeRateFilter
-    search_fields = ("filial__name",)
+    search_fields = ("filial__name", 'dollar')
     ordering = ["pk"]
     http_method_names = ["get", "post"]
 

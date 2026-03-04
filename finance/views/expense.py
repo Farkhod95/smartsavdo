@@ -56,7 +56,7 @@ class ExpenseViewList(ListCreateAPIView):
     serializer_class = ExpenseListSerializer   # ✅ yengilroq va foydaliroq
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExpenseFilter
-    search_fields = ('filial__name', 'category__name', 'note')
+    search_fields = ('filial__name', 'category__name', 'note', 'employee__full_name', 'summa_total_dollar')
     ordering = ['pk']
     http_method_names = ['get']
     pagination_class = None
@@ -76,7 +76,7 @@ class ExpenseGroupByDateView(ListAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ExpenseFilter
-    search_fields = ('filial__name', 'category__name', 'note')
+    search_fields = ('filial__name', 'category__name', 'note', 'employee__full_name', 'summa_total_dollar')
     ordering = ['-date', '-pk']
     http_method_names = ['get']
 
