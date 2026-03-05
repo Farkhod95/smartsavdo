@@ -2,16 +2,16 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers
-from accounts.serializers import  FilialListSerializer
+from accounts.serializers import FilialForSerializer
 from inventory.models import ProductStock, Product
 from sales.models import  VozvratOrder, Order, OrderHistoryProduct, Client
-from sales.serializer.client import ClientListSerializer
+from sales.serializer.client import ClientForSerializer
 from users.serializers import UserViewListShortSerializer
 
 
 class VozvratOrderListSerializer(serializers.ModelSerializer):
-    filial_detail = FilialListSerializer(source='filial', read_only=True)
-    client_detail = ClientListSerializer(source='client', read_only=True)
+    filial_detail = FilialForSerializer(source='filial', read_only=True)
+    client_detail = ClientForSerializer(source='client', read_only=True)
     employee_detail = UserViewListShortSerializer(source='employee', read_only=True)
 
     class Meta:

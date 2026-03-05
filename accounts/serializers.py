@@ -108,6 +108,16 @@ class FilialListSerializer(serializers.ModelSerializer):
         )
 
 
+class FilialForSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Filial
+        fields = (
+            'id', 'name', 'region', 'district',
+            'address', 'phone_number', 'logo',
+            'is_active', 'is_delete', 'is_head_office'
+        )
+
+
 class FilialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Filial
