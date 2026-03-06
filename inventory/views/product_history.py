@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
-from django.db.models import F
-from django.db.models import Count
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+from django.db.models.functions import Coalesce
 
 from rest_framework import filters, status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
@@ -107,6 +107,147 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
+    def patch(self, request, pk):
+        history = get_object_or_404(self.get_queryset().select_for_update(), id=pk)
+
+        # Siz aytgandek: product doim aniq va o'zgarmaydi
+        if not history.product_id:
+            raise ValidationError({"product": "ProductHistory.product topilmadi."})
+
+        product = Product.objects.select_for_update().get(pk=history.product_id)
+
+        # OLD invoice
+        old_invoice = history.purchase_invoice
+
+        # PATCH payload validate
+        put_ser = ProductHistoryPutSerializer(
+            history,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+        put_ser.is_valid(raise_exception=True)
+        data = put_ser.validated_data
+
+        # OLD
+        old_count = history.count or 0
+
+        old_sklad = resolve_sklad(history)
+        if old_sklad is None:
+            raise ValidationError({"sklad": "Eski sklad topilmadi (historyda ham, invoice ichida ham yo‘q)."})
+
+        # NEW invoice
+        new_invoice = data.get('purchase_invoice', history.purchase_invoice)
+
+        # NEW sklad (payload’da bo‘lmasa invoice.sklad dan, u ham bo‘lmasa historydagi sklad)
+        new_sklad = resolve_sklad(
+            history,
+            payload_sklad=data.get('sklad'),
+            payload_invoice=new_invoice
+        )
+        if new_sklad is None:
+            raise ValidationError({"sklad": "Yangi sklad topilmadi (payload/history/invoice)."})
+
+        # NEW count
+        new_count = data.get('count', history.count)
+        if new_count is None:
+            new_count = history.count or 0
+
+        # signed delta
+        delta = new_count - old_count
+
+        # --- 1) Product.count update (delta) ---
+        if delta != 0:
+            Product.objects.filter(pk=product.pk).update(count=F('count') + delta)
+
+        # --- 2) Stock update ---
+        same_sklad = (old_sklad.id == new_sklad.id)
+
+        if same_sklad:
+            # bitta sklad bo‘lsa stockga faqat delta ta’sir qiladi
+            if delta != 0:
+                stock = (
+                    ProductStock.objects.select_for_update()
+                    .filter(product=product, sklad=old_sklad)
+                    .first()
+                )
+                if not stock:
+                    stock = ProductStock.objects.create(product=product, sklad=old_sklad, count=0)
+
+                ProductStock.objects.filter(pk=stock.pk).update(count=F('count') + delta)
+
+        else:
+            # sklad almashgan bo‘lsa eski sklad ta’sirini bekor qilamiz
+            if old_count != 0:
+                old_stock = (
+                    ProductStock.objects.select_for_update()
+                    .filter(product=product, sklad=old_sklad)
+                    .first()
+                )
+                if not old_stock:
+                    old_stock = ProductStock.objects.create(product=product, sklad=old_sklad, count=0)
+
+                ProductStock.objects.filter(pk=old_stock.pk).update(count=F('count') - old_count)
+
+            # yangi skladga yangi count ni qo‘shamiz
+            if new_count != 0:
+                new_stock = (
+                    ProductStock.objects.select_for_update()
+                    .filter(product=product, sklad=new_sklad)
+                    .first()
+                )
+                if not new_stock:
+                    new_stock = ProductStock.objects.create(product=product, sklad=new_sklad, count=0)
+
+                ProductStock.objects.filter(pk=new_stock.pk).update(count=F('count') + new_count)
+
+        # --- 3) History update ---
+        for field, value in data.items():
+            setattr(history, field, value)
+
+        history.sklad = new_sklad
+        history.count = new_count
+        history.updated_by = request.user
+        history.save()
+
+        # =========================
+        # PurchaseInvoice.product_count va all_product_summa update
+        # faqat invoice_id bo'lsa
+        # =========================
+        invoice_ids = set()
+
+        if old_invoice and old_invoice.id:
+            invoice_ids.add(old_invoice.id)
+
+        if history.purchase_invoice and history.purchase_invoice.id:
+            invoice_ids.add(history.purchase_invoice.id)
+
+        for invoice_id in invoice_ids:
+            qs = ProductHistory.objects.filter(purchase_invoice_id=invoice_id)
+
+            aggregates = qs.aggregate(
+                product_count=Coalesce(Sum('count'), 0),
+                all_product_summa=Coalesce(
+                    Sum(
+                        ExpressionWrapper(
+                            F('count') * F('real_price'),
+                            output_field=DecimalField(max_digits=20, decimal_places=2)
+                        )
+                    ),
+                    0,
+                    output_field=DecimalField(max_digits=20, decimal_places=2)
+                )
+            )
+
+            PurchaseInvoice.objects.filter(id=invoice_id).update(
+                product_count=aggregates['product_count'] or 0,
+                all_product_summa=aggregates['all_product_summa'] or 0
+            )
+
+        out = ProductHistoryListSerializer(history, context={'request': request})
+        return Response(out.data, status=status.HTTP_202_ACCEPTED)
+
+    @transaction.atomic
     def put(self, request, pk):
         history = get_object_or_404(self.get_queryset().select_for_update(), id=pk)
 
@@ -208,7 +349,7 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
         history.save()
 
         # =========================
-        # PurchaseInvoice.product_count update
+        # PurchaseInvoice.product_count va all_product_summa update
         # faqat invoice_id bo'lsa
         # =========================
         invoice_ids = set()
@@ -220,12 +361,25 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
             invoice_ids.add(history.purchase_invoice.id)
 
         for invoice_id in invoice_ids:
-            product_count = ProductHistory.objects.filter(
-                purchase_invoice_id=invoice_id
-            ).count()
+            qs = ProductHistory.objects.filter(purchase_invoice_id=invoice_id)
+
+            aggregates = qs.aggregate(
+                product_count=Coalesce(Sum('count'), 0),
+                all_product_summa=Coalesce(
+                    Sum(
+                        ExpressionWrapper(
+                            F('count') * F('real_price'),
+                            output_field=DecimalField(max_digits=20, decimal_places=2)
+                        )
+                    ),
+                    0,
+                    output_field=DecimalField(max_digits=20, decimal_places=2)
+                )
+            )
 
             PurchaseInvoice.objects.filter(id=invoice_id).update(
-                product_count=product_count
+                product_count=aggregates['product_count'] or 0,
+                all_product_summa=aggregates['all_product_summa'] or 0
             )
 
         out = ProductHistoryListSerializer(history, context={'request': request})
