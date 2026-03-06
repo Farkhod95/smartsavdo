@@ -37,32 +37,26 @@ class ProductHistorySerializer(serializers.ModelSerializer):
         fields = ('id', 'date', 'reserve_limit', 'product', 'filial', 'sklad', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note')
 
 
-
-
 class ProductHistoryCreateSerializer(serializers.ModelSerializer):
-    """
-    ProductHistory yaratadi, lekin product maydoni o‘rniga product_data qabul qiladi.
-    """
-    # product_data = ProductCreateSerializer(write_only=True)
-
     class Meta:
         model = ProductHistory
         fields = (
-            'id', 'date', 'filial', 'sklad', 'reserve_limit', 'purchase_invoice', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price',
-            'unit_price', 'wholesale_price', 'min_price', 'note',
-            'product',       # response’da ko‘rinsin
-            # 'product_data',  # request’da keladi
+            'id', 'date', 'filial', 'sklad', 'reserve_limit', 'purchase_invoice',
+            'branch', 'branch_category', 'model', 'type', 'size', 'count',
+            'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note',
+            'product',
         )
-        # read_only_fields = ('id', 'product')
 
     def validate(self, attrs):
-        """
-        filial payload’da kelmasa, purchase_invoice.filial dan olib qo'yamiz.
-        Ikkalasi ham bo'lmasa xato.
-        """
         filial = attrs.get('filial')
         sklad = attrs.get('sklad')
         invoice = attrs.get('purchase_invoice')
+        count = int(attrs.get('count') or 0)
+
+        if count < 0:
+            raise serializers.ValidationError({
+                'count': "Miqdor manfiy bo‘lishi mumkin emas."
+            })
 
         if not filial:
             if invoice and getattr(invoice, 'filial_id', None):
@@ -77,103 +71,197 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
                 attrs['sklad'] = invoice.sklad
             else:
                 raise serializers.ValidationError({
-                    'sklad': "Sklad yuborilishi kerak yoki purchase_invoice ichida sklad bo‘lishi shart."
+                    'sklad': "Sklad yuborilishi kerak yoki purchase_invoice ichida incoming sklad bo‘lishi shart."
                 })
+
+        if invoice:
+            # incoming sklad filialga tegishli bo'lsin
+            if attrs['filial'] and attrs['sklad'] and getattr(attrs['sklad'], 'filial_id', None):
+                if attrs['sklad'].filial_id != attrs['filial'].id:
+                    raise serializers.ValidationError({
+                        'sklad': "Incoming sklad tanlangan filialga tegishli emas."
+                    })
+
+            if invoice.type == PurchaseInvoice.TYPE.INTERNAL:
+                if not invoice.sklad_outgoing_id:
+                    raise serializers.ValidationError({
+                        'purchase_invoice': "INTERNAL invoice uchun sklad_outgoing bo‘lishi shart."
+                    })
+
+                if not invoice.sklad_id:
+                    raise serializers.ValidationError({
+                        'purchase_invoice': "INTERNAL invoice uchun sklad bo‘lishi shart."
+                    })
+
+                if invoice.sklad_outgoing_id == invoice.sklad_id:
+                    raise serializers.ValidationError({
+                        'purchase_invoice': "Ichki kirimda chiqayotgan va kirayotgan sklad bir xil bo‘lishi mumkin emas."
+                    })
+
         return attrs
+
+    def _get_or_create_stock_locked(self, product, sklad):
+        stock = (
+            ProductStock.objects.select_for_update()
+            .filter(product=product, sklad=sklad)
+            .first()
+        )
+        if not stock:
+            stock = ProductStock.objects.create(product=product, sklad=sklad, count=0)
+        return stock
+
+    def _refresh_invoice_totals(self, invoice_id):
+        if not invoice_id:
+            return
+
+        aggregates = ProductHistory.objects.filter(
+            purchase_invoice_id=invoice_id
+        ).aggregate(
+            product_count=Coalesce(Sum('count'), 0),
+            all_product_summa=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('count') * F('real_price'),
+                        output_field=DecimalField(max_digits=20, decimal_places=2)
+                    )
+                ),
+                0,
+                output_field=DecimalField(max_digits=20, decimal_places=2)
+            )
+        )
+
+        PurchaseInvoice.objects.filter(id=invoice_id).update(
+            product_count=aggregates['product_count'] or 0,
+            all_product_summa=aggregates['all_product_summa'] or 0
+        )
 
     @transaction.atomic
     def create(self, validated_data):
-        # safety: product field bo'lsa ham olib tashlaymiz
         validated_data.pop('product', None)
 
-        # filial endi aniq bor (validate ichida qo‘yilgan bo‘ladi)
+        invoice = validated_data.get('purchase_invoice')
         filial = validated_data['filial']
-        count = validated_data.get('count') or 0
+        incoming_sklad = validated_data['sklad']
+        count = int(validated_data.get('count') or 0)
 
-        # 1) Product yaratamiz (payload fieldlari asosida)
-        product_qs = Product.objects.select_for_update().filter(
-            filial=filial,
-            branch=validated_data['branch'],
-            branch_category=validated_data.get('branch_category'),
-            model=validated_data.get('model'),
-            type=validated_data.get('type'),
-            size=validated_data.get('size'),
-            is_delete=False,
-        )
+        invoice_type = PurchaseInvoice.TYPE.EXTERNAL
+        outgoing_sklad = None
 
-        product = product_qs.first()
+        if invoice:
+            invoice_type = invoice.type or PurchaseInvoice.TYPE.EXTERNAL
+            if invoice_type == PurchaseInvoice.TYPE.INTERNAL:
+                outgoing_sklad = invoice.sklad_outgoing
 
-        if not product:
-            product = Product.objects.create(
-                date=validated_data.get('date'),
-                reserve_limit=validated_data.get('reserve_limit'),
+        # 1) Product ni topamiz
+        product = (
+            Product.objects.select_for_update()
+            .filter(
                 filial=filial,
-                branch=validated_data.get('branch'),
+                branch=validated_data['branch'],
                 branch_category=validated_data.get('branch_category'),
                 model=validated_data.get('model'),
                 type=validated_data.get('type'),
                 size=validated_data.get('size'),
-                count=count,
-                real_price=validated_data.get('real_price', 0),
-                unit_price=validated_data.get('unit_price', 0),
-                wholesale_price=validated_data.get('wholesale_price', 0),
-                min_price=validated_data.get('min_price', 0),
-                note=validated_data.get('note'),
                 is_delete=False,
             )
-        else:
-            # count ni xavfsiz oshiramiz
-            Product.objects.filter(pk=product.pk).update(
-                count=F('count') + count,
-                real_price=validated_data.get('real_price', product.real_price),
-                unit_price=validated_data.get('unit_price', product.unit_price),
-                wholesale_price=validated_data.get('wholesale_price', product.wholesale_price),
-                min_price=validated_data.get('min_price', product.min_price),
-                note=validated_data.get('note', product.note),
-                reserve_limit=validated_data.get('reserve_limit', product.reserve_limit),
-            )
-            product.refresh_from_db()
-
-        # 2) ProductHistory yaratamiz va product ni bog'laymiz
-        history = ProductHistory.objects.create(
-            product=product,
-            **validated_data
+            .first()
         )
 
-        # 3) ProductStock update
-        sklad = history.sklad
-        product_stock = ProductStock.objects.select_for_update().filter(
-            product=product,
-            sklad=sklad
-        ).first()
-
-        if not product_stock:
-            ProductStock.objects.create(product=product, sklad=sklad, count=count)
-        else:
-            ProductStock.objects.filter(pk=product_stock.pk).update(count=F('count') + count)
-
-        # 4) PurchaseInvoice.product_count + all_product_summa update
-        if history.purchase_invoice_id:
-            aggregates = ProductHistory.objects.filter(
-                purchase_invoice_id=history.purchase_invoice_id
-            ).aggregate(
-                product_count=Coalesce(Sum('count'), 0),
-                all_product_summa=Coalesce(
-                    Sum(
-                        ExpressionWrapper(
-                            F('count') * F('real_price'),
-                            output_field=DecimalField(max_digits=20, decimal_places=2)
-                        )
-                    ),
-                    0,
-                    output_field=DecimalField(max_digits=20, decimal_places=2)
+        # 2) Invoice turiga qarab logika
+        if invoice_type == PurchaseInvoice.TYPE.EXTERNAL:
+            # tashqi kirim: product bo'lmasa yaratamiz
+            if not product:
+                product = Product.objects.create(
+                    date=validated_data.get('date'),
+                    reserve_limit=validated_data.get('reserve_limit'),
+                    filial=filial,
+                    branch=validated_data.get('branch'),
+                    branch_category=validated_data.get('branch_category'),
+                    model=validated_data.get('model'),
+                    type=validated_data.get('type'),
+                    size=validated_data.get('size'),
+                    count=0,  # count ni stockdan recalc qilamiz
+                    real_price=validated_data.get('real_price', 0),
+                    unit_price=validated_data.get('unit_price', 0),
+                    wholesale_price=validated_data.get('wholesale_price', 0),
+                    min_price=validated_data.get('min_price', 0),
+                    note=validated_data.get('note'),
+                    is_delete=False,
+                    is_active=True,
+                    created_by=validated_data.get('created_by'),
                 )
+            else:
+                # narxlarni yangilab qo'yamiz, countni qo'l bilan oshirmaymiz
+                update_data = {
+                    'real_price': validated_data.get('real_price', product.real_price),
+                    'unit_price': validated_data.get('unit_price', product.unit_price),
+                    'wholesale_price': validated_data.get('wholesale_price', product.wholesale_price),
+                    'min_price': validated_data.get('min_price', product.min_price),
+                    'note': validated_data.get('note', product.note),
+                    'reserve_limit': validated_data.get('reserve_limit', product.reserve_limit),
+                }
+                Product.objects.filter(pk=product.pk).update(**update_data)
+                product.refresh_from_db()
+
+            # history yaratamiz
+            history = ProductHistory.objects.create(
+                product=product,
+                **validated_data
             )
 
-            PurchaseInvoice.objects.filter(id=history.purchase_invoice_id).update(
-                product_count=aggregates['product_count'] or 0,
-                all_product_summa=aggregates['all_product_summa'] or 0
+            # incoming skladga qo'shamiz
+            stock_in = self._get_or_create_stock_locked(product, incoming_sklad)
+            ProductStock.objects.filter(pk=stock_in.pk).update(count=F('count') + count)
+
+            # product count stocklardan qayta hisoblanadi
+            product.refresh_from_db()
+            product.recalc_count_from_stocks(save=True)
+
+        else:
+            # INTERNAL
+            if not outgoing_sklad:
+                raise serializers.ValidationError({
+                    'purchase_invoice': "INTERNAL invoice uchun sklad_outgoing topilmadi."
+                })
+
+            if outgoing_sklad.id == incoming_sklad.id:
+                raise serializers.ValidationError({
+                    'purchase_invoice': "Ichki kirimda chiqayotgan va kirayotgan sklad bir xil bo‘lishi mumkin emas."
+                })
+
+            if not product:
+                raise serializers.ValidationError({
+                    'product': "Ichki ko‘chirish uchun avval mahsulot tizimda mavjud bo‘lishi kerak."
+                })
+
+            stock_out = self._get_or_create_stock_locked(product, outgoing_sklad)
+            stock_in = self._get_or_create_stock_locked(product, incoming_sklad)
+
+            current_out_count = int(stock_out.count or 0)
+            if current_out_count < count:
+                raise serializers.ValidationError({
+                    'count': f"Chiquvchi omborda yetarli mahsulot yo‘q. Mavjud: {current_out_count}, kerak: {count}."
+                })
+
+            # history yaratamiz
+            history = ProductHistory.objects.create(
+                product=product,
+                **validated_data
             )
+
+            # source dan ayiramiz
+            ProductStock.objects.filter(pk=stock_out.pk).update(count=F('count') - count)
+
+            # destination ga qo'shamiz
+            ProductStock.objects.filter(pk=stock_in.pk).update(count=F('count') + count)
+
+            # product umumiy count o'zgarmaydi, lekin baribir recalc qilamiz
+            product.refresh_from_db()
+            product.recalc_count_from_stocks(save=True)
+
+        # 3) invoice aggregation
+        if history.purchase_invoice_id:
+            self._refresh_invoice_totals(history.purchase_invoice_id)
 
         return history
 
