@@ -23,7 +23,7 @@ class SupplierAccountAdmin(admin.ModelAdmin):
 class SupplierDebtRepaymentAdmin(admin.ModelAdmin):
     list_display = ('id', 'supplier', 'employee', 'date', 'total_debt_old', 'total_debt', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer')
     fields = ('supplier', 'employee', 'date', 'total_debt_old', 'total_debt', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer')
-    search_fields = ('supplier__name', 'employee__username')
+    search_fields = ('supplier__name', 'employee__full_name')
     list_filter = ('date', 'supplier', 'employee')
 
 
@@ -31,5 +31,5 @@ class SupplierDebtRepaymentAdmin(admin.ModelAdmin):
 class PurchaseInvoiceAdmin(admin.ModelAdmin):
     list_display = ('id', 'type', 'employee', 'supplier', 'sklad_outgoing', 'filial', 'sklad', 'date', 'product_count', 'all_product_summa', 'total_debt', 'total_debt_today', 'is_karzinka')
     fields = ('type', 'employee', 'supplier', 'sklad_outgoing', 'filial', 'sklad', 'date', 'total_debt_old', 'total_debt', 'total_debt_today', 'product_count', 'all_product_summa', 'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt', 'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_karzinka')
-    search_fields = ('supplier__name', 'sklad_outgoing__name', 'filial__name', 'sklad__name', 'employee__username')
+    search_fields = ('supplier__name', 'sklad_outgoing__name', 'filial__name', 'sklad__name', 'employee__full_name')
     list_filter = ('type', 'date', 'filial', 'sklad', 'supplier')

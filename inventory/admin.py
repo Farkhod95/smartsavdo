@@ -81,5 +81,5 @@ class ProductStockAdmin(admin.ModelAdmin):
     list_display = ('product', 'sklad', 'count')
     list_select_related = ('product', 'sklad')
     list_filter = ('sklad',)
-    search_fields = ('product__name',)
+    search_fields = ('sklad__name', 'count')
     fields = ('product', 'sklad', 'count')
