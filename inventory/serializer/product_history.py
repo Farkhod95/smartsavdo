@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Sum, DecimalField, ExpressionWrapper
+from django.db.models.functions import Coalesce
 
 from accounts.serializers import FilialSerializer, SkladSerializer
 from inventory.models import Product, ProductHistory, ProductStock
@@ -10,6 +11,7 @@ from inventory.serializer.product_branch_category import ProductBranchCategorySe
 from inventory.serializer.product_model import ProductModelSerializer
 from inventory.serializer.product_type import ProductTypeSerializer
 from inventory.serializer.product_type_size import ProductTypeSizeSerializer
+from suppliers.models import PurchaseInvoice
 from suppliers.serializer.purchase_invoice import PurchaseInvoiceSerializer
 
 
@@ -83,6 +85,7 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # safety: product field bo'lsa ham olib tashlaymiz
         validated_data.pop('product', None)
+
         # filial endi aniq bor (validate ichida qo‘yilgan bo‘ladi)
         filial = validated_data['filial']
         count = validated_data.get('count') or 0
@@ -137,12 +140,40 @@ class ProductHistoryCreateSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+        # 3) ProductStock update
         sklad = history.sklad
-        product_stock = ProductStock.objects.select_for_update().filter(product=product, sklad=sklad).first()
+        product_stock = ProductStock.objects.select_for_update().filter(
+            product=product,
+            sklad=sklad
+        ).first()
+
         if not product_stock:
             ProductStock.objects.create(product=product, sklad=sklad, count=count)
         else:
             ProductStock.objects.filter(pk=product_stock.pk).update(count=F('count') + count)
+
+        # 4) PurchaseInvoice.product_count + all_product_summa update
+        if history.purchase_invoice_id:
+            aggregates = ProductHistory.objects.filter(
+                purchase_invoice_id=history.purchase_invoice_id
+            ).aggregate(
+                product_count=Coalesce(Sum('count'), 0),
+                all_product_summa=Coalesce(
+                    Sum(
+                        ExpressionWrapper(
+                            F('count') * F('real_price'),
+                            output_field=DecimalField(max_digits=20, decimal_places=2)
+                        )
+                    ),
+                    0,
+                    output_field=DecimalField(max_digits=20, decimal_places=2)
+                )
+            )
+
+            PurchaseInvoice.objects.filter(id=history.purchase_invoice_id).update(
+                product_count=aggregates['product_count'] or 0,
+                all_product_summa=aggregates['all_product_summa'] or 0
+            )
 
         return history
 

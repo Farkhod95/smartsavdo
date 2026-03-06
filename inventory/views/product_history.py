@@ -390,12 +390,18 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def delete(self, request, pk):
-        history = get_object_or_404(self.get_queryset().select_for_update(), id=pk)
+        history = get_object_or_404(
+            ProductHistory.objects.select_for_update(),
+            id=pk
+        )
 
         if not history.product_id:
             raise ValidationError({"product": "ProductHistory.product topilmadi."})
 
         product = Product.objects.select_for_update().get(pk=history.product_id)
+
+        # delete bo‘lishidan oldin invoice ni olib qolamiz
+        old_invoice_id = history.purchase_invoice_id
 
         sklad = resolve_sklad(history)
         if sklad is None:
@@ -411,16 +417,40 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
                 .first()
             )
             if not stock:
-                # stock bo'lmasa ham yaratib, keyin -count qilamiz (manfiyga ruxsat bor)
+                # stock bo'lmasa ham yaratib, keyin -count qilamiz
                 stock = ProductStock.objects.create(product=product, sklad=sklad, count=0)
 
-            # history ta'sirini bekor qilamiz:
-            # product.count -= count
-            # stock.count   -= count
+            # history ta'sirini bekor qilamiz
             Product.objects.filter(pk=product.pk).update(count=F('count') - count)
             ProductStock.objects.filter(pk=stock.pk).update(count=F('count') - count)
 
         history.delete()
+
+        # =========================
+        # PurchaseInvoice.product_count + all_product_summa update
+        # =========================
+        if old_invoice_id:
+            aggregates = ProductHistory.objects.filter(
+                purchase_invoice_id=old_invoice_id
+            ).aggregate(
+                product_count=Coalesce(Sum('count'), 0),
+                all_product_summa=Coalesce(
+                    Sum(
+                        ExpressionWrapper(
+                            F('count') * F('real_price'),
+                            output_field=DecimalField(max_digits=20, decimal_places=2)
+                        )
+                    ),
+                    0,
+                    output_field=DecimalField(max_digits=20, decimal_places=2)
+                )
+            )
+
+            PurchaseInvoice.objects.filter(id=old_invoice_id).update(
+                product_count=aggregates['product_count'] or 0,
+                all_product_summa=aggregates['all_product_summa'] or 0
+            )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
