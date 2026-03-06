@@ -54,9 +54,9 @@ class ProductTypeSizeAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'unit_price', 'wholesale_price', 'min_price', 'is_delete', 'is_active')
+    list_display = ('id', 'date', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'is_delete', 'is_active')
     fields = ('date', 'reserve_limit', 'filial', 'branch', 'branch_category', 'model', 'type', 'size', 'count', 'real_price', 'unit_price', 'wholesale_price', 'min_price', 'note', 'is_delete', 'is_active')
-    search_fields = ('note', 'filial__name', 'branch__name', 'branch_category__name', 'model__name', 'type__name')
+    search_fields = ('note', 'filial__name', 'branch__name', 'branch_category__name', 'model__name', 'type__name', 'real_price')
     list_filter = ('is_delete', 'filial', 'branch', 'branch_category', 'model', 'type')
 
 
