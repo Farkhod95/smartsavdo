@@ -108,7 +108,10 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def patch(self, request, pk):
-        history = get_object_or_404(self.get_queryset().select_for_update(), id=pk)
+        history = get_object_or_404(
+            ProductHistory.objects.select_for_update(),
+            id=pk
+        )
 
         # Siz aytgandek: product doim aniq va o'zgarmaydi
         if not history.product_id:
