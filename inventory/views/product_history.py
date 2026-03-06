@@ -1,6 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from django.db.models import F
+from django.db.models import Count
 
 from rest_framework import filters, status
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, get_object_or_404
@@ -15,6 +16,7 @@ from inventory.serializer.product_history import ProductHistoryListSerializer, P
     ProductHistoryCreateSerializer, ProductHistoryPutSerializer
 from restapp.pagination import ResultsSetPagination
 from restapp.utils.responses import nonContent
+from suppliers.models import PurchaseInvoice
 
 
 class ProductHistoryFieldInfoView(APIView):
@@ -114,10 +116,16 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
 
         product = Product.objects.select_for_update().get(pk=history.product_id)
 
+        # OLD invoice
+        old_invoice = history.purchase_invoice
+
         # payload validate
         put_ser = ProductHistoryPutSerializer(history, data=request.data, context={'request': request})
         put_ser.is_valid(raise_exception=True)
         data = put_ser.validated_data
+
+        # NEW invoice
+        new_invoice = data.get('purchase_invoice', history.purchase_invoice)
 
         # OLD
         old_count = history.count or 0
@@ -198,6 +206,27 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
         history.count = new_count
         history.updated_by = request.user
         history.save()
+
+        # =========================
+        # PurchaseInvoice.product_count update
+        # faqat invoice_id bo'lsa
+        # =========================
+        invoice_ids = set()
+
+        if old_invoice and old_invoice.id:
+            invoice_ids.add(old_invoice.id)
+
+        if history.purchase_invoice and history.purchase_invoice.id:
+            invoice_ids.add(history.purchase_invoice.id)
+
+        for invoice_id in invoice_ids:
+            product_count = ProductHistory.objects.filter(
+                purchase_invoice_id=invoice_id
+            ).count()
+
+            PurchaseInvoice.objects.filter(id=invoice_id).update(
+                product_count=product_count
+            )
 
         out = ProductHistoryListSerializer(history, context={'request': request})
         return Response(out.data, status=status.HTTP_202_ACCEPTED)
