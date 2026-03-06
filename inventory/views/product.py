@@ -120,7 +120,7 @@ class ProductGroupByModelList(ListCreateAPIView):
 
     filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = ProductFilter
-    search_fields = ('filial__name', 'branch__name', 'model__name', 'type__name', "size__name")
+    search_fields = ('filial__name', 'branch__name', 'model__name', 'type__name', "size__size")
     ordering = ['pk']
     http_method_names = ['get']
 
