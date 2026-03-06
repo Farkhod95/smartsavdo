@@ -6,7 +6,8 @@ from sales.views.client_keshbek_history import ClientKeshbekHistoryView, ClientK
 from sales.views.order import OrderView, OrderDetailView, OrderFieldInfoView
 from sales.views.order_history import OrderHistoryView, OrderHistoryFieldInfoView, OrderHistoryDetailView, \
     OrderHistorySelfView, OrderHistoryKarzinkaView, OrderHistoryDetailKarzinkaView, OrderHistorySellView, \
-    OrderHistoryEditView, OrderHistoryRestoreKarzinkaView, OrderHistoryDebtorProductView, OrderHistoryCreateUpdate
+    OrderHistoryEditView, OrderHistoryRestoreKarzinkaView, OrderHistoryDebtorProductView, OrderHistoryCreateUpdate, \
+    OrderHistoryAppView
 from sales.views.order_history_product import OrderHistoryProductView, OrderHistoryProductDetailView, \
     OrderHistoryProductFieldInfoView, OrderHistoryProductVozvratView
 from sales.views.order_history_product_grouped import OrderHistoryProductByModelView
@@ -29,6 +30,7 @@ urlpatterns = [
     path('order/fields/', OrderFieldInfoView.as_view(), name='order_fields_info'),
 
     re_path(r'^order-history$', OrderHistoryView.as_view(), name='order_history_view'),
+    path('order-history/app', OrderHistoryAppView.as_view(), name='order_history_app'),
     path('order-history/create-update', OrderHistoryCreateUpdate.as_view(), name='order_history_create_update'),
     path('order-history/self', OrderHistorySelfView.as_view(), name='order_history_self_view'),
     path('order-history/debtor-product', OrderHistoryDebtorProductView.as_view(), name='order_history_debtor_product'),
