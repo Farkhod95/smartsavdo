@@ -29,3 +29,9 @@ class ClientForSerializer(serializers.ModelSerializer):
         model = Client
         fields = ('id', 'telegram_id', 'full_name', 'is_active', 'date_of_birthday', 'gender', 'phone_number', 'region',
                   'district', 'filial', 'total_debt', 'keshbek', 'is_profit_loss', 'type', 'is_delete')
+
+
+class ReportClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = ('id', 'full_name',  'phone_number', 'total_debt', 'keshbek')

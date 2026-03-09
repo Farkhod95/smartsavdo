@@ -95,3 +95,46 @@ class SoldProductsHistorySerializer(serializers.Serializer):
         if not date_value:
             return None
         return date_value.strftime("%d.%m.%Y")
+
+
+class SoldOrderItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    client_id = serializers.IntegerField(allow_null=True)
+    client_name = serializers.CharField(allow_null=True)
+    employee_id = serializers.IntegerField(allow_null=True)
+    employee_name = serializers.CharField(allow_null=True)
+    time = serializers.CharField(allow_null=True)
+    datetime = serializers.DateTimeField(allow_null=True)
+    note = serializers.CharField(allow_null=True)
+    driver_info = serializers.CharField(allow_null=True)
+
+    all_product_summa = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_total_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_naqt = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_kilik = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_terminal = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_transfer = serializers.DecimalField(max_digits=20, decimal_places=2)
+    all_profit_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+
+
+class DebtRepaymentItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    client_id = serializers.IntegerField(allow_null=True)
+    client_name = serializers.CharField(allow_null=True)
+    employee_id = serializers.IntegerField(allow_null=True)
+    employee_name = serializers.CharField(allow_null=True)
+    time = serializers.CharField(allow_null=True)
+    datetime = serializers.DateTimeField(allow_null=True)
+    note = serializers.CharField(allow_null=True)
+
+    old_total_debt_client = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_debt_client = serializers.DecimalField(max_digits=20, decimal_places=2)
+    paid_debt_dollar = serializers.DecimalField(source='summa_total_dollar', max_digits=20, decimal_places=2)
+
+    summa_total_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_naqt = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_kilik = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_terminal = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_transfer = serializers.DecimalField(max_digits=20, decimal_places=2)

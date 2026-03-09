@@ -109,7 +109,7 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderHistory)
 class OrderHistoryAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'order', 'client', 'order_filial', 'employee', 'currency', 'date',
+        'id', 'order', 'client', 'order_filial', 'employee', 'currency', 'created_time', 'date',
         'exchange_rate',
         'all_product_summa', 'discount_amount',
         'summa_total_dollar', 'summa_dollar',
