@@ -121,7 +121,7 @@ class OrderHistoryAdmin(admin.ModelAdmin):
         'order_status', 'update_status',
         'is_debtor_product',
         'status_order_dukon', 'status_order_sklad',
-        'driver_info',
+        'driver_info', 'price_difference',
         'is_karzinka', 'is_delete',
     )
     search_fields = (
@@ -164,7 +164,7 @@ class OrderHistoryAdmin(admin.ModelAdmin):
         ('Statuslar', {
             'classes': ('wide',),
             'fields': (
-                ('order_status', 'update_status'),
+                ('order_status', 'update_status', 'price_difference'),
                 ('is_debtor_product',),
                 ('status_order_dukon', 'status_order_sklad'),
                 ('driver_info',),

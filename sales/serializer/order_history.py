@@ -21,7 +21,7 @@ class OrderHistoryForSerializer(serializers.ModelSerializer):
             'all_product_summa', 'summa_total_dollar', 'summa_dollar', 'summa_naqt',
             'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount',
             'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
-            'is_debtor_product', 'status_order_dukon', 'status_order_sklad',
+            'is_debtor_product', 'status_order_dukon', 'status_order_sklad', 'price_difference',
             'driver_info', 'is_karzinka', 'order_filial', 'currency'
         )
 
@@ -33,7 +33,8 @@ class OrderHistorySerializer(serializers.ModelSerializer):
                   'total_debt_client', 'total_debt_today_client', 'all_product_summa', 'summa_total_dollar',
                   'summa_dollar', 'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount',
                   'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status', 'is_debtor_product',
-                  'status_order_dukon', 'status_order_sklad', 'driver_info', 'is_karzinka', 'order_filial', 'currency')
+                  'status_order_dukon', 'status_order_sklad', 'driver_info', 'is_karzinka', 'order_filial', 'currency',
+                  'price_difference')
 
 
 class OrderHistoryListSerializer(serializers.ModelSerializer):
@@ -51,7 +52,7 @@ class OrderHistoryListSerializer(serializers.ModelSerializer):
                   'discount_amount', 'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
                   'is_debtor_product', 'status_order_dukon', 'status_order_sklad', 'driver_info', 'is_karzinka',
                   'created_time', 'created_by', 'created_by_detail', 'order_filial', 'order_filial_detail',
-                  'currency', 'currency_detail')
+                  'currency', 'currency_detail', 'price_difference')
 
 
 class OrderHistoryUpdateSerializer(serializers.ModelSerializer):
@@ -63,7 +64,7 @@ class OrderHistoryUpdateSerializer(serializers.ModelSerializer):
             'all_product_summa', 'summa_total_dollar', 'summa_dollar', 'summa_naqt',
             'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount',
             'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
-            'is_debtor_product', 'status_order_dukon', 'status_order_sklad',
+            'is_debtor_product', 'status_order_dukon', 'status_order_sklad', 'price_difference',
             'driver_info', 'is_karzinka', 'order_filial', 'currency'
         )
         # extra_kwargs = {
@@ -165,7 +166,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             'all_product_summa', 'summa_total_dollar', 'summa_dollar', 'summa_naqt',
             'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount',
             'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
-            'is_debtor_product', 'status_order_dukon', 'status_order_sklad',
+            'is_debtor_product', 'status_order_dukon', 'status_order_sklad', 'price_difference',
             'driver_info', 'is_karzinka', 'order_filial', 'currency'
         )
 

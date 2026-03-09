@@ -94,6 +94,7 @@ class OrderHistoryFilter(FilterSet):
             'status_order_dukon': ['exact'],
             'status_order_sklad': ['exact'],
             'is_karzinka': ['exact'],
+            'price_difference': ['exact'],
             'driver_info': ['exact', 'icontains'],
         }
 

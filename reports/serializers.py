@@ -79,3 +79,19 @@ class TopClientItemSerializer(serializers.Serializer):
     sum_summa_total_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
     sum_all_product_summa = serializers.DecimalField(max_digits=20, decimal_places=2)
     sum_all_profit_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+
+
+class SoldProductsHistorySerializer(serializers.Serializer):
+    date = serializers.DateField(source='created_date')
+    date_label = serializers.SerializerMethodField()
+
+    orders_count = serializers.IntegerField()
+    all_product_summa = serializers.DecimalField(max_digits=20, decimal_places=2)
+    summa_total_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+    all_profit_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
+
+    def get_date_label(self, obj):
+        date_value = obj.get("created_date")
+        if not date_value:
+            return None
+        return date_value.strftime("%d.%m.%Y")

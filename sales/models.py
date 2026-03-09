@@ -121,10 +121,11 @@ class OrderHistory(BaseModel):
     zdacha_som = models.DecimalField(_('Change (UZS)'), max_digits=20, decimal_places=2, default=0, help_text=_("Qaytim so'mda"))
     is_delete = models.BooleanField(default=False, help_text=_("Is deleted?"))
     order_status = models.BooleanField(default=False, help_text=_("Buyurtma tasdiqlanganmi? (Narxini kiritishda)"))
-    update_status = models.IntegerField(_('Update status'), null=True, blank=True, help_text=_("Buyurtma o'zgarganmi?"))
+    update_status = models.IntegerField(_('Update status'), default=0, null=True, blank=True, help_text=_("Buyurtma o'zgarganmi?"))
     is_debtor_product = models.BooleanField(default=False, help_text=_("Mijozdan qarzdorlik mavjudmi? (Hamma mahsuloti berildimi?)"))
     status_order_dukon = models.BooleanField(default=False, help_text=_("Do'konda buyurtma xolati"))
     status_order_sklad = models.BooleanField(default=False, help_text=_("Skladda buyurtma xolati"))
+    price_difference = models.BooleanField(default=False, help_text=_("Narxda farq bormi? (Sotilgan narx real dan kichikmi)"))
     driver_info = models.CharField(_('Driver info'), max_length=255, null=True, blank=True, help_text=_("Haydovchi ma'lumotlari"))
     is_karzinka = models.BooleanField(default=True, help_text=_("Karzinkaga qoshilganmi?"))
 
@@ -193,10 +194,8 @@ class OrderHistoryProduct(BaseModel):
     type = models.ForeignKey(ProductType, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductType bilan bog'lanish"))
     size = models.ForeignKey(ProductTypeSize, related_name='order_history_products', on_delete=models.SET_NULL, null=True, blank=True, help_text=_("ProductTypeSize bilan bog'lanish"))
     count = models.IntegerField(_('Count'), null=True, blank=True, help_text=_("Miqdor"))
-    price_dollar = models.DecimalField(_('Price dollar'), max_digits=20, decimal_places=2, default=0,
-                                       help_text=_("Narxi dollarda"))
-    price_sum = models.DecimalField(_('Price sum'), max_digits=20, decimal_places=2, default=0,
-                                    help_text=_("Narxi so'mda"))
+    price_dollar = models.DecimalField(_('Price dollar'), max_digits=20, decimal_places=2, default=0, help_text=_("Narxi dollarda"))
+    price_sum = models.DecimalField(_('Price sum'), max_digits=20, decimal_places=2, default=0, help_text=_("Narxi so'mda"))
     given_count = models.IntegerField(_('Given count'), null=True, blank=True, help_text=_("Mijozga berilgan mahsulot soni"))
     real_price = models.DecimalField(_('Real price'), max_digits=20, decimal_places=2, default=0, help_text=_("Xaqiqiy narxi"))
     unit_price = models.DecimalField(_('Unit price'), max_digits=20, decimal_places=2, default=0, help_text=_("Dona narxi"))
@@ -211,19 +210,10 @@ class OrderHistoryProduct(BaseModel):
         verbose_name = _('order history product')
         verbose_name_plural = _('order history products')
         indexes = [
-            # eng muhim: order_history ichidagi mahsulotlarni tez topish (exists/filter)
             models.Index(fields=["order_history", "is_delete"]),
-
-            # vozvrat bo'yicha mahsulotlar
             models.Index(fields=["vozvrat_order", "is_delete"]),
-
-            # ombor/report: qaysi sklad + sana kesimida
             models.Index(fields=["sklad", "is_delete", "date"]),
-
-            # mahsulot kesimida sotuv/chiqim statistikasi bo'lsa
             models.Index(fields=["product", "is_delete", "date"]),
-
-            # katalog bo'yicha reportlar bo'lsa (minimal)
             models.Index(fields=["branch", "is_delete", "date"]),
             models.Index(fields=["model", "is_delete", "date"]),
             models.Index(fields=["type", "is_delete", "date"]),
@@ -232,7 +222,6 @@ class OrderHistoryProduct(BaseModel):
 
     def __str__(self):
         return f"OrderHistoryProduct #{self.pk}" if self.pk else "OrderHistoryProduct"
-
 
     def _sync_order_history_debtor_flag(self):
         """
@@ -244,7 +233,6 @@ class OrderHistoryProduct(BaseModel):
 
         oh = self.order_history
 
-        # given_count yoki count NULL bo'lsa, ularni farqli deb hisoblaymiz (qarzdorlik bor)
         has_mismatch = OrderHistoryProduct.objects.filter(
             order_history_id=self.order_history_id,
             is_delete=False,
@@ -259,6 +247,78 @@ class OrderHistoryProduct(BaseModel):
             oh.is_debtor_product = new_value
             oh.save(update_fields=['is_debtor_product'])
 
+    def _sync_order_history_price_difference_flag(self):
+        """
+        Agar shu order_history ichida is_delete=False bo'lgan productlardan
+        birortasida price_difference=True bo'lsa -> OrderHistory.price_difference=True,
+        aks holda False.
+        """
+        if not self.order_history_id:
+            return
+
+        oh = self.order_history
+
+        has_price_difference = OrderHistoryProduct.objects.filter(
+            order_history_id=self.order_history_id,
+            is_delete=False,
+            price_difference=True
+        ).exists()
+
+        new_value = bool(has_price_difference)
+        if oh.price_difference != new_value:
+            oh.price_difference = new_value
+            oh.save(update_fields=['price_difference'])
+
     def save(self, *args, **kwargs):
+        """
+        Product darajasida avtomatik hisob:
+        agar price_dollar < real_price bo'lsa price_difference=True
+        """
+        price_dollar = self.price_dollar or 0
+        real_price = self.real_price or 0
+
+        self.price_difference = price_dollar < real_price
+
         super().save(*args, **kwargs)
+
         self._sync_order_history_debtor_flag()
+        self._sync_order_history_price_difference_flag()
+
+    def delete(self, *args, **kwargs):
+        """
+        Agar obyekt fizik delete bo'lsa ham OrderHistory flaglari qayta hisoblanadi.
+        """
+        order_history_id = self.order_history_id
+        super().delete(*args, **kwargs)
+
+        if order_history_id:
+            oh = OrderHistory.objects.filter(id=order_history_id).first()
+            if oh:
+                has_mismatch = OrderHistoryProduct.objects.filter(
+                    order_history_id=order_history_id,
+                    # is_delete=False,
+                ).filter(
+                    Q(count__isnull=True) |
+                    Q(given_count__isnull=True) |
+                    Q(given_count__lt=F('count')) |
+                    Q(given_count__gt=F('count'))
+                ).exists()
+
+                has_price_difference = OrderHistoryProduct.objects.filter(
+                    order_history_id=order_history_id,
+                    is_delete=False,
+                    price_difference=True
+                ).exists()
+
+                update_fields = []
+
+                if oh.is_debtor_product != bool(has_mismatch):
+                    oh.is_debtor_product = bool(has_mismatch)
+                    update_fields.append('is_debtor_product')
+
+                if oh.price_difference != bool(has_price_difference):
+                    oh.price_difference = bool(has_price_difference)
+                    update_fields.append('price_difference')
+
+                if update_fields:
+                    oh.save(update_fields=update_fields)
