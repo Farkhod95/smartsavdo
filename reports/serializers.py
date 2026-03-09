@@ -84,7 +84,6 @@ class TopClientItemSerializer(serializers.Serializer):
 class SoldProductsHistorySerializer(serializers.Serializer):
     date = serializers.DateField(source='created_date')
     date_label = serializers.SerializerMethodField()
-
     orders_count = serializers.IntegerField()
     all_product_summa = serializers.DecimalField(max_digits=20, decimal_places=2)
     summa_total_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
