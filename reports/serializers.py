@@ -137,3 +137,71 @@ class DebtRepaymentItemSerializer(serializers.Serializer):
     summa_kilik = serializers.DecimalField(max_digits=20, decimal_places=2)
     summa_terminal = serializers.DecimalField(max_digits=20, decimal_places=2)
     summa_transfer = serializers.DecimalField(max_digits=20, decimal_places=2)
+
+
+class OrdersAndDebtsReportRowSerializer(serializers.Serializer):
+    row_number = serializers.IntegerField()
+    type = serializers.CharField()
+    object_id = serializers.IntegerField()
+
+    client_id = serializers.IntegerField(allow_null=True)
+    client_name = serializers.CharField(allow_null=True)
+
+    employee_id = serializers.IntegerField(allow_null=True)
+    employee_name = serializers.CharField(allow_null=True)
+
+    all_product_summa = serializers.CharField()
+    all_profit_dollar = serializers.CharField()
+    total_debt_client = serializers.CharField()
+
+    summa_total_dollar = serializers.CharField()
+    summa_dollar = serializers.CharField()
+    summa_naqt = serializers.CharField()
+    summa_kilik = serializers.CharField()
+    summa_terminal = serializers.CharField()
+    summa_transfer = serializers.CharField()
+    discount_amount = serializers.CharField()
+    zdacha_dollar = serializers.CharField()
+
+    vaqti = serializers.CharField(allow_null=True)
+    holati = serializers.CharField()
+    datetime = serializers.DateTimeField(allow_null=True)
+
+
+class OrdersTotalsSerializer(serializers.Serializer):
+    all_profit_dollar = serializers.CharField()
+    summa_total_dollar = serializers.CharField()
+    summa_dollar = serializers.CharField()
+    summa_naqt = serializers.CharField()
+    summa_kilik = serializers.CharField()
+    summa_terminal = serializers.CharField()
+    summa_transfer = serializers.CharField()
+    discount_amount = serializers.CharField()
+    zdacha_dollar = serializers.CharField()
+
+
+class DebtsTotalsSerializer(serializers.Serializer):
+    summa_total_dollar = serializers.CharField()
+    summa_dollar = serializers.CharField()
+    summa_naqt = serializers.CharField()
+    summa_kilik = serializers.CharField()
+    summa_terminal = serializers.CharField()
+    summa_transfer = serializers.CharField()
+    discount_amount = serializers.CharField()
+    zdacha_dollar = serializers.CharField()
+
+
+class OrdersAndDebtsTotalsSerializer(serializers.Serializer):
+    totalproduct_summa = serializers.CharField()
+    totalprofit = serializers.CharField()
+    total_all_qarz = serializers.CharField()
+    orders = OrdersTotalsSerializer()
+    debts = DebtsTotalsSerializer()
+
+
+class OrdersAndDebtsReportGroupSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    date_label = serializers.CharField()
+    count = serializers.IntegerField()
+    totals = OrdersAndDebtsTotalsSerializer()
+    items = OrdersAndDebtsReportRowSerializer(many=True)

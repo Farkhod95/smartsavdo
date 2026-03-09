@@ -14,11 +14,11 @@ class ExpenseListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ('id', 'filial', 'filial_detail', 'category', 'category_detail', 'is_salary', 'employee', 'employee_detail', 'summa_total_dollar', 'summa_dollar',
-                  'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate')
+                  'summa_naqt', 'summa_kilik', 'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate', 'created_time')
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ('id', 'filial', 'category', 'is_salary', 'employee', 'summa_total_dollar', 'summa_dollar', 'summa_naqt', 'summa_kilik',
-                  'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate')
+                  'summa_terminal', 'summa_transfer', 'date', 'note', 'is_delete', 'exchange_rate', 'created_time')
