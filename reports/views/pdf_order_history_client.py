@@ -24,8 +24,6 @@ from reportlab.platypus import (
     TableStyle,
     Image,
 )
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 # Modellar
 from sales.models import OrderHistory, OrderHistoryProduct
@@ -37,6 +35,7 @@ class OrderHistoryInvoicePdfView(APIView):
     GET /api/v1/pdf/order-history/<id>/client/
 
     Berilgan OrderHistory bo'yicha PDF invoice qaytaradi.
+    DejaVuSans ishlatilmaydi, standart Helvetica ishlatiladi.
     """
     permission_classes = [IsAuthenticated]
 
@@ -51,16 +50,17 @@ class OrderHistoryInvoicePdfView(APIView):
             is_delete=False,
         )
 
-        # PDF ni xotirada yasash uchun buffer
+        # PDF ni memory ichida yasash uchun buffer
         buffer = BytesIO()
 
-        # PDF qurish
+        # PDF build
         self.build_pdf(buffer, order_history)
 
-        # Byte ko'rinishdagi pdf
+        # Byte ko'rinishga o'tkazamiz
         pdf = buffer.getvalue()
         buffer.close()
 
+        # Response qaytaramiz
         response = HttpResponse(pdf, content_type="application/pdf")
         response["Content-Disposition"] = 'inline; filename="mijoz_buyurtmasi.pdf"'
         return response
@@ -68,28 +68,6 @@ class OrderHistoryInvoicePdfView(APIView):
     # =========================================================
     # HELPERS
     # =========================================================
-    def register_font(self):
-        """
-        UTF-8 / O'zbekcha matnlar uchun font ulash.
-        Font topilmasa Helvetica ishlatiladi.
-        """
-        candidates = [
-            os.path.join(settings.BASE_DIR, "static", "fonts", "DejaVuSans.ttf"),
-            os.path.join(settings.BASE_DIR, "assets", "fonts", "DejaVuSans.ttf"),
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-        ]
-
-        for path in candidates:
-            if os.path.exists(path):
-                try:
-                    pdfmetrics.registerFont(TTFont("DejaVuSans", path))
-                    return "DejaVuSans"
-                except Exception:
-                    pass
-
-        return "Helvetica"
-
     def d(self, value):
         """
         Qiymatni xavfsiz Decimal ga aylantiradi.
@@ -101,7 +79,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
     def fmt_money(self, value):
         """
-        4000 -> 4 000,00
+        4000 -> 4 000,00 ko'rinishiga o'tkazadi
         """
         value = self.d(value)
         formatted = f"{value:,.2f}"
@@ -132,7 +110,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
     def safe(self, value, default=""):
         """
-        None yoki bo'sh qiymatda default qaytaradi.
+        None yoki bo'sh qiymat bo'lsa default qaytaradi.
         """
         if value is None:
             return default
@@ -146,12 +124,14 @@ class OrderHistoryInvoicePdfView(APIView):
         if not filial or not filial.logo:
             return None
 
+        # 1-usul: ImageField.path
         try:
             if hasattr(filial.logo, "path") and os.path.exists(filial.logo.path):
                 return filial.logo.path
         except Exception:
             pass
 
+        # 2-usul: MEDIA_ROOT bilan yasash
         try:
             path = os.path.join(settings.MEDIA_ROOT, str(filial.logo))
             if os.path.exists(path):
@@ -198,7 +178,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
     def is_non_zero(self, value):
         """
-        0 yoki bo'sh qiymat emasligini tekshiradi.
+        Qiymat 0 emasligini tekshiradi.
         """
         return self.d(value) != Decimal("0")
 
@@ -207,11 +187,13 @@ class OrderHistoryInvoicePdfView(APIView):
     # =========================================================
     def build_pdf(self, buffer, order_history):
         """
-        PDF ni to'liq yasovchi asosiy metod.
+        PDF ni to'liq yasovchi metod.
         """
-        base_font = self.register_font()
+        # Bu yerda standart ReportLab font ishlatiladi
+        base_font = "Helvetica"
+        bold_font = "Helvetica-Bold"
 
-        # PDF document
+        # Asosiy document
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
@@ -232,7 +214,7 @@ class OrderHistoryInvoicePdfView(APIView):
         style_title_date = ParagraphStyle(
             name="TitleDate",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=14,
             leading=16,
             alignment=TA_CENTER,
@@ -243,9 +225,9 @@ class OrderHistoryInvoicePdfView(APIView):
         style_client_line = ParagraphStyle(
             name="ClientLine",
             parent=styles["Normal"],
-            fontName=base_font,
-            fontSize=11,
-            leading=13,
+            fontName=bold_font,
+            fontSize=11.5,
+            leading=14,
             alignment=TA_CENTER,
             textColor=colors.black,
             spaceAfter=6,
@@ -261,10 +243,20 @@ class OrderHistoryInvoicePdfView(APIView):
             textColor=colors.black,
         )
 
+        style_text_bold = ParagraphStyle(
+            name="TextBold",
+            parent=styles["Normal"],
+            fontName=bold_font,
+            fontSize=9.5,
+            leading=10.5,
+            alignment=TA_LEFT,
+            textColor=colors.black,
+        )
+
         style_text_dollar_kurs = ParagraphStyle(
             name="TextDollarKurs",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=9.5,
             leading=10.5,
             alignment=TA_LEFT,
@@ -284,7 +276,7 @@ class OrderHistoryInvoicePdfView(APIView):
         style_center_bold = ParagraphStyle(
             name="CenterBold",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=8.8,
             leading=10.5,
             alignment=TA_CENTER,
@@ -294,7 +286,7 @@ class OrderHistoryInvoicePdfView(APIView):
         style_orange = ParagraphStyle(
             name="Orange",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=9.5,
             leading=11.5,
             alignment=TA_LEFT,
@@ -304,7 +296,7 @@ class OrderHistoryInvoicePdfView(APIView):
         style_orange_right = ParagraphStyle(
             name="OrangeRight",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=9.5,
             leading=11.5,
             alignment=TA_RIGHT,
@@ -314,7 +306,7 @@ class OrderHistoryInvoicePdfView(APIView):
         style_blue_right = ParagraphStyle(
             name="BlueRight",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=9.5,
             leading=11.5,
             alignment=TA_RIGHT,
@@ -324,26 +316,27 @@ class OrderHistoryInvoicePdfView(APIView):
         style_red_big = ParagraphStyle(
             name="RedBig",
             parent=styles["Normal"],
-            fontName=base_font,
+            fontName=bold_font,
             fontSize=12.8,
             leading=14.5,
             alignment=TA_RIGHT,
             textColor=colors.red,
         )
 
+        # Story
         story = []
 
         # =========================================================
-        # HEADER QISMI
+        # CLIENT INFO
         # =========================================================
         client_name = self.safe(getattr(order_history.client, "full_name", None), "-")
         client_phone = self.safe(getattr(order_history.client, "phone_number", None), "")
         filial = order_history.order_filial
 
-        # Dollar kursi filial bo'yicha ExchangeRate dan olinadi
+        # Dollar kursi ExchangeRate dan olinadi
         exchange_rate_value = self.get_filial_exchange_rate(filial)
 
-        # Mijoz fullname + phone bitta qatorda
+        # Fullname + phone bitta qatorda
         if client_phone:
             client_line = (
                 f'<font color="red"><b>{client_name}</b></font> '
@@ -352,47 +345,48 @@ class OrderHistoryInvoicePdfView(APIView):
         else:
             client_line = f'<font color="red"><b>{client_name}</b></font>'
 
-        # Sana
+        # =========================================================
+        # TOP TITLE
+        # =========================================================
         story.append(
-            Paragraph(f"<b>{self.fmt_date(order_history.date)}</b>", style_title_date)
+            Paragraph(f"{self.fmt_date(order_history.date)}", style_title_date)
         )
-
-        # Mijoz qatori
         story.append(
             Paragraph(client_line, style_client_line)
         )
-
         story.append(Spacer(1, 2 * mm))
 
-        # Logo
+        # =========================================================
+        # HEADER: LOGO + FILIAL INFO
+        # =========================================================
         logo_file_path = self.logo_path(filial)
         if logo_file_path:
             try:
-                logo = Image(logo_file_path, width=28 * mm, height=22 * mm)
+                logo = Image(logo_file_path, width=30 * mm, height=24 * mm)
             except Exception:
-                logo = Paragraph("<b>LOGO</b>", style_center)
+                logo = Paragraph("LOGO", style_center_bold)
         else:
-            logo = Paragraph("<b>LOGO</b>", style_center)
+            logo = Paragraph("LOGO", style_center_bold)
 
-        # Filial info
+        # O'ng tarafdagi info jadvali
         info_rows = [
             [
-                Paragraph("<b>Do'kon:</b>", style_text),
-                Paragraph(f"<b>{self.safe(getattr(filial, 'name', None), '-')}</b>", style_text),
-                Paragraph("<b>Telefon nomer1:</b>", style_text),
-                Paragraph(f"<b>{self.safe(getattr(filial, 'phone_number', None), '-')}</b>", style_text),
+                Paragraph("Do'kon:", style_text_bold),
+                Paragraph(self.safe(getattr(filial, "name", None), "-"), style_text_bold),
+                Paragraph("Telefon nomer1:", style_text_bold),
+                Paragraph(self.safe(getattr(filial, "phone_number", None), "-"), style_text_bold),
             ],
             [
-                Paragraph("<b>Manzil:</b>", style_text),
-                Paragraph(f"<b>{self.safe(getattr(filial, 'address', None), '-')}</b>", style_text),
-                Paragraph("<b>Dollar kursi:</b>", style_text_dollar_kurs),
-                Paragraph(f"<b>{self.fmt_plain_number(exchange_rate_value)}</b>", style_text_dollar_kurs),
+                Paragraph("Manzil:", style_text_bold),
+                Paragraph(self.safe(getattr(filial, "address", None), "-"), style_text_bold),
+                Paragraph("Dollar kursi:", style_text_dollar_kurs),
+                Paragraph(self.fmt_plain_number(exchange_rate_value), style_text_dollar_kurs),
             ],
         ]
 
         info_table = Table(
             info_rows,
-            colWidths=[20 * mm, 60 * mm, 30 * mm, 50 * mm]
+            colWidths=[22 * mm, 62 * mm, 34 * mm, 44 * mm]
         )
         info_table.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -400,11 +394,13 @@ class OrderHistoryInvoicePdfView(APIView):
             ("RIGHTPADDING", (0, 0), (-1, -1), 2),
             ("TOPPADDING", (0, 0), (-1, -1), 2),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ("FONTNAME", (0, 0), (-1, -1), base_font),
         ]))
 
+        # Logo chapda, info o'ngda
         header_table = Table(
             [[logo, info_table]],
-            colWidths=[34 * mm, 160 * mm]
+            colWidths=[36 * mm, 146 * mm]
         )
         header_table.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -436,18 +432,19 @@ class OrderHistoryInvoicePdfView(APIView):
 
         table_data = [
             [
-                Paragraph("<b>№</b>", style_center_bold),
-                Paragraph("<b>MODEL</b>", style_center_bold),
-                Paragraph("<b>NOMI</b>", style_center_bold),
-                Paragraph("<b>SONI</b>", style_center_bold),
-                Paragraph("<b>TIP</b>", style_center_bold),
-                Paragraph("<b>NARXI ($)</b>", style_center_bold),
-                Paragraph("<b>UMUMIY<br/>NARXI ($)</b>", style_center_bold),
+                Paragraph("№", style_center_bold),
+                Paragraph("MODEL", style_center_bold),
+                Paragraph("NOMI", style_center_bold),
+                Paragraph("SONI", style_center_bold),
+                Paragraph("TIP", style_center_bold),
+                Paragraph("NARXI ($)", style_center_bold),
+                Paragraph("UMUMIY<br/>NARXI ($)", style_center_bold),
             ]
         ]
 
         calc_total = Decimal("0")
 
+        # Har bir mahsulotni jadvalga qo'shamiz
         for i, item in enumerate(items, start=1):
             model_name = self.safe(getattr(item.model, "name", None), "-")
             type_name = self.safe(getattr(item.type, "name", None), "-")
@@ -466,36 +463,36 @@ class OrderHistoryInvoicePdfView(APIView):
             calc_total += line_total
 
             table_data.append([
-                Paragraph(f"<b>{i}</b>", style_center),
-                Paragraph(f"<b>{model_name}</b>", style_text),
-                Paragraph(f"<b>{nomi}</b>", style_text),
-                Paragraph(f"<b>{count}</b>", style_center),
-                Paragraph(f"<b>{unit_name}</b>", style_center),
-                Paragraph(f"<b>{self.fmt_plain_number(price)}</b>", style_center),
-                Paragraph(f"<b>= {self.fmt_plain_number(line_total)}</b>", style_text),
+                Paragraph(str(i), style_center_bold),
+                Paragraph(model_name, style_text_bold),
+                Paragraph(nomi, style_text_bold),
+                Paragraph(str(count), style_center_bold),
+                Paragraph(unit_name, style_center_bold),
+                Paragraph(self.fmt_plain_number(price), style_center_bold),
+                Paragraph(f"= {self.fmt_plain_number(line_total)}", style_text_bold),
             ])
 
         total_for_footer = self.d(order_history.all_product_summa or calc_total)
 
         # Jami qatori
         table_data.append([
-            Paragraph("<b>Jami</b>", style_text),
+            Paragraph("Jami", style_text_bold),
             "",
             "",
             "",
             "",
-            Paragraph("<b>-</b>", style_center),
-            Paragraph(f"<b>{self.fmt_plain_number(total_for_footer)}</b>", style_center),
+            Paragraph("-", style_center_bold),
+            Paragraph(self.fmt_plain_number(total_for_footer), style_center_bold),
         ])
 
         col_widths = [
-            8 * mm,
-            40 * mm,
-            58 * mm,
-            17 * mm,
-            20 * mm,
-            20 * mm,
-            28 * mm,
+            8 * mm,    # №
+            40 * mm,   # MODEL
+            58 * mm,   # NOMI
+            17 * mm,   # SONI
+            20 * mm,   # TIP
+            20 * mm,   # NARXI
+            28 * mm,   # UMUMIY
         ]
 
         products_table = Table(
@@ -526,7 +523,8 @@ class OrderHistoryInvoicePdfView(APIView):
             ("ALIGN", (5, -1), (6, -1), "CENTER"),
 
             ("FONTNAME", (0, 0), (-1, -1), base_font),
-            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+            ("TOPPADDING", (0, -1), (-1, -1), 2),
+            ("BOTTOMPADDING", (0, -1), (-1, -1), 2),
         ]))
 
         # =========================================================
@@ -538,32 +536,33 @@ class OrderHistoryInvoicePdfView(APIView):
         total_debt = self.d(order_history.total_debt_client)
         today_debt = self.d(order_history.total_debt_today_client)
 
-        # Chap blok
+        # Chap blok qatorlari
         left_rows = [
             [
-                Paragraph("<b>Ostatka ($):</b>", style_orange),
-                Paragraph(f"<b>{self.fmt_money(today_debt)} $</b>", style_orange_right),
+                Paragraph("Ostatka ($):", style_orange),
+                Paragraph(f"{self.fmt_money(today_debt)} $", style_orange_right),
             ],
             [
-                Paragraph("<b>Olingan tavarlar summasi ($):</b>", style_orange),
-                Paragraph(f"<b>{self.fmt_money(all_product_summa)} $</b>", style_orange_right),
+                Paragraph("Olingan tavarlar summasi ($):", style_orange),
+                Paragraph(f"{self.fmt_money(all_product_summa)} $", style_orange_right),
             ],
             [
-                Paragraph("<b>Jami to'langan summa ($):</b>", style_orange),
-                Paragraph(f"<b>{self.fmt_money(total_paid)} $</b>", style_orange_right),
+                Paragraph("Jami to'langan summa ($):", style_orange),
+                Paragraph(f"{self.fmt_money(total_paid)} $", style_orange_right),
             ],
         ]
 
         # Chegirma 0 bo'lmasa chiqadi
         if self.is_non_zero(discount_amount):
             left_rows.append([
-                Paragraph("<b>Chegirma ($):</b>", style_orange),
-                Paragraph(f"<b>{self.fmt_money(discount_amount)} $</b>", style_orange_right),
+                Paragraph("Chegirma ($):", style_orange),
+                Paragraph(f"{self.fmt_money(discount_amount)} $", style_orange_right),
             ])
 
+        # Qolgan qarz doim chiqadi
         left_rows.append([
-            Paragraph("<b>Qolgan qarz ($):</b>", style_orange),
-            Paragraph(f"<b>{self.fmt_money(total_debt)} $</b>", style_red_big),
+            Paragraph("Qolgan qarz ($):", style_orange),
+            Paragraph(f"{self.fmt_money(total_debt)} $", style_red_big),
         ])
 
         left_block = Table(
@@ -580,7 +579,7 @@ class OrderHistoryInvoicePdfView(APIView):
             ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
         ]))
 
-        # O'ng blok
+        # O'ng blok qatorlari
         paid_dollar = self.d(order_history.summa_dollar)
         paid_naqt = self.d(order_history.summa_naqt)
         paid_kilik = self.d(order_history.summa_kilik)
@@ -591,32 +590,32 @@ class OrderHistoryInvoicePdfView(APIView):
 
         if self.is_non_zero(paid_dollar):
             right_rows.append([
-                Paragraph("<b>To'langan summa ($):</b>", style_blue_right),
-                Paragraph(f"<b>{self.fmt_money(paid_dollar)} $</b>", style_blue_right),
+                Paragraph("To'langan summa ($):", style_blue_right),
+                Paragraph(f"{self.fmt_money(paid_dollar)} $", style_blue_right),
             ])
 
         if self.is_non_zero(paid_naqt):
             right_rows.append([
-                Paragraph("<b>To'langan summa naqt:</b>", style_blue_right),
-                Paragraph(f"<b>{self.fmt_money(paid_naqt)}</b>", style_blue_right),
+                Paragraph("To'langan summa naqt:", style_blue_right),
+                Paragraph(f"{self.fmt_money(paid_naqt)}", style_blue_right),
             ])
 
         if self.is_non_zero(paid_kilik):
             right_rows.append([
-                Paragraph("<b>To'langan summa kilik:</b>", style_blue_right),
-                Paragraph(f"<b>{self.fmt_money(paid_kilik)}</b>", style_blue_right),
+                Paragraph("To'langan summa kilik:", style_blue_right),
+                Paragraph(f"{self.fmt_money(paid_kilik)}", style_blue_right),
             ])
 
         if self.is_non_zero(paid_terminal):
             right_rows.append([
-                Paragraph("<b>To'langan summa terminal:</b>", style_blue_right),
-                Paragraph(f"<b>{self.fmt_money(paid_terminal)}</b>", style_blue_right),
+                Paragraph("To'langan summa terminal:", style_blue_right),
+                Paragraph(f"{self.fmt_money(paid_terminal)}", style_blue_right),
             ])
 
         if self.is_non_zero(paid_transfer):
             right_rows.append([
-                Paragraph("<b>To'langan summa transfer:</b>", style_blue_right),
-                Paragraph(f"<b>{self.fmt_money(paid_transfer)}</b>", style_blue_right),
+                Paragraph("To'langan summa transfer:", style_blue_right),
+                Paragraph(f"{self.fmt_money(paid_transfer)}", style_blue_right),
             ])
 
         if right_rows:
@@ -645,14 +644,15 @@ class OrderHistoryInvoicePdfView(APIView):
             ("ALIGN", (1, 0), (1, 0), "RIGHT"),
             ("LEFTPADDING", (0, 0), (-1, -1), 6),
             ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
         ]))
 
-        # Jadval + totals ni bitta blok qilamiz
+        # Jadval + totals ni bir blok qilamiz
         combined_block = Table(
             [
                 [products_table],
+                [Spacer(1, 6 * mm)],   # <-- shu joy jadval bilan pastki text orasini ochadi
                 [totals_table],
             ],
             colWidths=[191 * mm]
