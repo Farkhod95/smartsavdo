@@ -154,6 +154,7 @@ class FiliaOrderDebtHistoryReportView(APIView):
                 "client_full_name": (r.client.full_name if r.client else None),
                 "date": r.date,
                 "summa_total_dollar": r.summa_total_dollar,
+                "old_total_debt_client": r.old_total_debt_client or Decimal("0.00"),
             }
             for r in repayments_qs
         ]
