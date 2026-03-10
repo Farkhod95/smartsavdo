@@ -27,16 +27,16 @@ from reportlab.platypus import (
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-# O'zingizdagi import yo'llarni moslang
+# Modellar
 from sales.models import OrderHistory, OrderHistoryProduct
-from finance.models import ExchangeRate  # app nomini kerak bo'lsa o'zgartiring
+from finance.models import ExchangeRate
 
 
 class OrderHistoryInvoicePdfView(APIView):
     """
     GET /api/v1/pdf/order-history/<id>/client/
 
-    OrderHistory bo'yicha PDF invoice qaytaradi.
+    Berilgan OrderHistory bo'yicha PDF invoice qaytaradi.
     """
     permission_classes = [IsAuthenticated]
 
@@ -51,15 +51,16 @@ class OrderHistoryInvoicePdfView(APIView):
             is_delete=False,
         )
 
-        # PDF ni memory ichida yasaymiz
+        # PDF ni xotirada yasash uchun buffer
         buffer = BytesIO()
+
+        # PDF qurish
         self.build_pdf(buffer, order_history)
 
-        # PDF byte larini olamiz
+        # Byte ko'rinishdagi pdf
         pdf = buffer.getvalue()
         buffer.close()
 
-        # Response
         response = HttpResponse(pdf, content_type="application/pdf")
         response["Content-Disposition"] = 'inline; filename="mijoz_buyurtmasi.pdf"'
         return response
@@ -69,12 +70,14 @@ class OrderHistoryInvoicePdfView(APIView):
     # =========================================================
     def register_font(self):
         """
-        O'zbekcha / UTF-8 matnlar uchun font ulash.
+        UTF-8 / O'zbekcha matnlar uchun font ulash.
+        Font topilmasa Helvetica ishlatiladi.
         """
         candidates = [
+            os.path.join(settings.BASE_DIR, "static", "fonts", "DejaVuSans.ttf"),
+            os.path.join(settings.BASE_DIR, "assets", "fonts", "DejaVuSans.ttf"),
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-            os.path.join(settings.BASE_DIR, "static", "fonts", "DejaVuSans.ttf"),
         ]
 
         for path in candidates:
@@ -138,7 +141,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
     def logo_path(self, filial):
         """
-        Filial logo faylining real path ini topadi.
+        Filial logosining fizik yo'lini topadi.
         """
         if not filial or not filial.logo:
             return None
@@ -195,8 +198,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
     def is_non_zero(self, value):
         """
-        Qiymat 0 emasligini tekshiradi.
-        None, '', 0, 0.00 bo'lsa False qaytaradi.
+        0 yoki bo'sh qiymat emasligini tekshiradi.
         """
         return self.d(value) != Decimal("0")
 
@@ -204,8 +206,12 @@ class OrderHistoryInvoicePdfView(APIView):
     # PDF BUILDER
     # =========================================================
     def build_pdf(self, buffer, order_history):
+        """
+        PDF ni to'liq yasovchi asosiy metod.
+        """
         base_font = self.register_font()
 
+        # PDF document
         doc = SimpleDocTemplate(
             buffer,
             pagesize=A4,
@@ -238,8 +244,8 @@ class OrderHistoryInvoicePdfView(APIView):
             name="ClientLine",
             parent=styles["Normal"],
             fontName=base_font,
-            fontSize=11.5,
-            leading=14,
+            fontSize=11,
+            leading=13,
             alignment=TA_CENTER,
             textColor=colors.black,
             spaceAfter=6,
@@ -328,16 +334,16 @@ class OrderHistoryInvoicePdfView(APIView):
         story = []
 
         # =========================================================
-        # CLIENT INFO
+        # HEADER QISMI
         # =========================================================
         client_name = self.safe(getattr(order_history.client, "full_name", None), "-")
         client_phone = self.safe(getattr(order_history.client, "phone_number", None), "")
         filial = order_history.order_filial
 
-        # Dollar kursi ExchangeRate jadvalidan olinadi
+        # Dollar kursi filial bo'yicha ExchangeRate dan olinadi
         exchange_rate_value = self.get_filial_exchange_rate(filial)
 
-        # Fullname + phone bitta qatorda
+        # Mijoz fullname + phone bitta qatorda
         if client_phone:
             client_line = (
                 f'<font color="red"><b>{client_name}</b></font> '
@@ -346,29 +352,29 @@ class OrderHistoryInvoicePdfView(APIView):
         else:
             client_line = f'<font color="red"><b>{client_name}</b></font>'
 
-        # =========================================================
-        # TOP TITLE
-        # =========================================================
+        # Sana
         story.append(
             Paragraph(f"<b>{self.fmt_date(order_history.date)}</b>", style_title_date)
         )
+
+        # Mijoz qatori
         story.append(
             Paragraph(client_line, style_client_line)
         )
+
         story.append(Spacer(1, 2 * mm))
 
-        # =========================================================
-        # HEADER: LOGO + FILIAL INFO
-        # =========================================================
+        # Logo
         logo_file_path = self.logo_path(filial)
         if logo_file_path:
             try:
-                logo = Image(logo_file_path, width=30 * mm, height=24 * mm)
+                logo = Image(logo_file_path, width=28 * mm, height=22 * mm)
             except Exception:
                 logo = Paragraph("<b>LOGO</b>", style_center)
         else:
             logo = Paragraph("<b>LOGO</b>", style_center)
 
+        # Filial info
         info_rows = [
             [
                 Paragraph("<b>Do'kon:</b>", style_text),
@@ -386,7 +392,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
         info_table = Table(
             info_rows,
-            colWidths=[22 * mm, 62 * mm, 34 * mm, 44 * mm]
+            colWidths=[20 * mm, 60 * mm, 30 * mm, 50 * mm]
         )
         info_table.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -398,7 +404,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
         header_table = Table(
             [[logo, info_table]],
-            colWidths=[36 * mm, 146 * mm]
+            colWidths=[34 * mm, 160 * mm]
         )
         header_table.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -471,6 +477,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
         total_for_footer = self.d(order_history.all_product_summa or calc_total)
 
+        # Jami qatori
         table_data.append([
             Paragraph("<b>Jami</b>", style_text),
             "",
@@ -482,13 +489,13 @@ class OrderHistoryInvoicePdfView(APIView):
         ])
 
         col_widths = [
-            8 * mm,    # №
-            40 * mm,   # MODEL
-            58 * mm,   # NOMI
-            17 * mm,   # SONI
-            20 * mm,   # TIP
-            20 * mm,   # NARXI
-            28 * mm,   # UMUMIY
+            8 * mm,
+            40 * mm,
+            58 * mm,
+            17 * mm,
+            20 * mm,
+            20 * mm,
+            28 * mm,
         ]
 
         products_table = Table(
@@ -522,9 +529,6 @@ class OrderHistoryInvoicePdfView(APIView):
             ("FONTSIZE", (0, 0), (-1, -1), 8.5),
         ]))
 
-        story.append(products_table)
-        story.append(Spacer(1, 10 * mm))
-
         # =========================================================
         # TOTALS
         # =========================================================
@@ -534,7 +538,7 @@ class OrderHistoryInvoicePdfView(APIView):
         total_debt = self.d(order_history.total_debt_client)
         today_debt = self.d(order_history.total_debt_today_client)
 
-        # Chap blok uchun qatorlarni dinamik yig'amiz
+        # Chap blok
         left_rows = [
             [
                 Paragraph("<b>Ostatka ($):</b>", style_orange),
@@ -550,14 +554,13 @@ class OrderHistoryInvoicePdfView(APIView):
             ],
         ]
 
-        # Chegirma 0 bo'lmasa qo'shamiz
+        # Chegirma 0 bo'lmasa chiqadi
         if self.is_non_zero(discount_amount):
             left_rows.append([
                 Paragraph("<b>Chegirma ($):</b>", style_orange),
                 Paragraph(f"<b>{self.fmt_money(discount_amount)} $</b>", style_orange_right),
             ])
 
-        # Qolgan qarz har doim chiqadi
         left_rows.append([
             Paragraph("<b>Qolgan qarz ($):</b>", style_orange),
             Paragraph(f"<b>{self.fmt_money(total_debt)} $</b>", style_red_big),
@@ -577,7 +580,7 @@ class OrderHistoryInvoicePdfView(APIView):
             ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
         ]))
 
-        # O'ng blok uchun to'lov turlarini dinamik yig'amiz
+        # O'ng blok
         paid_dollar = self.d(order_history.summa_dollar)
         paid_naqt = self.d(order_history.summa_naqt)
         paid_kilik = self.d(order_history.summa_kilik)
@@ -586,7 +589,6 @@ class OrderHistoryInvoicePdfView(APIView):
 
         right_rows = []
 
-        # Faqat 0 bo'lmaganlarini chiqaramiz
         if self.is_non_zero(paid_dollar):
             right_rows.append([
                 Paragraph("<b>To'langan summa ($):</b>", style_blue_right),
@@ -617,7 +619,6 @@ class OrderHistoryInvoicePdfView(APIView):
                 Paragraph(f"<b>{self.fmt_money(paid_transfer)}</b>", style_blue_right),
             ])
 
-        # Agar o'ng blokda umuman data bo'lmasa bo'sh element qo'yamiz
         if right_rows:
             right_block = Table(
                 right_rows,
@@ -632,7 +633,6 @@ class OrderHistoryInvoicePdfView(APIView):
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
             ]))
         else:
-            # O'ng blok butunlay bo'sh bo'lib qolsa layout buzilmasligi uchun
             right_block = Paragraph("", style_blue_right)
 
         totals_table = Table(
@@ -645,11 +645,27 @@ class OrderHistoryInvoicePdfView(APIView):
             ("ALIGN", (1, 0), (1, 0), "RIGHT"),
             ("LEFTPADDING", (0, 0), (-1, -1), 6),
             ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
         ]))
 
-        story.append(totals_table)
+        # Jadval + totals ni bitta blok qilamiz
+        combined_block = Table(
+            [
+                [products_table],
+                [totals_table],
+            ],
+            colWidths=[191 * mm]
+        )
+        combined_block.setStyle(TableStyle([
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+
+        story.append(combined_block)
 
         # =========================================================
         # PDF META
