@@ -150,6 +150,7 @@ class FiliaOrderDebtHistoryReportView(APIView):
 
         repayments_items = [
             {
+                "id": r.id,
                 "client_full_name": (r.client.full_name if r.client else None),
                 "date": r.date,
                 "summa_total_dollar": r.summa_total_dollar,
