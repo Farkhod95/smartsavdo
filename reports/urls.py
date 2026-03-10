@@ -5,9 +5,9 @@ from reports.views.filial_dashboard_reports import FilialDashboardReportView
 from reports.views.filial_statistics import FilialSatisticsReportView
 from reports.views.order_debt_history import FiliaOrderDebtHistoryReportView
 from reports.views.orders_and_debts_report import OrdersAndDebtsReportView
+from reports.views.pdf_order_history_client import OrderHistoryInvoicePdfView
 from reports.views.sold_product_history import SoldProductsHistoryView
 from reports.views.sold_product_history_detail import SoldProductsHistoryDetailView
-from reports.views.sold_product_history_detail_view import ReportOrderHistoryDetailView
 from reports.views.top_client import FilialTopClientReportView
 
 urlpatterns = [
@@ -18,6 +18,6 @@ urlpatterns = [
     path("reports/order-debt-history", FiliaOrderDebtHistoryReportView.as_view(), name="filial_order_debt_history_report"),
     path("reports/sold-products-history", SoldProductsHistoryView.as_view(), name="sold-products-history"),
     path("reports/sold-products-history-detail", SoldProductsHistoryDetailView.as_view(), name="sold-products-history-detail"),
-    # path("reports/sold-products-history-detail-view/<int:pk>", ReportOrderHistoryDetailView.as_view(), name="sold-products-history-detail-view"),
     path("reports/orders-and-debts-report", OrdersAndDebtsReportView.as_view(), name="orders-and-debts-report"),
+    path('pdf/order-history/<int:pk>/client', OrderHistoryInvoicePdfView.as_view(), name='order-history-client-invoice-pdf'),
 ]
