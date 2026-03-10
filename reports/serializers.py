@@ -11,6 +11,7 @@ class DebtorClientSerializer(serializers.Serializer):
 
 
 class OrderHistoryItemSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     client_full_name = serializers.CharField(allow_null=True, required=False)
     date = serializers.DateField(allow_null=True)
     summa_total_dollar = serializers.DecimalField(max_digits=20, decimal_places=2)
