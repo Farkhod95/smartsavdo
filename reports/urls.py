@@ -1,11 +1,13 @@
 from django.urls import re_path, path
 
+from finance.views.pdf_debt_repayment_client import DebtRepaymentPdfClientView
 from reports.views.debtors import FilialDebtorsReportView
 from reports.views.filial_dashboard_reports import FilialDashboardReportView
 from reports.views.filial_statistics import FilialSatisticsReportView
 from reports.views.order_debt_history import FiliaOrderDebtHistoryReportView
 from reports.views.orders_and_debts_report import OrdersAndDebtsReportView
 from reports.views.pdf_order_history_client import OrderHistoryInvoicePdfView
+from reports.views.pdf_order_history_worker import OrderHistoryInvoicePdfWorkerView
 from reports.views.sold_product_history import SoldProductsHistoryView
 from reports.views.sold_product_history_detail import SoldProductsHistoryDetailView
 from reports.views.top_client import FilialTopClientReportView
@@ -20,4 +22,6 @@ urlpatterns = [
     path("reports/sold-products-history-detail", SoldProductsHistoryDetailView.as_view(), name="sold-products-history-detail"),
     path("reports/orders-and-debts-report", OrdersAndDebtsReportView.as_view(), name="orders-and-debts-report"),
     path('pdf/order-history/<int:pk>/client', OrderHistoryInvoicePdfView.as_view(), name='order-history-client-invoice-pdf'),
+    path('pdf/order-history/<int:pk>/worker', OrderHistoryInvoicePdfWorkerView.as_view(), name='order-history-worker-invoice-pdf'),
+    path('pdf/debt-repayment/<int:pk>/client', DebtRepaymentPdfClientView.as_view(), name='debt-repayment-client-pdf'),
 ]
