@@ -14,7 +14,7 @@ from finance.models import DebtRepayment, Expense  # to'g'rilang
 
 from reports.serializers import (
     OrderHistoryItemSerializer,
-    DebtRepaymentItemSerializer,
+    DebtRepaymentItemListSerializer,
     ExpenseItemSerializer,
 )
 
@@ -158,7 +158,7 @@ class FiliaOrderDebtHistoryReportView(APIView):
             }
             for r in repayments_qs
         ]
-        repayments_items_ser = DebtRepaymentItemSerializer(repayments_items, many=True).data
+        repayments_items_ser = DebtRepaymentItemListSerializer(repayments_items, many=True).data
 
         # =============== 3) Expense ===============
         expenses_qs = (
