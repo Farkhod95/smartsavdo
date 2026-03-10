@@ -17,6 +17,7 @@ class UserFilter(FilterSet):
             'district': ['exact'],
             'gender': ['exact'],
             'roles': ['exact'],
+            'is_active': ['exact'],
         }
 
 
