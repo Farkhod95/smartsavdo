@@ -539,6 +539,7 @@ class OrderHistorySellView(RetrieveUpdateDestroyAPIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=request.user)
+
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
