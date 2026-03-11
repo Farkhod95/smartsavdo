@@ -226,7 +226,7 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
 
     def _update_history(self, request, pk, partial=False):
         history = get_object_or_404(
-            ProductHistory.objects.select_for_update().select_related('purchase_invoice'),
+            ProductHistory.objects.select_for_update(),
             id=pk
         )
 
@@ -317,7 +317,7 @@ class ProductHistoryDetailView(RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def delete(self, request, pk):
         history = get_object_or_404(
-            ProductHistory.objects.select_for_update().select_related('purchase_invoice'),
+            ProductHistory.objects.select_for_update(),
             id=pk
         )
 
