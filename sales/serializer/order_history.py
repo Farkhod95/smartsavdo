@@ -356,17 +356,12 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
 
         return self._q2(paid_total)
 
-    def _sync_cashback_history(self, *, client: Client, order_history_id: int, paid_total_usd: Decimal, is_posted: bool):
-        """
-        Idempotent cashback:
-        - is_posted=False bo‘lsa: cashback history o‘chadi
-        - is_posted=True bo‘lsa: update_or_create
-        """
-        if not order_history_id:
+    def _sync_cashback_history(self, *, client, order_history, paid_total_usd, is_posted):
+        if not order_history:
             return
 
         if not is_posted:
-            ClientKeshbekHistory.objects.filter(order_history_id=order_history_id).delete()
+            ClientKeshbekHistory.objects.filter(order_history=order_history).delete()
             return
 
         paid_total_usd = self._q2(paid_total_usd if paid_total_usd > 0 else Decimal("0"))
@@ -374,7 +369,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         cashback_sum = self._q2((paid_total_usd * keshbek_percent) / Decimal("100"))
 
         ClientKeshbekHistory.objects.update_or_create(
-            order_history_id=order_history_id,
+            order_history=order_history,
             defaults={
                 "client": client,
                 "keshbek": keshbek_percent,
