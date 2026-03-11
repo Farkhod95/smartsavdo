@@ -85,17 +85,32 @@ class OrderHistoryProductDetailView(RetrieveUpdateDestroyAPIView):
         serializer = OrderHistoryProductListSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk):
-        instance = get_object_or_404(OrderHistoryProduct, id=pk, is_delete=False)
+    @transaction.atomic
+    def _update(self, request, pk, partial=False):
+        instance = get_object_or_404(
+            OrderHistoryProduct.objects.select_for_update(),
+            id=pk,
+            is_delete=False
+        )
+
         serializer = OrderHistoryProductUpdateSerializer(
             instance,
             data=request.data,
-            partial=False,
+            partial=partial,
             context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save(updated_by=request.user)
+
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @transaction.atomic
+    def put(self, request, pk):
+        return self._update(request, pk, partial=False)
+
+    @transaction.atomic
+    def patch(self, request, pk):
+        return self._update(request, pk, partial=True)
 
     @transaction.atomic
     def delete(self, request, pk):

@@ -318,8 +318,6 @@ class OrderHistoryProductUpdateSerializer(serializers.ModelSerializer):
 
 
 
-
-
 class OrderHistoryProductVozvratCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderHistoryProduct
