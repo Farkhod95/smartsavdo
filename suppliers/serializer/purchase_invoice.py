@@ -19,7 +19,7 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
         model = PurchaseInvoice
         fields = ('id', 'type', 'employee', 'employee_detail', 'supplier', 'supplier_detail', 'sklad_outgoing', 'sklad_outgoing_detail',
                   'filial', 'filial_detail', 'sklad', 'sklad_detail', 'date', 'total_debt_old', 'total_debt',
-                  'total_debt_today', 'product_count',
+                  'total_debt_today', 'product_count', 'is_confirm',
                   'all_product_summa', 'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
                   'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_karzinka', 'supplier_debt')
 
@@ -50,9 +50,8 @@ class PurchaseInvoiceSerializer(serializers.ModelSerializer):
             'total_debt_old', 'total_debt', 'total_debt_today',
             'product_count', 'all_product_summa',
             'given_summa_total_dollar', 'given_summa_dollar', 'given_summa_naqt',
-            'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer',
-            'is_karzinka',
-            'supplier_debt',  # ✅ doim ko‘rinadi
+            'given_summa_kilik', 'given_summa_terminal', 'given_summa_transfer', 'is_confirm',
+            'is_karzinka', 'supplier_debt',  # ✅ doim ko‘rinadi
         )
 
     def get_supplier_debt(self, obj):
@@ -91,7 +90,7 @@ class PurchaseInvoiceDoneSerializer(serializers.ModelSerializer):
             'given_summa_dollar', 'given_summa_naqt', 'given_summa_kilik',
             'given_summa_terminal', 'given_summa_transfer',
 
-            'is_karzinka',
+            'is_karzinka', 'is_confirm',
             'supplier_debt',
         )
         read_only_fields = (

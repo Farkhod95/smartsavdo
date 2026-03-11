@@ -64,6 +64,7 @@ class PurchaseInvoiceFilter(FilterSet):
             'sklad_outgoing': ['exact'],
             'filial': ['exact'],
             'sklad': ['exact'],
+            'is_confirm': ['exact'],
             'date': ['exact', 'gte', 'lte'],
             'total_debt_old': ['exact', 'gte', 'lte'],
             'total_debt': ['exact', 'gte', 'lte'],

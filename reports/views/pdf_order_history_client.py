@@ -432,7 +432,7 @@ class OrderHistoryInvoicePdfView(APIView):
 
         table_data = [
             [
-                Paragraph("№", style_center_bold),
+                Paragraph("T/r", style_center_bold),
                 Paragraph("MODEL", style_center_bold),
                 Paragraph("NOMI", style_center_bold),
                 Paragraph("SONI", style_center_bold),
