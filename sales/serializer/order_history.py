@@ -183,8 +183,15 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             'all_product_summa', 'summa_total_dollar', 'summa_dollar', 'summa_naqt',
             'summa_kilik', 'summa_terminal', 'summa_transfer', 'discount_amount',
             'zdacha_dollar', 'zdacha_som', 'is_delete', 'order_status', 'update_status',
-            'is_debtor_product', 'status_order_dukon', 'status_order_sklad', 'price_difference',
-            'driver_info', 'is_karzinka', 'order_filial', 'currency'
+            'is_debtor_product', 'status_order_dukon', 'status_order_sklad',
+            'price_difference', 'driver_info', 'is_karzinka', 'order_filial', 'currency'
+        )
+        read_only_fields = (
+            'all_profit_dollar',
+            'total_debt_client',
+            'total_debt_today_client',
+            'all_product_summa',
+            'summa_total_dollar',
         )
 
     # ---------------- helpers ----------------
@@ -193,62 +200,88 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = getattr(request, "user", None)
         if not user or not user.is_authenticated:
-            raise serializers.ValidationError({"detail": "Autentifikatsiya talab qilinadi."})
+            raise serializers.ValidationError({
+                "detail": "Autentifikatsiya talab qilinadi."
+            })
         return user
+
+    def _q2(self, value: Decimal) -> Decimal:
+        return (value or Decimal("0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def _to_decimal(self, value) -> Decimal:
+        if value is None or value == "":
+            return Decimal("0")
+        if isinstance(value, Decimal):
+            return value
+        return Decimal(str(value))
+
+    def _uzs_to_usd(self, uzs: Decimal, rate: Decimal) -> Decimal:
+        uzs = self._to_decimal(uzs)
+        rate = self._to_decimal(rate)
+
+        if uzs == 0:
+            return Decimal("0")
+
+        if rate <= 0:
+            raise serializers.ValidationError({
+                "exchange_rate": "exchange_rate 0 dan katta bo‘lishi kerak."
+            })
+
+        return self._q2(uzs / rate)
 
     def _get_filial_for_order(self, validated_data, instance=None):
         user = self._get_user()
+
         if validated_data.get("order_filial") is not None:
             return validated_data["order_filial"]
+
         if instance is not None and instance.order_filial is not None:
             return instance.order_filial
+
         filial = getattr(user, "order_filial", None)
         if filial is None:
-            raise serializers.ValidationError({"detail": "Sizga order_filial biriktirilmagan. (User.order_filial = null)"})
+            raise serializers.ValidationError({
+                "detail": "Sizga order_filial biriktirilmagan. (User.order_filial = null)"
+            })
         return filial
 
-    def _q2(self, v: Decimal) -> Decimal:
-        return (v or Decimal("0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-    def _to_decimal(self, v) -> Decimal:
-        if v is None:
-            return Decimal("0")
-        if isinstance(v, Decimal):
-            return v
-        return Decimal(str(v))
-
-    def _uzs_to_usd(self, uzs: Decimal, rate: Decimal) -> Decimal:
-        if rate is None or rate <= 0:
-            raise serializers.ValidationError({"exchange_rate": "exchange_rate 0 dan katta bo‘lishi kerak."})
-        return self._q2(uzs / rate)
-
-    def _get_or_create_first_order(self, client, filial, date=None):
+    def _get_or_create_order_for_history(self, instance: OrderHistory, client, filial, date=None):
         """
-        MUHIM: get_or_create emas!
-        - bir nechta order bo'lsa ham .first() bilan birinchisini oladi
-        - bo'lmasa yaratadi
+        Priority:
+        1) instance.order bor va shu client/filialga tegishli bo‘lsa o‘shani ishlatadi
+        2) client+filial bo‘yicha mavjud birinchi activeni oladi
+        3) bo‘lmasa yaratadi
         """
-        order = (
+        if instance.order_id:
+            current_order = Order.objects.filter(
+                id=instance.order_id,
+                is_delete=False
+            ).first()
+            if current_order and current_order.client_id == client.id and current_order.filial_id == filial.id:
+                return current_order, False
+
+        existing_order = (
             Order.objects
             .filter(client=client, filial=filial, is_delete=False)
             .order_by("id")
             .first()
         )
-        if order:
-            return order, False
+        if existing_order:
+            return existing_order, False
 
-        order = Order.objects.create(
+        new_order = Order.objects.create(
             client=client,
             filial=filial,
             date_last_order=date,
             is_delete=False,
         )
-        return order, True
+        return new_order, True
 
     def _calc_products_totals(self, order_history: OrderHistory):
         """
         return:
-          total_product_summa_usd, total_profit_usd
+            total_product_summa_usd,
+            total_profit_usd
         """
         qs = OrderHistoryProduct.objects.filter(
             order_history_id=order_history.id,
@@ -259,19 +292,22 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         total_profit_usd = Decimal("0")
         rate = self._to_decimal(order_history.exchange_rate)
 
-        for p in qs:
-            count = self._to_decimal(p.count or 0)
+        for item in qs:
+            count = self._to_decimal(item.count or 0)
 
-            # sotilgan narx USD
-            if p.price_dollar and self._to_decimal(p.price_dollar) > 0:
-                sold_usd_unit = self._to_decimal(p.price_dollar)
+            if count <= 0:
+                continue
+
+            # Sotuv narxi unit USD
+            if self._to_decimal(item.price_dollar) > 0:
+                sold_usd_unit = self._to_decimal(item.price_dollar)
             else:
-                sold_usd_unit = self._uzs_to_usd(self._to_decimal(p.price_sum), rate)
+                sold_usd_unit = self._uzs_to_usd(self._to_decimal(item.price_sum), rate)
 
             line_sum_usd = count * sold_usd_unit
 
-            # real_price (USD) — unit
-            real_unit = self._to_decimal(p.real_price)
+            # Tannarx unit USD
+            real_unit = self._to_decimal(item.real_price)
             line_cost_usd = count * real_unit
 
             total_summa_usd += line_sum_usd
@@ -279,9 +315,21 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
 
         return self._q2(total_summa_usd), self._q2(total_profit_usd)
 
-    def _calc_payments_usd(self, oh: OrderHistory):
+    def _calc_effective_paid_total_usd(self, oh: OrderHistory):
         """
-        return: paid_total_usd (discount va qaytimni inobatga olgan holda)
+        Effective paid total:
+            dollar
+          + cash(uzs->usd)
+          + click(uzs->usd)
+          + terminal(uzs->usd)
+          + transfer(uzs->usd)
+          + discount
+          - zdacha_dollar
+          - zdacha_som(uzs->usd)
+
+        Nega discount qo‘shiladi?
+        Chunki discount mijoz to‘lashi kerak bo‘lgan summani kamaytiradi.
+        Ya'ni debt hisobida effective payment kabi ishlaydi.
         """
         rate = self._to_decimal(oh.exchange_rate)
 
@@ -291,32 +339,42 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         terminal_usd = self._uzs_to_usd(self._to_decimal(oh.summa_terminal), rate)
         transfer_usd = self._uzs_to_usd(self._to_decimal(oh.summa_transfer), rate)
 
-        discount = self._to_decimal(oh.discount_amount)
-        zdacha_usd = self._to_decimal(oh.zdacha_dollar)
+        discount_usd = self._to_decimal(oh.discount_amount)
+        zdacha_dollar = self._to_decimal(oh.zdacha_dollar)
+        zdacha_som_usd = self._uzs_to_usd(self._to_decimal(oh.zdacha_som), rate)
 
-        paid = summa_dollar + naqt_usd + klik_usd + terminal_usd + transfer_usd - discount - zdacha_usd
-        return self._q2(paid)
+        paid_total = (
+            summa_dollar
+            + naqt_usd
+            + klik_usd
+            + terminal_usd
+            + transfer_usd
+            + discount_usd
+            - zdacha_dollar
+            - zdacha_som_usd
+        )
+
+        return self._q2(paid_total)
 
     def _sync_cashback_history(self, *, client: Client, order_history_id: int, paid_total_usd: Decimal, is_posted: bool):
         """
         Idempotent cashback:
-        - is_posted=False bo‘lsa: cashback history'ni o‘chiradi (rollback)
-        - is_posted=True bo‘lsa: update_or_create orqali bitta yozuvni yangilaydi
+        - is_posted=False bo‘lsa: cashback history o‘chadi
+        - is_posted=True bo‘lsa: update_or_create
         """
         if not order_history_id:
             return
 
         if not is_posted:
-            ClientKeshbekHistory.objects.filter(order_history=order_history_id).delete()
+            ClientKeshbekHistory.objects.filter(order_history_id=order_history_id).delete()
             return
 
         paid_total_usd = self._q2(paid_total_usd if paid_total_usd > 0 else Decimal("0"))
         keshbek_percent = self._to_decimal(client.keshbek)
-
         cashback_sum = self._q2((paid_total_usd * keshbek_percent) / Decimal("100"))
 
         ClientKeshbekHistory.objects.update_or_create(
-            order_history=order_history_id,
+            order_history_id=order_history_id,
             defaults={
                 "client": client,
                 "keshbek": keshbek_percent,
@@ -324,42 +382,54 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             }
         )
 
+    # ---------------- validation ----------------
+
+    def validate(self, attrs):
+        exchange_rate = attrs.get("exchange_rate")
+        if exchange_rate is not None and self._to_decimal(exchange_rate) < 0:
+            raise serializers.ValidationError({
+                "exchange_rate": "exchange_rate manfiy bo‘lishi mumkin emas."
+            })
+        return attrs
+
     # ---------------- main update ----------------
 
     @transaction.atomic
     def update(self, instance, validated_data):
         user = self._get_user()
 
-        # lock: double request bo‘lsa ham safe
+        # lock instance
         instance = OrderHistory.objects.select_for_update().get(pk=instance.pk)
 
-        # default employee
+        # employee default
         if validated_data.get("employee") is None:
             validated_data["employee"] = user
 
         # filial normalize
         validated_data["order_filial"] = self._get_filial_for_order(validated_data, instance=instance)
 
-        # eski "posted" snapshot qiymatlarni saqlab olamiz (delta uchun)
+        # old snapshot
         old_posted = bool(instance.order_status)
         old_profit = self._to_decimal(instance.all_profit_dollar)
         old_debt_today = self._to_decimal(instance.total_debt_today_client)
         old_product_sum = self._to_decimal(instance.all_product_summa)
         old_paid_total = self._to_decimal(instance.summa_total_dollar)
 
-        # update instance fields
+        # field update
         updated_instance = super().update(instance, validated_data)
 
-        # faqat karzinkadan chiqqan bo‘lsa hisob qilamiz
-        if updated_instance.is_karzinka is not False:
+        # faqat karzinkadan chiqqan order bo‘lsa bu sell hisob-kitob ishlasin
+        if updated_instance.is_karzinka:
             return updated_instance
 
         if updated_instance.client is None:
-            raise serializers.ValidationError({"client": "client majburiy"})
+            raise serializers.ValidationError({"client": "client majburiy."})
 
-        # Order topish/yasash (filial = order_filial)
         filial = updated_instance.order_filial
-        order, _created = self._get_or_create_first_order(
+
+        # order topish / yaratish
+        order, _created = self._get_or_create_order_for_history(
+            updated_instance,
             client=updated_instance.client,
             filial=filial,
             date=updated_instance.date
@@ -369,35 +439,27 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             updated_instance.order = order
             updated_instance.save(update_fields=["order"])
 
-        # yangi hisob-kitob
+        # yangi hisoblar
         new_product_sum, new_profit = self._calc_products_totals(updated_instance)
-        new_paid_total = self._calc_payments_usd(updated_instance)
+        new_paid_total = self._calc_effective_paid_total_usd(updated_instance)
         new_debt_today = self._q2(new_product_sum - new_paid_total)
 
-        # OrderHistory snapshotlarni yangilaymiz (har doim)
+        # order history snapshot update
         updated_instance.all_product_summa = new_product_sum
         updated_instance.all_profit_dollar = new_profit
         updated_instance.total_debt_today_client = new_debt_today
-
-        # total_debt_client: bu maydon "mijozning umumiy qarzi" bo‘lsa, uni Client.total_debt dan oling
-        # (delta bilan qo‘shmang!)
-        updated_instance.total_debt_client = self._to_decimal(updated_instance.client.total_debt)
-
-        # summa_total_dollar: har doim hisoblangan qiymat bilan tenglab boring
         updated_instance.summa_total_dollar = new_paid_total
 
         updated_instance.save(update_fields=[
             "all_product_summa",
             "all_profit_dollar",
             "total_debt_today_client",
-            "total_debt_client",
             "summa_total_dollar",
         ])
 
-        # posted holat
         new_posted = bool(updated_instance.order_status)
 
-        # delta
+        # delta hisob
         if not old_posted and new_posted:
             delta_profit = new_profit
             delta_debt = new_debt_today
@@ -411,10 +473,10 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             delta_paid = new_paid_total - old_paid_total
 
         elif old_posted and not new_posted:
-            delta_profit = Decimal("0") - old_profit
-            delta_debt = Decimal("0") - old_debt_today
-            delta_product = Decimal("0") - old_product_sum
-            delta_paid = Decimal("0") - old_paid_total
+            delta_profit = -old_profit
+            delta_debt = -old_debt_today
+            delta_product = -old_product_sum
+            delta_paid = -old_paid_total
 
         else:
             delta_profit = Decimal("0")
@@ -422,13 +484,11 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             delta_product = Decimal("0")
             delta_paid = Decimal("0")
 
-        # delta apply
-        if delta_profit != 0 or delta_debt != 0 or delta_product != 0 or delta_paid != 0:
-            # lock order & client
-            order = Order.objects.select_for_update().get(pk=order.pk)
-            client = Client.objects.select_for_update().get(pk=updated_instance.client_id)
+        # client/order update
+        order = Order.objects.select_for_update().get(pk=order.pk)
+        client = Client.objects.select_for_update().get(pk=updated_instance.client_id)
 
-            # Order
+        if delta_profit != 0 or delta_debt != 0 or delta_product != 0 or delta_paid != 0:
             Order.objects.filter(pk=order.pk).update(
                 all_profit_dollar=F("all_profit_dollar") + delta_profit,
                 total_debt_old_client=F("total_debt_client"),
@@ -438,27 +498,32 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
                 date_last_order=updated_instance.date,
             )
 
-            # Client
             Client.objects.filter(pk=client.pk).update(
                 total_debt=F("total_debt") + delta_debt
             )
 
-            # Cashback history: posted bo'lsa update/create, rollback bo'lsa delete
-            self._sync_cashback_history(
-                client=client,
-                order_history_id=updated_instance.id,
-                paid_total_usd=new_paid_total,   # cashback real to‘lovdan
-                is_posted=new_posted
-            )
-        else:
-            # delta bo‘lmasa ham: order_status o‘zgargan bo‘lishi mumkin (ba'zi holatlarda)
-            # Shuning uchun cashback’ni ham sync qilib qo‘yib ketamiz
-            client = Client.objects.select_for_update().get(pk=updated_instance.client_id)
-            self._sync_cashback_history(
-                client=client,
-                order_history_id=updated_instance.id,
-                paid_total_usd=new_paid_total,
-                is_posted=new_posted
-            )
+        # refresh qilingan qiymatlar
+        client.refresh_from_db(fields=["total_debt"])
+        order.refresh_from_db(fields=[
+            "all_profit_dollar",
+            "total_debt_old_client",
+            "total_debt_client",
+            "all_product_summa",
+            "summa_total_dollar",
+            "date_last_order",
+        ])
+
+        # snapshot: endi real updated client debt ni yozamiz
+        if updated_instance.total_debt_client != self._to_decimal(client.total_debt):
+            updated_instance.total_debt_client = self._to_decimal(client.total_debt)
+            updated_instance.save(update_fields=["total_debt_client"])
+
+        # cashback sync
+        self._sync_cashback_history(
+            client=client,
+            order_history_id=updated_instance.id,
+            paid_total_usd=new_paid_total,
+            is_posted=new_posted
+        )
 
         return updated_instance

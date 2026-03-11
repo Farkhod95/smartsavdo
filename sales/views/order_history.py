@@ -519,15 +519,22 @@ class OrderHistoryView(ListCreateAPIView):
 
 
 class OrderHistorySellView(RetrieveUpdateDestroyAPIView):
-    serializer_class = OrderHistorySerializer
+    queryset = OrderHistory.objects.filter(is_delete=False)
+    serializer_class = OrderHistorySellSerializer
     http_method_names = ['put']
 
+    @transaction.atomic
     def put(self, request, pk):
-        instance = get_object_or_404(OrderHistory, id=pk, is_delete=False)
+        instance = get_object_or_404(
+            OrderHistory.objects.select_for_update(),
+            id=pk,
+            is_delete=False
+        )
 
-        serializer = OrderHistorySellSerializer(
+        serializer = self.get_serializer(
             instance,
             data=request.data,
+            partial=False,
             context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
