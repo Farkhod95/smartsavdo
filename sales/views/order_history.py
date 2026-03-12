@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from inventory.models import Product, ProductStock
 from sales.filterset import OrderHistoryFilter
 from sales.models import OrderHistory, OrderHistoryProduct, Order, Client, ClientKeshbekHistory
 from restapp.pagination import ResultsSetPagination
@@ -716,34 +717,51 @@ class OrderHistoryDetailKarzinkaView(RetrieveUpdateDestroyAPIView):
 
     def get(self, request, pk):
         instance = get_object_or_404(OrderHistory, id=pk)
-        serializer = OrderHistoryListSerializer(instance)
+        serializer = OrderHistoryListSerializer(instance, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def _to_decimal(self, value):
+        try:
+            return Decimal(str(value or 0))
+        except Exception:
+            return Decimal("0")
+
+    def _to_int(self, value):
+        try:
+            return int(value or 0)
+        except Exception:
+            return 0
 
     @transaction.atomic
     def delete(self, request, pk):
         """
         HARD DELETE:
-        - Agar OrderHistory posted bo'lsa (order_status=True) -> Order, Client, Cashback hisoblarini rollback qiladi
-        - Keyin OrderHistoryProduct larni hard delete qiladi
-        - Keyin OrderHistory ni hard delete qiladi
+        1) OrderHistory ni lock qiladi
+        2) Posted bo'lsa Order / Client / Cashback rollback qiladi
+        3) OrderHistoryProduct lar bo'yicha ProductStock va Product count rollback qiladi
+        4) OrderHistoryProduct larni hard delete qiladi
+        5) OrderHistory ni hard delete qiladi
         """
 
-        # 1) OrderHistory ni lock qilib olamiz
+        # 1. OrderHistory ni lock qilamiz
         oh = get_object_or_404(
-            OrderHistory.objects.select_for_update().select_related("order", "client"),
+            OrderHistory.objects.select_for_update(),
             id=pk
         )
 
-        # 2) Agar posted bo'lsa: rollback
-        if oh.order_status:
-            old_profit = oh.all_profit_dollar or Decimal("0")
-            old_debt_today = oh.total_debt_today_client or Decimal("0")
-            old_product_sum = oh.all_product_summa or Decimal("0")
-            old_paid_total = oh.summa_total_dollar or Decimal("0")
+        old_profit = self._to_decimal(oh.all_profit_dollar)
+        old_debt_today = self._to_decimal(oh.total_debt_today_client)
+        old_product_sum = self._to_decimal(oh.all_product_summa)
+        old_paid_total = self._to_decimal(oh.summa_total_dollar)
 
-            # Order rollback
+        # 2. Order va Client rollback (faqat posted bo'lsa)
+        if oh.order_status:
             if oh.order_id:
-                order = Order.objects.select_for_update().get(pk=oh.order_id)
+                order = get_object_or_404(
+                    Order.objects.select_for_update(),
+                    pk=oh.order_id
+                )
+
                 Order.objects.filter(pk=order.pk).update(
                     all_profit_dollar=F("all_profit_dollar") - old_profit,
                     total_debt_old_client=F("total_debt_client"),
@@ -752,20 +770,76 @@ class OrderHistoryDetailKarzinkaView(RetrieveUpdateDestroyAPIView):
                     summa_total_dollar=F("summa_total_dollar") - old_paid_total,
                 )
 
-            # Client rollback
             if oh.client_id:
-                client = Client.objects.select_for_update().get(pk=oh.client_id)
+                client = get_object_or_404(
+                    Client.objects.select_for_update(),
+                    pk=oh.client_id
+                )
+
                 Client.objects.filter(pk=client.pk).update(
                     total_debt=F("total_debt") - old_debt_today
                 )
 
-            # Cashback rollback
             ClientKeshbekHistory.objects.filter(order_history=oh.id).delete()
 
-        # 3) OrderHistoryProduct larni hard delete
-        OrderHistoryProduct.objects.filter(order_history_id=pk).delete()
+        # 3. Product rollback
+        products = list(
+            OrderHistoryProduct.objects.select_for_update().filter(order_history_id=oh.id)
+        )
 
-        # 4) OrderHistory ni hard delete
+        touched_product_ids = set()
+
+        for item in products:
+            if not item.product_id:
+                continue
+
+            product = get_object_or_404(
+                Product.objects.select_for_update(),
+                pk=item.product_id
+            )
+
+            # Qaysi miqdorni qaytaramiz?
+            # Odatda berilgan mahsulot qaytadi.
+            rollback_count = self._to_int(item.given_count)
+            if rollback_count <= 0:
+                rollback_count = self._to_int(item.count)
+
+            if rollback_count > 0:
+                # sklad aniqlash
+                sklad_id = item.sklad_id
+                if sklad_id is not None:
+                    stock = (
+                        ProductStock.objects
+                        .select_for_update()
+                        .filter(product_id=product.pk, sklad_id=sklad_id)
+                        .first()
+                    )
+
+                    if stock is None:
+                        stock = ProductStock.objects.create(
+                            product=product,
+                            sklad_id=sklad_id,
+                            count=0
+                        )
+
+                    ProductStock.objects.filter(pk=stock.pk).update(
+                        count=F("count") + rollback_count
+                    )
+
+                touched_product_ids.add(product.pk)
+
+        # 4. Product.count ni recalc qilamiz
+        if touched_product_ids:
+            locked_products = Product.objects.select_for_update().filter(pk__in=touched_product_ids)
+            for product in locked_products:
+                product.recalc_count_from_stocks(save=True)
+
+        # 5. OrderHistoryProduct larni hard delete qilamiz
+        # custom delete ichidagi flag sync bu yerda kerak emas,
+        # chunki OrderHistory o'zi ham o'chiriladi
+        OrderHistoryProduct.objects.filter(order_history_id=oh.id).delete()
+
+        # 6. OrderHistory ni hard delete qilamiz
         oh.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
