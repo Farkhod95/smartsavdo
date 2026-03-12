@@ -290,7 +290,7 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             else:
                 sold_usd_unit = self._uzs_to_usd(self._to_decimal(p.price_sum), rate)
 
-            line_sum_usd = count * sold_usd_unit
+            line_sum_usd = sold_usd_unit
             real_unit = self._to_decimal(p.real_price)
             line_cost_usd = count * real_unit
 
