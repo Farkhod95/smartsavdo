@@ -264,11 +264,6 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
         return order, True
 
     def _calc_products_totals(self, order_history):
-        """
-        Mahsulotlar bo'yicha:
-        - total sotuv summa (USD)
-        - total foyda (USD)
-        """
         qs = OrderHistoryProduct.objects.filter(
             order_history_id=order_history.id,
             is_delete=False
@@ -284,14 +279,14 @@ class OrderHistorySellSerializer(serializers.ModelSerializer):
             if count <= 0:
                 continue
 
-            # sotuvdagi unit price
             if self._to_decimal(p.price_dollar) > 0:
                 sold_usd_unit = self._to_decimal(p.price_dollar)
             else:
                 sold_usd_unit = self._uzs_to_usd(self._to_decimal(p.price_sum), rate)
 
-            line_sum_usd = sold_usd_unit
             real_unit = self._to_decimal(p.real_price)
+
+            line_sum_usd = count * sold_usd_unit
             line_cost_usd = count * real_unit
 
             total_summa_usd += line_sum_usd
