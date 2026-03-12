@@ -6,11 +6,15 @@ from inventory.serializer.unit import UnitListSerializer
 
 
 class ProductTypeSizeForSerializer(serializers.ModelSerializer):
-    unit_detail = UnitListSerializer(source='unit', read_only=True)
+    unit_code = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductTypeSize
-        fields = ('id', 'product_type', 'size', 'unit', 'unit_detail', 'sorting', 'is_delete')
+        fields = ('id', 'product_type', 'size', 'unit', 'unit_code', 'sorting', 'is_delete')
+
+    def get_unit_code(self, obj):
+        # Unit.name ni qaytaradi (Unit yo'q bo'lsa None)
+        return obj.unit.code if obj.unit else None
 
 
 class ProductTypeSizeListSerializer(serializers.ModelSerializer):
