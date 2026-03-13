@@ -134,8 +134,6 @@ class VozvratOrderUpdateSerializer(serializers.ModelSerializer):
         return updated
 
 
-
-
 class VozvratOrderReturnSerializer(serializers.ModelSerializer):
     class Meta:
         model = VozvratOrder
@@ -296,7 +294,7 @@ class VozvratOrderReturnSerializer(serializers.ModelSerializer):
 
         # employee auto
         if validated_data.get("employee") is None:
-            validated_data["employee"] = instance.employee_id or user
+            validated_data["employee"] = instance.employee or user
 
         # old flags
         old_confirmed = bool(instance.is_vazvrat_status)

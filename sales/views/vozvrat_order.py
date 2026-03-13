@@ -217,7 +217,7 @@ class VozvratOrderDetailView(RetrieveUpdateDestroyAPIView):
 
 
 class VozvratOrderReturnView(RetrieveUpdateDestroyAPIView):
-    serializer_class = VozvratOrderSerializer
+    serializer_class = VozvratOrderReturnSerializer
     http_method_names = ['put']
 
     def put(self, request, pk):
