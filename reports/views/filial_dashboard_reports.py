@@ -22,7 +22,7 @@ class FilialDashboardReportView(APIView):
     """
     GET /reports/filial-dashboard?filial_id=1&months=12
 
-    ✅ LOGIKA O'ZGARMAYDI:
+    ✅ LOGIKA ASOSIY HOLDA O'ZGARMAYDI:
     - filial_id majburiy
     - filial mavjud bo'lishi shart
     - card_count:
@@ -33,6 +33,7 @@ class FilialDashboardReportView(APIView):
     - monthly:
         OrderHistory.summa_total_dollar bo‘yicha oy kesimida SUM
         DebtRepayment.summa_total_dollar bo‘yicha oy kesimida SUM
+        OrderHistory.all_profit_dollar bo‘yicha oy kesimida SUM  <-- qo‘shildi
         monthly = months bo‘yicha ketma-ket oylar (start_month..)
     - Dostup (xavfsizlik): user faqat o‘z filialida ko‘radi (403)
     - Http404 qaytmaydi, doim tushunarli JSON xabar qaytadi.
@@ -44,11 +45,13 @@ class FilialDashboardReportView(APIView):
         if not filial_id:
             return Response({"detail": "filial_id majburiy"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # filial_id int bo‘lishi shart
         try:
             filial_id_int = int(filial_id)
         except (TypeError, ValueError):
-            return Response({"detail": "filial_id noto'g'ri (int bo'lishi kerak)."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "filial_id noto'g'ri (int bo'lishi kerak)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # ✅ DOSTUP: userda filial bo‘lmasa 403
         if not request.user.filials.filter(id=filial_id_int).exists():
@@ -58,7 +61,7 @@ class FilialDashboardReportView(APIView):
             )
 
         # filial mavjudligini tekshiramiz (Http404 emas)
-        filial = Filial.objects.filter(pk=filial_id_int).first()
+        filial = Filial.objects.filter(pk=filial_id_int, is_delete=False).first()
         if not filial:
             return Response({"detail": "Bunday filial topilmadi"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -67,6 +70,7 @@ class FilialDashboardReportView(APIView):
             months = int(request.query_params.get("months", 12))
         except (TypeError, ValueError):
             months = 12
+
         if months <= 0:
             months = 12
 
@@ -79,7 +83,7 @@ class FilialDashboardReportView(APIView):
             start_month = (start_month - timezone.timedelta(days=1)).replace(day=1)
 
         # -------------------------
-        # CARD COUNT (logika o‘sha-o‘sha)
+        # CARD COUNT
         # -------------------------
         clients_count = Client.objects.filter(
             filial_id=filial.id,
@@ -99,7 +103,7 @@ class FilialDashboardReportView(APIView):
             .count()
         )
 
-        # Sizda latest_total_debt_subq bor edi, lekin foydalanilmagan — logikaga ta’sir qilmaslik uchun qoldirdim.
+        # Oldingi logikani buzmaslik uchun qoldirildi
         latest_total_debt_subq = (
             DebtRepayment.objects
             .filter(
@@ -115,8 +119,8 @@ class FilialDashboardReportView(APIView):
         )
 
         debtors_count = Client.objects.filter(
-            is_delete=False,
             filial_id=filial.id,
+            is_delete=False,
             total_debt__gt=1,
         ).count()
 
@@ -128,7 +132,7 @@ class FilialDashboardReportView(APIView):
         }
 
         # -------------------------
-        # MONTHLY SUMS (logika o‘sha-o‘sha)
+        # MONTHLY SUMS
         # -------------------------
         order_qs = (
             OrderHistory.objects
@@ -144,16 +148,23 @@ class FilialDashboardReportView(APIView):
                 order_sum_usd=Coalesce(
                     Sum("summa_total_dollar"),
                     Value(Decimal("0.00"), output_field=DecimalField(max_digits=20, decimal_places=2)),
-                )
+                ),
+                profit_sum_usd=Coalesce(
+                    Sum("all_profit_dollar"),
+                    Value(Decimal("0.00"), output_field=DecimalField(max_digits=20, decimal_places=2)),
+                ),
             )
             .order_by("month")
         )
 
-        order_map = {
-            row["month"].isoformat(): row["order_sum_usd"]
-            for row in order_qs
-            if row["month"]
-        }
+        order_map = {}
+        profit_map = {}
+
+        for row in order_qs:
+            if row["month"]:
+                key = row["month"].isoformat()
+                order_map[key] = row["order_sum_usd"]
+                profit_map[key] = row["profit_sum_usd"]
 
         debt_qs = (
             DebtRepayment.objects
@@ -182,19 +193,23 @@ class FilialDashboardReportView(APIView):
 
         monthly = []
         cur = start_month.replace(day=1)
+
         for _ in range(months):
-            key = cur.isoformat()  # "YYYY-MM-01"
+            key = cur.isoformat()  # YYYY-MM-01
+
             o = order_map.get(key, Decimal("0.00"))
             d = debt_map.get(key, Decimal("0.00"))
+            p = profit_map.get(key, Decimal("0.00"))
 
             monthly.append({
                 "month": key,
                 "order_sum_usd": str(o),
                 "debt_sum_usd": str(d),
+                "profit_sum_usd": str(p),   # <-- yangi qo‘shildi
                 "total_sum_usd": str(o + d),
             })
 
-            # keyingi oy (dateutil siz)
+            # keyingi oy
             cur = (cur.replace(day=28) + timezone.timedelta(days=4)).replace(day=1)
 
         return Response(
